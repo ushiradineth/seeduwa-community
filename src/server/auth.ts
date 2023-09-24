@@ -54,8 +54,6 @@ export const authOptions: NextAuthOptions = {
         if (admin) {
           const isValid = bcrypt.compareSync(credentials?.password ?? "", admin.password);
 
-          console.log(admin);
-
           if (isValid) {
             return {
               id: admin.id,

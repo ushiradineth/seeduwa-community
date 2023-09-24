@@ -14,7 +14,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { XIcon } from "lucide-react";
 
-import Layout from "@/components/Layout";
+import Layout from "@/components/Organism/Layout";
 
 const dmsans = DM_Sans({
   weight: ["700"],
@@ -36,9 +36,9 @@ const MyApp: AppType<{ session: Session | null }> = ({ Component, pageProps: { s
           startPosition={0.3}
           stopDelayMs={200}
           height={3}
-          showOnShallow={true}
+          showOnShallow={false}
           options={{ showSpinner: false }}
-        />{" "}
+        />
         <style jsx global>
           {`
             :root {

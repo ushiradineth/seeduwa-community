@@ -20,13 +20,6 @@ export const passwordValidator = yup
   .matches(/(?=.*[0-9])/, "Password must have atleast one Number")
   .matches(/(?=.*[!@#\$%\^&\*])/, "Password must have atleast one Special Character");
 
-export const confirmPasswordValidator = yup
-  .string()
-  .required("Confirm Password is a required field")
-  .test("passwords-match", "Passwords must match", function (value) {
-    return this.parent.Password === value;
-  });
-
 export const LoginSchema = yup
   .object()
   .shape({
@@ -37,95 +30,34 @@ export const LoginSchema = yup
 
 export type LoginFormData = yup.InferType<typeof LoginSchema>;
 
-export const RegisterSchema = yup
-  .object()
-  .shape({
-    ConfirmPassword: confirmPasswordValidator,
-    Password: passwordValidator,
-    Email: emailValidator,
-    Name: nameValidator,
-  })
-  .required();
+export const CreateMemberSchema = yup.object().shape({
+  Lane: textValidator,
+  House: textValidator,
+  Name: textValidator,
+});
 
-export type RegisterFormData = yup.InferType<typeof RegisterSchema>;
+export type CreateMemberFormData = yup.InferType<typeof CreateMemberSchema>;
 
-export const ForgetPasswordSchema = yup
-  .object()
-  .shape({
-    Email: emailValidator,
-  })
-  .required();
+export const CreateRecordSchema = yup.object().shape({
+  Year: numberValidator,
+  Month: yup.number().min(0).max(11).required(),
+  Amount: numberValidator,
+  Member: yup.string().required(),
+});
 
-export type ForgetPasswordFormData = yup.InferType<typeof ForgetPasswordSchema>;
+export type CreateRecordFormData = yup.InferType<typeof CreateRecordSchema>;
 
-export const ResetPasswordSchema = yup
-  .object()
-  .shape({
-    OTP: otpValidtor,
-    Password: passwordValidator,
-  })
-  .required();
+export const CreateRecordForMemberSchema = yup.object().shape({
+  Year: numberValidator,
+  Month: yup.number().min(0).max(11).required(),
+  Amount: numberValidator,
+  Member: yup.string().required(),
+});
 
-export type ResetPasswordFormData = yup.InferType<typeof ResetPasswordSchema>;
+export type CreateRecordForMemberFormData = yup.InferType<typeof CreateRecordForMemberSchema>;
 
-export const TierSchema = yup
-  .object()
-  .shape({
-    Point: yup.string().min(1).max(200),
-    Points: pointsValidator,
-    Period: periodValidtor,
-    Price: numberValidator,
-    Description: textValidator,
-    Name: nameValidator,
-  })
-  .required();
+export const EditRecordSchema = yup.object().shape({
+  Amount: numberValidator,
+});
 
-export type TierFormData = yup.InferType<typeof TierSchema>;
-
-export const ProductSchema = yup
-  .object()
-  .shape({
-    Images: fileValidator,
-    Link: urlValidator,
-    Category: idValidator,
-    Description: textValidator,
-    Name: nameValidator,
-    Logo: fileValidator,
-  })
-  .required();
-
-export type ProductFormData = yup.InferType<typeof ProductSchema>;
-
-export const CategorySchema = yup
-  .object()
-  .shape({
-    Icon: fileValidator,
-    Description: textValidator,
-    Name: nameValidator,
-  })
-  .required();
-
-export type CategoryFormData = yup.InferType<typeof CategorySchema>;
-
-export const UserSchema = yup
-  .object()
-  .shape({
-    Image: fileValidator,
-    Name: nameValidator,
-    Email: emailValidator,
-  })
-  .required();
-
-export type UserFormData = yup.InferType<typeof UserSchema>;
-
-export const UserEditFormSchema = yup
-  .object()
-  .shape({
-    Image: fileValidator,
-    Password: passwordValidator.notRequired(),
-    Name: nameValidator,
-    Email: emailValidator,
-  })
-  .required();
-
-export type UserEditFormData = yup.InferType<typeof UserEditFormSchema>;
+export type EditRecordFormData = yup.InferType<typeof EditRecordSchema>;

@@ -23,7 +23,6 @@ import CreateRecordForMember from "../Templates/CreateRecordForMember";
 import EditMember from "../Templates/EditMember";
 import EditRecord from "../Templates/EditRecord";
 
-const UNALLOWED_UNAUTHED_PATHS = ["/"];
 const NAVBAR_HIDDEN_PATHS = ["/auth", "/auth/reset"];
 
 function Layout(props: { children: React.ReactNode }) {
@@ -53,9 +52,9 @@ function Layout(props: { children: React.ReactNode }) {
     [],
   );
 
-  if (status === "loading" && router.pathname !== "/") return <Loader background />;
-  if (status === "unauthenticated" && UNALLOWED_UNAUTHED_PATHS.includes(router.pathname)) void router.push("/auth");
-  if (status === "authenticated" && router.pathname === "/auth") void router.push("/");
+  if (status === "loading") return <Loader background />;
+  if (status === "unauthenticated") void router.push("/auth");
+  if (status === "authenticated" && router.pathname.startsWith("/auth")) void router.push("/");
 
   return (
     <main className="dark flex min-h-screen min-w-fit flex-col overflow-hidden border-bc bg-bgc text-white">

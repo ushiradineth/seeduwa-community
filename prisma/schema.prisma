@@ -18,20 +18,22 @@ model Admin {
 
 model Member {
   id        String   @id @default(cuid())
-  createdAt DateTime
+  createdAt DateTime @default(now())
 
   houseId String
   name    String
   lane    String
-  active  Boolean
+  active  Boolean @default(true)
 
-  Payment Payment[]
+  payments Payment[]
 }
 
 model Payment {
   id        String   @id @default(cuid())
-  createdAt DateTime
+  createdAt DateTime @default(now())
   amount    Float
+  active    Boolean  @default(true)
+  date      DateTime @default(now())
 
   member   Member @relation(fields: [memberId], references: [id])
   memberId String

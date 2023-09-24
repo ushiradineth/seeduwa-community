@@ -53,7 +53,7 @@ function Layout(props: { children: React.ReactNode }) {
   );
 
   if (status === "loading") return <Loader background />;
-  if (status === "unauthenticated") void router.push("/auth");
+  if (status === "unauthenticated" && !router.pathname.startsWith("/auth")) void router.push("/auth");
   if (status === "authenticated" && router.pathname.startsWith("/auth")) void router.push("/");
 
   return (

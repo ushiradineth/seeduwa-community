@@ -68,8 +68,7 @@ export default function EditMember() {
   }
 
   const exitPopup = useCallback(
-    (shallow: boolean) =>
-      router.push({ query: removeQueryParamsFromRouter(router, ["mode", "payment", "month", "year"]) }, undefined, { shallow }),
+    (shallow: boolean) => router.push({ query: removeQueryParamsFromRouter(router, ["action", "member"]) }, undefined, { shallow }),
     [router],
   );
 

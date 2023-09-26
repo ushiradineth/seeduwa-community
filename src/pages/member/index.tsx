@@ -1,9 +1,12 @@
+import { Label } from "@radix-ui/react-label";
 import { getSession } from "next-auth/react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
+import { useRouter } from "next/router";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/Molecules/Select";
 import Members from "@/components/Templates/Members";
-import { ITEMS_PER_PAGE } from "@/lib/consts";
+import { ITEMS_PER_PAGE, MEMBERS_PAYMENT_FILTER, MEMBERS_PAYMENT_FILTER_ENUM } from "@/lib/consts";
 import { prisma } from "@/server/db";
 
 export type Member = {
@@ -34,11 +37,45 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   }
 
   const search = context.query.search ? (context.query.search as string).split(" ").join(" | ") : "";
+  const membersParam = String(context.query.members ?? "All") as MEMBERS_PAYMENT_FILTER_ENUM;
+
+  let membersFilter = {};
+
+  if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
+    membersFilter = {
+      some: {
+        active: true,
+        date: {
+          equals: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1)),
+        },
+      },
+    };
+  } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
+    membersFilter = {
+      none: {
+        active: true,
+        date: {
+          equals: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1)),
+        },
+      },
+    };
+  }
 
   const where =
     search !== ""
-      ? { AND: [{ active: true }, { OR: [{ name: { search: search } }, { houseId: { search: search } }, { lane: { search: search } }] }] }
-      : { active: true };
+      ? {
+          AND: [
+            { active: true },
+            { OR: [{ name: { search: search } }, { houseId: { search: search } }, { lane: { search: search } }] },
+            membersFilter,
+          ],
+        }
+      : {
+          active: true,
+          payments: {
+            ...membersFilter,
+          },
+        };
 
   const members = await prisma.member.findMany({
     take: ITEMS_PER_PAGE,
@@ -51,12 +88,14 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       lane: true,
       payments: {
         where: {
+          active: true,
           date: {
             equals: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1)),
           },
         },
         select: {
           id: true,
+          date: true,
         },
       },
     },
@@ -65,16 +104,19 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     },
   });
 
+  console.log(members[0]?.payments);
+
   const count = await prisma.member.count({
     where,
   });
 
-  const total = await prisma.member.count();
+  const total = await prisma.member.count({ where: { active: true } });
 
   return {
     props: {
       members: members.map((member) => ({
         ...member,
+        payments: {},
         payment: member.payments.length > 0,
       })),
       count,
@@ -84,12 +126,34 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 };
 
 export default function AllMembers({ members, count, total }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const router = useRouter();
   return (
     <>
       <Head>
         <title>Members | Seeduwa Community</title>
       </Head>
       <main className="dark flex flex-col items-center justify-center">
+        <div className="flex w-full gap-8 py-4">
+          <div className="flex flex-col gap-2">
+            <Label>Members</Label>
+            <Select
+              defaultValue={String(router.query.members ?? "All")}
+              onValueChange={(value) => router.push({ query: { ...router.query, members: value === "All" ? undefined : value } })}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="dark z-[250] w-max">
+                {MEMBERS_PAYMENT_FILTER.map((value) => {
+                  return (
+                    <SelectItem key={value} value={value}>
+                      {value}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <Members members={members} count={count} total={total} />
       </main>
     </>

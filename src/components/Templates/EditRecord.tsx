@@ -21,7 +21,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 export default function EditRecord() {
   const [error, setError] = useState("");
   const router = useRouter();
-  const [mutated, setMutated] = useState(false);
 
   const {
     data: record,
@@ -34,8 +33,7 @@ export default function EditRecord() {
 
   const { mutate: editRecord, isLoading: editingRecord } = api.record.edit.useMutation({
     onSuccess: async () => {
-      setMutated(true);
-      await exitPopup();
+      await exitPopup(false);
       toast.success("Record updated successfully");
     },
     onError: (error) => {
@@ -46,8 +44,7 @@ export default function EditRecord() {
 
   const { mutate: deleteRecord, isLoading: deletingRecord } = api.record.delete.useMutation({
     onSuccess: async () => {
-      setMutated(true);
-      await exitPopup();
+      await exitPopup(false);
       toast.success("Record deleted successfully");
     },
     onError: (error) => {
@@ -68,11 +65,21 @@ export default function EditRecord() {
   }
 
   const exitPopup = useCallback(
-    () =>
-      mutated
-        ? router.push({ query: removeQueryParamsFromRouter(router, ["mode", "payment", "month", "year"]) })
-        : router.push({ query: removeQueryParamsFromRouter(router, ["mode", "payment", "month", "year"]) }, undefined, { shallow: true }),
-    [mutated, router],
+    (shallow: boolean) =>
+      router.push(
+        {
+          query: removeQueryParamsFromRouter(router, [
+            "mode",
+            "payment",
+            "month",
+            "year",
+            `${router.pathname === "/member/[memberId]" ? "" : "memberId"}`,
+          ]),
+        },
+        undefined,
+        { shallow },
+      ),
+    [router],
   );
 
   useEffect(() => {
@@ -81,7 +88,7 @@ export default function EditRecord() {
   }, [form, record?.amount]);
 
   return (
-    <Dialog open={router.query.mode === "edit" && typeof router.query.payment === "string"} onOpenChange={() => exitPopup()}>
+    <Dialog open={router.query.mode === "edit" && typeof router.query.payment === "string"} onOpenChange={() => exitPopup(true)}>
       <DialogContent className="dark text-white sm:max-w-[425px]">
         {gettingRecord || refetchingRecord ? (
           <Loader background removeBackgroundColor height={"385px"} />

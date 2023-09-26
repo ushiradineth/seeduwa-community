@@ -22,7 +22,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 export default function EditMember() {
   const [error, setError] = useState("");
   const router = useRouter();
-  const [mutated, setMutated] = useState(false);
 
   const {
     data: member,
@@ -35,8 +34,7 @@ export default function EditMember() {
 
   const { mutate: editMember, isLoading: editingMember } = api.member.edit.useMutation({
     onSuccess: async () => {
-      setMutated(true);
-      await exitPopup();
+      await exitPopup(false);
       toast.success("Member updated successfully");
     },
     onError: (error) => {
@@ -47,8 +45,7 @@ export default function EditMember() {
 
   const { mutate: deleteMember, isLoading: deletingMember } = api.member.delete.useMutation({
     onSuccess: async () => {
-      setMutated(true);
-      await exitPopup();
+      await exitPopup(false);
       toast.success("Member deleted successfully");
     },
     onError: (error) => {
@@ -71,11 +68,9 @@ export default function EditMember() {
   }
 
   const exitPopup = useCallback(
-    () =>
-      mutated
-        ? router.push({ query: removeQueryParamsFromRouter(router, ["mode", "payment", "month", "year"]) })
-        : router.push({ query: removeQueryParamsFromRouter(router, ["mode", "payment", "month", "year"]) }, undefined, { shallow: true }),
-    [mutated, router],
+    (shallow: boolean) =>
+      router.push({ query: removeQueryParamsFromRouter(router, ["mode", "payment", "month", "year"]) }, undefined, { shallow }),
+    [router],
   );
 
   useEffect(() => {
@@ -88,9 +83,7 @@ export default function EditMember() {
   }, [form, member]);
 
   return (
-    <Dialog
-      open={router.query.action === "edit" && typeof router.query.member === "string"}
-      onOpenChange={() => router.push({ query: removeQueryParamsFromRouter(router, ["member", "action"]) }, undefined, { shallow: true })}>
+    <Dialog open={router.query.action === "edit" && typeof router.query.member === "string"} onOpenChange={() => exitPopup(true)}>
       <DialogContent className="dark text-white sm:max-w-[425px]">
         {gettingMember || refetchingMember ? (
           <Loader background removeBackgroundColor height={"385px"} />

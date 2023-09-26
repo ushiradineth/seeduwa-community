@@ -21,12 +21,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 export default function CreateRecordForMember() {
   const [error, setError] = useState("");
   const router = useRouter();
-  const [mutated, setMutated] = useState(false);
 
   const { mutate: createRecord, isLoading: creatingRecord } = api.record.create.useMutation({
     onSuccess: async () => {
-      setMutated(true);
-      await exitPopup();
+      await exitPopup(false);
       toast.success("Record created successfully");
     },
     onError: (error) => {
@@ -48,23 +46,33 @@ export default function CreateRecordForMember() {
   }
 
   const exitPopup = useCallback(
-    () =>
-      mutated
-        ? router.push({ query: removeQueryParamsFromRouter(router, ["mode", "payment", "month", "year"]) })
-        : router.push({ query: removeQueryParamsFromRouter(router, ["mode", "payment", "month", "year"]) }, undefined, { shallow: true }),
-    [mutated, router],
+    (shallow: boolean) =>
+      router.push(
+        {
+          query: removeQueryParamsFromRouter(router, [
+            "mode",
+            "payment",
+            "month",
+            "year",
+            `${router.pathname === "/member/[memberId]" ? "" : "memberId"}`,
+          ]),
+        },
+        undefined,
+        { shallow },
+      ),
+    [router],
   );
 
   useEffect(() => {
     form.clearErrors();
-    form.setValue("Member", String(router.query.id ?? ""));
+    form.setValue("Member", String(router.query.memberId ?? ""));
     form.setValue("Amount", 2000);
     form.setValue("Month", Number(router.query.month ?? new Date().getMonth()));
     form.setValue("Year", Number(router.query.year ?? new Date().getFullYear()));
-  }, [router.query.create, form, router.query.month, router.query.year, creatingRecord, router.query.id]);
+  }, [router.query.create, form, router.query.month, router.query.year, creatingRecord, router.query.memberId]);
 
   return (
-    <Dialog open={router.query.mode === "new"} onOpenChange={() => exitPopup()}>
+    <Dialog open={router.query.mode === "new"} onOpenChange={() => exitPopup(true)}>
       <DialogContent className="dark text-white sm:max-w-[425px]">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">

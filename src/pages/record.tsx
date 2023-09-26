@@ -91,7 +91,7 @@ export default function AllMembers({ records, count, total }: InferGetServerSide
       <Head>
         <title>Records - Seeduwa Community</title>
       </Head>
-      <main className="dark flex flex-col items-center justify-center">
+      <main className="dark flex flex-col items-center justify-center px-4">
         <Records records={records} count={count} total={total} />
       </main>
     </>

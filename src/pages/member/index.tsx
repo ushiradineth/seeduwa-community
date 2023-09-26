@@ -132,7 +132,7 @@ export default function AllMembers({ members, count, total }: InferGetServerSide
       <Head>
         <title>Members | Seeduwa Community</title>
       </Head>
-      <main className="dark flex flex-col items-center justify-center">
+      <main className="dark flex flex-col items-center justify-center px-4">
         <div className="flex w-full gap-8 py-4">
           <div className="flex flex-col gap-2">
             <Label>Members</Label>

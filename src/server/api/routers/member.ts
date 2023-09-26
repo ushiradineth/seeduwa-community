@@ -45,10 +45,21 @@ export const memberRouter = createTRPCRouter({
     }),
 
   getAllByLane: protectedProcedure.input(z.object({ lane: z.string() })).mutation(async ({ ctx, input }) => {
-    return await ctx.prisma.member.findMany({ where: { lane: input.lane }, include: { payments: { select: { date: true } } } });
+    return await ctx.prisma.member.findMany({
+      where: {
+        lane: input.lane,
+        active: true,
+      },
+      include: {
+        payments: {
+          select: { date: true },
+          where: { active: true },
+        },
+      },
+    });
   }),
 
   get: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    return await ctx.prisma.member.findFirst({ where: { id: input.id } });
+    return await ctx.prisma.member.findFirst({ where: { id: input.id, active: true } });
   }),
 });

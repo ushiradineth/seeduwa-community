@@ -27,6 +27,9 @@ export const recordRouter = createTRPCRouter({
   }),
 
   get: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    return await ctx.prisma.payment.findFirst({ where: { id: input.id }, include: { member: true } });
+    return await ctx.prisma.payment.findFirst({
+      where: { id: input.id, active: true },
+      include: { member: true },
+    });
   }),
 });

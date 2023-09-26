@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { ITEMS_PER_PAGE, MONTHS } from "@/lib/consts";
+import { MONTHS } from "@/lib/consts";
 import { type Member, type Props } from "@/pages";
 import PageNumbers from "../Atoms/PageNumbers";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../Molecules/Card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Dashboard({ members: initialMembers, count, year }: Props) {
+export default function Dashboard({ members: initialMembers, count, year, itemsPerPage }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
   const [Members, setMembers] = useState<Member[]>(initialMembers);
@@ -54,6 +54,7 @@ export default function Dashboard({ members: initialMembers, count, year }: Prop
                     </TableCell>
                     {MONTHS.map((month, index) => {
                       const payment = paymentFilter(month, year, member);
+
                       return (
                         <TableCell
                           key={`${month}-${year}`}
@@ -75,8 +76,8 @@ export default function Dashboard({ members: initialMembers, count, year }: Prop
                               },
                             )
                           }
-                          className={` border active:bg-accent ${payment ? "bg-green-500 hover:bg-green-600" : "hover:bg-accent/90"}`}>
-                          {month}
+                          className={`w-24 border active:bg-accent ${payment ? "bg-green-500 hover:bg-green-600" : "hover:bg-accent/90"}`}>
+                          {payment ? payment.amount : "-"}
                         </TableCell>
                       );
                     })}
@@ -93,10 +94,10 @@ export default function Dashboard({ members: initialMembers, count, year }: Prop
           </TableBody>
         </Table>
       </CardContent>
-      {count !== 0 && count > ITEMS_PER_PAGE && (
+      {count !== 0 && count > itemsPerPage && (
         <CardFooter className="flex justify-center">
           <TableCaption>
-            <PageNumbers count={count} itemsPerPage={ITEMS_PER_PAGE} pageNumber={pageNumber} path={router.asPath} params={router.query} />
+            <PageNumbers count={count} itemsPerPage={itemsPerPage} pageNumber={pageNumber} path={router.asPath} params={router.query} />
           </TableCaption>
         </CardFooter>
       )}

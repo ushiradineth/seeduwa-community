@@ -18,6 +18,7 @@ export type Member = {
   payments: {
     id: string;
     date: string;
+    amount: number;
   }[];
 };
 
@@ -25,6 +26,7 @@ export type Props = {
   members: Member[];
   count: number;
   year: number;
+  itemsPerPage: number;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -42,6 +44,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 
   const search = context.query.search ? (context.query.search as string).split(" ").join(" | ") : "";
   const recordYear = context.query.recordYear ? Number(context.query.recordYear) : new Date().getFullYear();
+  const itemsPerPage = context.query.itemsPerPage ? Number(context.query.itemsPerPage) : ITEMS_PER_PAGE;
 
   const where =
     search !== ""
@@ -49,8 +52,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       : { active: true };
 
   const members = await prisma.member.findMany({
-    take: ITEMS_PER_PAGE,
-    skip: context.query.page ? (Number(context.query.page) - 1) * ITEMS_PER_PAGE : 0,
+    take: itemsPerPage,
+    skip: context.query.page ? (Number(context.query.page) - 1) * itemsPerPage : 0,
     where,
     select: {
       id: true,
@@ -68,6 +71,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         select: {
           id: true,
           date: true,
+          amount: true,
         },
       },
     },
@@ -90,11 +94,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       })),
       count,
       year: recordYear,
+      itemsPerPage,
     },
   };
 };
 
-export default function TableDashboard({ members, count, year }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function TableDashboard({ members, count, year, itemsPerPage }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const router = useRouter();
 
   return (
@@ -102,7 +107,7 @@ export default function TableDashboard({ members, count, year }: InferGetServerS
       <Head>
         <title>Records - Seeduwa Community</title>
       </Head>
-      <main className="dark flex flex-col items-center justify-center">
+      <main className="dark flex flex-col items-center justify-center px-4">
         <div className="flex w-full gap-8 py-4">
           <div className="flex flex-col gap-2">
             <Label>Year</Label>
@@ -121,8 +126,27 @@ export default function TableDashboard({ members, count, year }: InferGetServerS
               </SelectContent>
             </Select>
           </div>
+          <div className="flex flex-col gap-2">
+            <Label>Items per page</Label>
+            <Select
+              defaultValue={String(itemsPerPage)}
+              onValueChange={(value) => router.push({ query: { ...router.query, itemsPerPage: value } })}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="dark z-[250] w-max">
+                {[100, 50, 25, 10].map((value) => {
+                  return (
+                    <SelectItem key={value} value={String(value)}>
+                      {value}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <Dashboard members={members} count={count} year={year} />
+        <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} />
       </main>
     </>
   );

@@ -18,3 +18,11 @@ export const MONTHS = [
 ];
 
 export const YEARS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
+
+export const MEMBERS_PAYMENT_FILTER = ["All", "Paid", "Unpaid"];
+
+export enum MEMBERS_PAYMENT_FILTER_ENUM {
+  All = "All",
+  Paid = "Paid",
+  Unpaid = "Unpaid",
+}

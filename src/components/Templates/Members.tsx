@@ -78,7 +78,7 @@ export default function Members({ members: initialMembers, count, total }: Props
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
+                <TableCell colSpan={4} className="h-24 text-center">
                   No results.
                 </TableCell>
               </TableRow>

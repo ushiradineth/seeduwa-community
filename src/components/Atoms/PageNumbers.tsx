@@ -15,7 +15,11 @@ function PageNumbers(props: { pageNumber: number; count: number; itemsPerPage: n
         )}
 
         {[...Array(Math.ceil(props.count / props.itemsPerPage))].map((e, i) => (
-          <Link href={{ href: props.path, query: { ...props.params, page: i + 1 } }} className="mx-2" key={i}>
+          <Link
+            href={{ href: props.path, query: { ...props.params, page: i + 1 } }}
+            style={{ color: props.pageNumber === i + 1 ? "white" : "grey" }}
+            className="mx-2"
+            key={i}>
             {i + 1}
           </Link>
         ))}

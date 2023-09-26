@@ -7,7 +7,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 export const memberRouter = createTRPCRouter({
   create: protectedProcedure.input(CreateMemberSchema).mutation(async ({ ctx, input }) => {
     const exisitingMember = await ctx.prisma.member.findMany({
-      where: { AND: [{ active: true }, { OR: [{ houseId: input.House }, { lane: input.Lane }, { name: input.Name }] }] },
+      where: { AND: [{ active: true }, { OR: [{ houseId: input.House }, { name: input.Name }] }] },
     });
 
     if (exisitingMember.length > 0) {

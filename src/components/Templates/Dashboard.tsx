@@ -85,7 +85,7 @@ export default function Dashboard({ members: initialMembers, count, year }: Prop
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={13} className="h-24 text-center">
                   No results.
                 </TableCell>
               </TableRow>

@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 import { Label } from "@/components/Atoms/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/Molecules/Select";
 import Dashboard from "@/components/Templates/Dashboard";
-import { ITEMS_PER_PAGE, YEARS } from "@/lib/consts";
+import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, YEARS } from "@/lib/consts";
 import { prisma } from "@/server/db";
 
 export type Member = {
@@ -43,8 +43,10 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   }
 
   const search = context.query.search ? (context.query.search as string).split(" ").join(" | ") : "";
-  const recordYear = context.query.recordYear ? Number(context.query.recordYear) : new Date().getFullYear();
-  const itemsPerPage = context.query.itemsPerPage ? Number(context.query.itemsPerPage) : ITEMS_PER_PAGE;
+  const recordYear = YEARS.includes(Number(context.query.recordYear)) ? Number(context.query.recordYear) : new Date().getFullYear();
+  const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
+    ? Number(context.query.itemsPerPage)
+    : ITEMS_PER_PAGE;
 
   const where =
     search !== ""
@@ -100,54 +102,58 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 };
 
 export default function TableDashboard({ members, count, year, itemsPerPage }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const router = useRouter();
-
   return (
     <>
       <Head>
         <title>Records - Seeduwa Community</title>
       </Head>
       <main className="dark flex flex-col items-center justify-center px-4">
-        <div className="flex w-full gap-8 py-4">
-          <div className="flex flex-col gap-2">
-            <Label>Year</Label>
-            <Select defaultValue={String(year)} onValueChange={(year) => router.push({ query: { ...router.query, recordYear: year } })}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="dark z-[250] w-max">
-                {YEARS.map((year) => {
-                  return (
-                    <SelectItem key={year} value={String(year)}>
-                      {year}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label>Items per page</Label>
-            <Select
-              defaultValue={String(itemsPerPage)}
-              onValueChange={(value) => router.push({ query: { ...router.query, itemsPerPage: value } })}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="dark z-[250] w-max">
-                {[100, 50, 25, 10].map((value) => {
-                  return (
-                    <SelectItem key={value} value={String(value)}>
-                      {value}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex w-full justify-between gap-8 py-4">
+          <Filter filterItems={YEARS} label="Year" paramKey="recordYear" value={year} />
+          <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
         </div>
         <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} />
       </main>
     </>
+  );
+}
+
+function Filter({
+  label,
+  value,
+  paramKey,
+  filterItems,
+}: {
+  label: string;
+  value: string | number | boolean;
+  paramKey: string;
+  filterItems: string[] | number[];
+}) {
+  const router = useRouter();
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Label>{label}</Label>
+      <Select
+        defaultValue={String(value)}
+        onValueChange={(value) => {
+          const obj: Record<string, string | number | boolean> = {};
+          obj[paramKey] = value;
+          void router.push({ query: { ...router.query, ...obj } });
+        }}>
+        <SelectTrigger className="w-48">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="dark z-[250] w-max">
+          {filterItems.map((year) => {
+            return (
+              <SelectItem key={year} value={String(year)}>
+                {year}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

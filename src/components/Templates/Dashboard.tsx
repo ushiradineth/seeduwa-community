@@ -6,6 +6,7 @@ import { MONTHS } from "@/lib/consts";
 import { type Member, type Props } from "@/pages";
 import PageNumbers from "../Atoms/PageNumbers";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../Molecules/Card";
+import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
 export default function Dashboard({ members: initialMembers, count, year, itemsPerPage }: Props) {
@@ -30,7 +31,14 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{`Seeduwa Community Records - ${year}`}</CardTitle>
+        <CardTitle className="mb-2">{`Seeduwa Community Records - ${year}`}</CardTitle>
+        <Search
+          search={router.query.search as string}
+          placeholder="Search for members"
+          path={router.asPath}
+          params={router.query}
+          count={count}
+        />
       </CardHeader>
       <CardContent>
         <Table className="border">
@@ -38,7 +46,7 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
             <TableRow>
               <TableHead className="text-center">Member</TableHead>
               {MONTHS.map((month) => (
-                <TableHead key={month} className="text-center">
+                <TableHead key={month} className="text-center border-x-2">
                   {month}
                 </TableHead>
               ))}

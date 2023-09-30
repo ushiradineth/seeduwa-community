@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Members({ members: initialMembers, count, total }: Props) {
+export default function Members({ members: initialMembers, count, total, year, month }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
   const [members, setMembers] = useState<Member[]>(initialMembers);
@@ -38,7 +38,9 @@ export default function Members({ members: initialMembers, count, total }: Props
             <TableRow>
               <TableHead className="text-center">Name</TableHead>
               <TableHead className="text-center">Address</TableHead>
-              <TableHead className="text-center">Paid this month</TableHead>
+              <TableHead className="text-center">
+                Paid for {month} {year}
+              </TableHead>
               <TableHead className="text-center">Action</TableHead>
             </TableRow>
           </TableHeader>

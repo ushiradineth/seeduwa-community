@@ -150,7 +150,7 @@ export default function CreateRecordForMember() {
 
             <DialogFooter>
               <Button loading={creatingRecord} type="submit">
-                Save member
+                Save Record
               </Button>
             </DialogFooter>
           </form>

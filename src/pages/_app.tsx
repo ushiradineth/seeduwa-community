@@ -6,7 +6,7 @@ import { api } from "@/utils/api";
 
 import "@/styles/globals.css";
 
-import { DM_Sans, Libre_Baskerville } from "@next/font/google";
+import { DM_Sans, Libre_Baskerville } from "next/font/google";
 import NextNProgress from "nextjs-progressbar";
 import { ToastContainer } from "react-toastify";
 

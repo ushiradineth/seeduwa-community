@@ -1,4 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { getSession, signIn, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -61,6 +62,7 @@ function Login() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(false);
 
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
@@ -88,7 +90,18 @@ function Login() {
           </div>
           <div className="space-y-1">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" placeholder="*****" type="password" {...register("Password")} />
+            <div className="mb-10 flex h-fit w-full items-center justify-center gap-x-2 rounded-md border border-input bg-background">
+              <Input
+                className="border-0"
+                id="password"
+                placeholder="*****"
+                type={isEnabled ? "text" : "password"}
+                {...register("Password")}
+              />
+              <div onClick={() => setIsEnabled(!isEnabled)} className="mr-2 cursor-pointer" color={isEnabled ? "gray" : "white"}>
+                {isEnabled ? <EyeIcon /> : <EyeOffIcon />}
+              </div>
+            </div>
             <FormFieldError error={errors.Password?.message} />
           </div>
         </CardContent>

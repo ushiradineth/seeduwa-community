@@ -125,7 +125,7 @@ export default function EditMember() {
                   <FormItem>
                     <FormLabel>Lane</FormLabel>
                     <FormControl>
-                      <Select onValueChange={field.onChange} defaultValue={member?.lane ?? field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a lane" />
                         </SelectTrigger>

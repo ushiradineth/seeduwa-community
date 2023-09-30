@@ -1,4 +1,4 @@
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/router";
 
@@ -26,13 +26,21 @@ function Search(props: { search: string; path: string; params: Record<string, un
       }}
       className="my-8 flex w-full flex-col items-center justify-center">
       <div className="flex w-full items-center justify-center gap-2">
-        <Input
-          name="search"
-          className="h-"
-          defaultValue={props.search}
-          placeholder={props.placeholder}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIntenalSearch(e.currentTarget.value)}
-        />
+        <div className="flex h-fit w-full items-center justify-center gap-x-2 rounded-md border border-input bg-background">
+          <Input
+            name="search"
+            className="border-0"
+            defaultValue={props.search}
+            placeholder={props.placeholder}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIntenalSearch(e.currentTarget.value)}
+            value={intenalSearch}
+          />
+          {intenalSearch !== "" && typeof intenalSearch !== undefined && intenalSearch !== null && (
+            <div onClick={() => setIntenalSearch("")} className="mr-2 cursor-pointer">
+              {<XIcon />}
+            </div>
+          )}
+        </div>
         <Button type="submit" className="h-8">
           <SearchIcon className="h-4 w-4 text-black" />
         </Button>

@@ -2,10 +2,8 @@ import moment from "moment";
 import { getSession } from "next-auth/react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
-import { useRouter } from "next/router";
 
-import { Label } from "@/components/Atoms/Label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/Molecules/Select";
+import Filter from "@/components/Molecules/Filter";
 import Dashboard from "@/components/Templates/Dashboard";
 import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, YEARS } from "@/lib/consts";
 import { prisma } from "@/server/db";
@@ -115,45 +113,5 @@ export default function TableDashboard({ members, count, year, itemsPerPage }: I
         <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} />
       </main>
     </>
-  );
-}
-
-function Filter({
-  label,
-  value,
-  paramKey,
-  filterItems,
-}: {
-  label: string;
-  value: string | number | boolean;
-  paramKey: string;
-  filterItems: string[] | number[];
-}) {
-  const router = useRouter();
-
-  return (
-    <div className="flex flex-col gap-2">
-      <Label>{label}</Label>
-      <Select
-        defaultValue={String(value)}
-        onValueChange={(value) => {
-          const obj: Record<string, string | number | boolean> = {};
-          obj[paramKey] = value;
-          void router.push({ query: { ...router.query, ...obj } });
-        }}>
-        <SelectTrigger className="w-48">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="dark z-[250] w-max">
-          {filterItems.map((year) => {
-            return (
-              <SelectItem key={year} value={String(year)}>
-                {year}
-              </SelectItem>
-            );
-          })}
-        </SelectContent>
-      </Select>
-    </div>
   );
 }

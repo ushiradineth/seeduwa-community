@@ -1,12 +1,10 @@
-import { Label } from "@radix-ui/react-label";
 import { getSession } from "next-auth/react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
-import { useRouter } from "next/router";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/Molecules/Select";
+import Filter from "@/components/Molecules/Filter";
 import Members from "@/components/Templates/Members";
-import { ITEMS_PER_PAGE, MEMBERS_PAYMENT_FILTER, MEMBERS_PAYMENT_FILTER_ENUM } from "@/lib/consts";
+import { ITEMS_PER_PAGE, MEMBERS_PAYMENT_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
 import { prisma } from "@/server/db";
 
 export type Member = {
@@ -21,6 +19,9 @@ export type Props = {
   members: Member[];
   count: number;
   total: number;
+  membersParam: MEMBERS_PAYMENT_FILTER_ENUM;
+  year: number;
+  month: string;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -36,17 +37,24 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     };
   }
 
-  const search = context.query.search ? (context.query.search as string).split(" ").join(" | ") : "";
+  const search = context.query.search ? (context.query.search as string).split(" ").join(" <-> ") : "";
   const membersParam = String(context.query.members ?? "All") as MEMBERS_PAYMENT_FILTER_ENUM;
+  const year = Number(context.query.filterYear ?? new Date().getFullYear());
+  const month = String(context.query.filterMonth ?? MONTHS[new Date().getMonth()]);
 
   let membersFilter = {};
+
+  const monthIndex = MONTHS.findIndex((value) => value === month);
+  const timePeriodGT = new Date(year, monthIndex, 1);
+  const timePeriodLT = new Date(year, monthIndex, 31);
 
   if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
     membersFilter = {
       some: {
         active: true,
         date: {
-          equals: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1)),
+          gt: timePeriodGT,
+          lt: timePeriodLT,
         },
       },
     };
@@ -55,7 +63,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       none: {
         active: true,
         date: {
-          equals: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1)),
+          gt: timePeriodGT,
+          lt: timePeriodLT,
         },
       },
     };
@@ -67,14 +76,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
           AND: [
             { active: true },
             { OR: [{ name: { search: search } }, { houseId: { search: search } }, { lane: { search: search } }] },
-            membersFilter,
+            { payments: { ...membersFilter } },
           ],
         }
       : {
           active: true,
-          payments: {
-            ...membersFilter,
-          },
+          payments: { ...membersFilter },
         };
 
   const members = await prisma.member.findMany({
@@ -86,25 +93,16 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       houseId: true,
       name: true,
       lane: true,
-      payments: {
-        where: {
-          active: true,
-          date: {
-            equals: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1)),
-          },
-        },
-        select: {
-          id: true,
-          date: true,
-        },
-      },
+      payments: { where: { active: true, date: { gt: timePeriodGT, lt: timePeriodLT } }, select: { id: true, date: true } },
     },
     orderBy: {
-      createdAt: "desc",
+      _relevance: {
+        fields: ["name", "houseId", "lane"],
+        search,
+        sort: "asc",
+      },
     },
   });
-
-  console.log(members[0]?.payments);
 
   const count = await prisma.member.count({
     where,
@@ -121,12 +119,21 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       })),
       count,
       total,
+      membersParam,
+      month,
+      year,
     },
   };
 };
 
-export default function AllMembers({ members, count, total }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const router = useRouter();
+export default function AllMembers({
+  members,
+  count,
+  total,
+  membersParam,
+  year,
+  month,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
       <Head>
@@ -134,27 +141,15 @@ export default function AllMembers({ members, count, total }: InferGetServerSide
       </Head>
       <main className="dark flex flex-col items-center justify-center px-4">
         <div className="flex w-full gap-8 py-4">
-          <div className="flex flex-col gap-2">
-            <Label>Members</Label>
-            <Select
-              defaultValue={String(router.query.members ?? "All")}
-              onValueChange={(value) => router.push({ query: { ...router.query, members: value === "All" ? undefined : value } })}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="dark z-[250] w-max">
-                {MEMBERS_PAYMENT_FILTER.map((value) => {
-                  return (
-                    <SelectItem key={value} value={value}>
-                      {value}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+          <Filter label="Members" filterItems={MEMBERS_PAYMENT_FILTER} paramKey="members" value={membersParam} />
+          {membersParam !== MEMBERS_PAYMENT_FILTER_ENUM.All && (
+            <>
+              <Filter label="Month" filterItems={MONTHS} paramKey="filterMonth" value={month} />
+              <Filter label="Year" filterItems={YEARS} paramKey="filterYear" value={String(year)} />
+            </>
+          )}
         </div>
-        <Members members={members} count={count} total={total} />
+        <Members members={members} count={count} total={total} year={year} month={month} membersParam={membersParam} />
       </main>
     </>
   );

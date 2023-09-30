@@ -1,8 +1,7 @@
 export const ITEMS_PER_PAGE = 10;
 export const ITEMS_PER_PAGE_FILTER = [100, 50, 25, 10];
 
-
-export const LANE = ["1st Lane", "2nd Lane", "3rd Lane", "4th Lane", "5th Lane", "6th Lane", "7th Lane", "8th Lane", "Main road"];
+export const LANE = ["1st Lane", "2nd Lane", "3rd Lane", "4th Lane", "5th Lane", "6th Lane", "7th Lane", "8th Lane", "Main Road"];
 
 export const MONTHS = [
   "January",

@@ -120,7 +120,7 @@ export default function EditRecord() {
                   <FormItem>
                     <FormLabel>Month</FormLabel>
                     <FormControl>
-                      <Input placeholder="Month" defaultValue={MONTHS[Number(record?.date.getUTCMonth() ?? 0)]} disabled />
+                      <Input placeholder="Month" defaultValue={MONTHS[Number(record?.date.getMonth() ?? 0)]} disabled />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,7 +141,7 @@ export default function EditRecord() {
                 )}
               />
 
-              <DialogFooter>
+              <DialogFooter className="gap-2 md:gap-0">
                 <Button
                   onClick={() => deleteRecord({ id: record?.id ?? "" })}
                   type="button"

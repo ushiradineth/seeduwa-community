@@ -46,7 +46,7 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
             <TableRow>
               <TableHead className="text-center">Member</TableHead>
               {MONTHS.map((month) => (
-                <TableHead key={month} className="text-center border-x-2">
+                <TableHead key={month} className="border-x-2 text-center">
                   {month}
                 </TableHead>
               ))}
@@ -84,7 +84,9 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
                               },
                             )
                           }
-                          className={`w-24 border active:bg-accent ${payment ? "bg-green-500 hover:bg-green-600" : "hover:bg-accent/90"}`}>
+                          className={`w-24 border text-center font-bold active:bg-accent ${
+                            payment ? "bg-green-500 hover:bg-green-600" : "hover:bg-accent/90"
+                          }`}>
                           {payment ? payment.amount : "-"}
                         </TableCell>
                       );

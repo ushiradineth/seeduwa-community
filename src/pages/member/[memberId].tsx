@@ -45,7 +45,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 
   const member = await prisma.member.findFirst({
     where: {
-      id: context.params?.id as string,
+      id: context.params?.memberId as string,
       active: true,
     },
     include: { payments: { where: { active: true } } },

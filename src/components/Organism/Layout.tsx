@@ -116,11 +116,11 @@ function NavSheet() {
                 <Button
                   className="bg-white"
                   variant={"ghost"}
-                  onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
+                  onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>p
                   Add new member
                 </Button>
                 <Separator />
-                <Button className="bg-white" variant={"ghost"} onClick={() => router.push("/member")}>
+                <Button className="bg-white" variant={"ghost"} onClick={() => router.push("/record")}>
                   View all payment records
                 </Button>
                 <Button

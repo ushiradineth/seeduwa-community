@@ -31,7 +31,7 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="mb-2">{`Seeduwa Community Records - ${year}`}</CardTitle>
+        <CardTitle className="mb-2">{`Seeduwa Village Security Association - ${year}`}</CardTitle>
         <Search
           search={router.query.search as string}
           placeholder="Search for members"

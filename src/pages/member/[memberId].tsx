@@ -87,7 +87,7 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
   return (
     <>
       <Head>
-        <title>{member.name} | Seeduwa Community</title>
+        <title>{member.name} - Seeduwa Village Security Association</title>
       </Head>
       <Card className="flex flex-col justify-center gap-4 p-4">
         <div className="flex flex-col gap-1">

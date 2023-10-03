@@ -137,7 +137,7 @@ export default function AllMembers({
   return (
     <>
       <Head>
-        <title>Members | Seeduwa Community</title>
+        <title>Members - Seeduwa Village Security Association</title>
       </Head>
       <main className="dark flex flex-col items-center justify-center px-4">
         <div className="flex w-full gap-8 py-4">

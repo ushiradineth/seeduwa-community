@@ -1,11 +1,13 @@
 import { Coins, LogOut, Menu, Plus, User } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { Button } from "@/components/Atoms/Button";
 import useWindowDimensions from "@/hooks/useWindowDimensions";
+import icon from "../../../public/icon.jpeg";
 import Loader from "../Atoms/Loader";
 import { Separator } from "../Atoms/Separator";
 import {
@@ -64,7 +66,8 @@ function Layout(props: { children: React.ReactNode }) {
           NAVBAR_HIDDEN_PATHS.includes(router.pathname) && "hidden"
         }`}>
         <Link href={"/"} className="mx-4 flex items-center justify-center gap-2">
-          <h1 className="font-sans text-lg font-semibold md:block">Seeduwa Village Community</h1>
+          <Image src={icon} alt="Seeduwa Village Security Association Logo" width={30} className="ml-4" />
+          <h1 className="font-sans text-lg font-semibold md:block">SVSA</h1>
         </Link>
         <NavBar />
         <LogOut onClick={() => signOut()} className="ml-auto mr-4 hidden cursor-pointer md:block" />
@@ -116,7 +119,7 @@ function NavSheet() {
                 <Button
                   className="bg-white"
                   variant={"ghost"}
-                  onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>p
+                  onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
                   Add new member
                 </Button>
                 <Separator />

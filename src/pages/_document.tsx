@@ -4,8 +4,8 @@ export default function Document() {
   return (
     <Html>
       <Head>
-        <meta name="description" content="Seeduwa Village Community by Ushira Dineth" />
-        <link rel="icon" href="/icon.png" />
+        <meta name="description" content="Seeduwa Village Security Association by Ushira Dineth" />
+        <link rel="icon" href="/icon.jpeg" />
       </Head>
       <body>
         <Main />

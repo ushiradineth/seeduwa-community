@@ -76,7 +76,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       },
     },
     orderBy: {
-      createdAt: "desc",
+      createdAt: "asc",
     },
   });
 
@@ -103,7 +103,7 @@ export default function TableDashboard({ members, count, year, itemsPerPage }: I
   return (
     <>
       <Head>
-        <title>Records - Seeduwa Community</title>
+        <title>Dashboard - Seeduwa Village Security Association</title>
       </Head>
       <main className="dark flex flex-col items-center justify-center px-4">
         <div className="flex w-full justify-between gap-8 py-4">

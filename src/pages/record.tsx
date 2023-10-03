@@ -85,11 +85,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   };
 };
 
-export default function AllMembers({ records, count, total }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function AllRecords({ records, count, total }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
       <Head>
-        <title>Records - Seeduwa Community</title>
+        <title>Records - Seeduwa Village Security Association</title>
       </Head>
       <main className="dark flex flex-col items-center justify-center px-4">
         <Records records={records} count={count} total={total} />

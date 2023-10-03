@@ -45,27 +45,19 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   let membersFilter = {};
 
   const monthIndex = MONTHS.findIndex((value) => value === month);
-  const timePeriodGT = new Date(year, monthIndex, 1);
-  const timePeriodLT = new Date(year, monthIndex, 31);
 
   if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
     membersFilter = {
       some: {
         active: true,
-        date: {
-          gt: timePeriodGT,
-          lt: timePeriodLT,
-        },
+        date: { equals: new Date(year, monthIndex, 1) },
       },
     };
   } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
     membersFilter = {
       none: {
         active: true,
-        date: {
-          gt: timePeriodGT,
-          lt: timePeriodLT,
-        },
+        date: { equals: new Date(year, monthIndex, 1) },
       },
     };
   }
@@ -93,7 +85,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       houseId: true,
       name: true,
       lane: true,
-      payments: { where: { active: true, date: { gt: timePeriodGT, lt: timePeriodLT } }, select: { id: true, date: true } },
+      payments: { where: { active: true, date: { equals: new Date(year, monthIndex, 1) } }, select: { id: true, date: true } },
     },
     orderBy: {
       _relevance: {

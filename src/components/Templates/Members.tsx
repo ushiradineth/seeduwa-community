@@ -14,6 +14,7 @@ export default function Members({ members: initialMembers, count, total, year, m
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
   const [members, setMembers] = useState<Member[]>(initialMembers);
+  const filter = String((router.query.members ?? "") === "Unpaid" ? "not paid" : "paid").toLowerCase();
 
   useEffect(() => {
     initialMembers !== members && setMembers(initialMembers);
@@ -23,7 +24,11 @@ export default function Members({ members: initialMembers, count, total, year, m
     <Card>
       <CardHeader>
         <CardTitle>Members</CardTitle>
-        <CardDescription>A list of all members.</CardDescription>
+        <CardDescription>
+          <p className="text-lg font-bold">
+            {count} members have {filter} for {month} {year} so far
+          </p>
+        </CardDescription>
         <Search
           search={router.query.search as string}
           placeholder="Search for members"

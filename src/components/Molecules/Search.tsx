@@ -8,15 +8,15 @@ import { Input } from "../Atoms/Input";
 
 function Search(props: { search: string; path: string; params: Record<string, unknown>; count: number; placeholder: string }) {
   const router = useRouter();
-  const [intenalSearch, setIntenalSearch] = useState<string>(props.search === "undefined" ? "" : props.search);
+  const [internalSearch, setInternalSearch] = useState<string>(props.search === "undefined" ? "" : props.search);
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
         let query = props.params as Record<string, string | number>;
-        if (intenalSearch !== "") {
-          query.search = intenalSearch;
+        if (internalSearch !== "") {
+          query.search = internalSearch;
           query = removeQueryParamsFromRouter(router, ["page"]) as Record<string, string | number>;
         } else {
           query = removeQueryParamsFromRouter(router, ["search", "page"]) as Record<string, string | number>;
@@ -32,11 +32,11 @@ function Search(props: { search: string; path: string; params: Record<string, un
             className="border-0"
             defaultValue={props.search}
             placeholder={props.placeholder}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIntenalSearch(e.currentTarget.value)}
-            value={intenalSearch}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInternalSearch(e.currentTarget.value)}
+            value={internalSearch}
           />
-          {intenalSearch !== "" && typeof intenalSearch !== undefined && intenalSearch !== null && (
-            <div onClick={() => setIntenalSearch("")} className="mr-2 cursor-pointer">
+          {typeof internalSearch !== "undefined" && internalSearch !== "" && (
+            <div onClick={() => setInternalSearch("")} className="mr-2 cursor-pointer">
               {<XIcon />}
             </div>
           )}

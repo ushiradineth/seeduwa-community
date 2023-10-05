@@ -36,7 +36,7 @@ model Payment {
   active    Boolean  @default(true)
   date      DateTime @default(now())
 
-  member   Member @relation(fields: [memberId], references: [id])
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberId String
 
   @@index([memberId])

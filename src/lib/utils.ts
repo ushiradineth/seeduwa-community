@@ -44,3 +44,23 @@ export const removeQueryParamsFromRouter = (router: NextRouter, removeList: stri
 
   return router.query;
 };
+
+export function commonAttribute(
+  member: {
+    name: string;
+    houseId: string;
+    lane: string;
+    phoneNumber: string;
+  },
+  input: {
+    name: string;
+    houseId: string;
+    lane: string;
+    phoneNumber: string;
+  },
+) {
+  if (member.name === input.name) return "name";
+  else if (member.houseId === input.houseId && member.lane === input.lane) return "address";
+  else if (member.houseId === input.houseId) return "house number";
+  else if (member.phoneNumber === input.phoneNumber) return "phone number";
+}

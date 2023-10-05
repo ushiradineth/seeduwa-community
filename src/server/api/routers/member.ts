@@ -3,20 +3,33 @@ import { z } from "zod";
 
 import { CreateMemberSchema } from "@/lib/validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { commonAttribute } from "@/lib/utils";
 
 export const memberRouter = createTRPCRouter({
   create: protectedProcedure.input(CreateMemberSchema).mutation(async ({ ctx, input }) => {
     const exisitingMember = await ctx.prisma.member.findMany({
-      where: { AND: [{ active: true }, { OR: [{ houseId: input.House }, { name: input.Name }] }] },
+      where: {
+        AND: [{ active: true }, { OR: [{ houseId: input.House }, { name: input.Name }, { phoneNumber: input.Number }] }],
+      },
     });
 
-    if (exisitingMember.length > 0) {
+    if (exisitingMember[0]) {
       throw new TRPCError({
-        message: `Member with this ${
-          exisitingMember[0]?.name === input.Name
-            ? "name"
-            : exisitingMember[0]?.houseId === input.House && exisitingMember[0]?.lane === input.Lane && "address"
-        } already exists`,
+        message: `Member with this ${commonAttribute(
+          {
+            name: exisitingMember[0]?.name,
+            houseId: exisitingMember[0]?.houseId,
+            lane: exisitingMember[0]?.lane,
+            phoneNumber: exisitingMember[0]?.phoneNumber,
+          },
+          {
+            name: input.Name,
+            houseId: input.House,
+            lane: input.Lane,
+            phoneNumber: input.Number,
+          },
+        )}
+         already exists`,
         code: "CONFLICT",
       });
     }
@@ -39,6 +52,36 @@ export const memberRouter = createTRPCRouter({
   edit: protectedProcedure
     .input(z.object({ id: z.string(), name: z.string(), houseId: z.string(), lane: z.string(), number: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      const exisitingMember = await ctx.prisma.member.findMany({
+        where: {
+          AND: [
+            { id: { not: input.id } },
+            { active: true },
+            { OR: [{ houseId: input.houseId }, { name: input.name }, { phoneNumber: input.number }] },
+          ],
+        },
+      });
+
+      if (exisitingMember[0]) {
+        throw new TRPCError({
+          message: `Member with this ${commonAttribute(
+            {
+              name: exisitingMember[0]?.name,
+              houseId: exisitingMember[0]?.houseId,
+              lane: exisitingMember[0]?.lane,
+              phoneNumber: exisitingMember[0]?.phoneNumber,
+            },
+            {
+              name: input.name,
+              houseId: input.houseId,
+              lane: input.lane,
+              phoneNumber: input.number,
+            },
+          )} already exists`,
+          code: "CONFLICT",
+        });
+      }
+
       return await ctx.prisma.member.update({
         where: { id: input.id },
         data: { name: input.name, houseId: input.houseId, lane: input.lane, phoneNumber: input.number },

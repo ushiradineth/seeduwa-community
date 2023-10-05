@@ -20,10 +20,11 @@ model Member {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 
-  houseId String
-  name    String
-  lane    String
-  active  Boolean @default(true)
+  houseId     String
+  name        String
+  phoneNumber String
+  lane        String
+  active      Boolean @default(true)
 
   payments Payment[]
 }

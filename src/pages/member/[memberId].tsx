@@ -1,8 +1,10 @@
 import { type Payment } from "@prisma/client";
 import { getSession } from "next-auth/react";
+import { formatPhoneNumberIntl } from "react-phone-number-input";
 import { useCallback, useMemo } from "react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { Card } from "@/components/Molecules/Card";
@@ -14,6 +16,7 @@ import { prisma } from "@/server/db";
 export type Props = {
   member: {
     id: string;
+    phoneNumber: string;
     createdAt: string;
     houseId: string;
     name: string;
@@ -98,10 +101,11 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
           <p>
             No.{member.houseId} - {member.lane}
           </p>
+          <Link href={`tel:${member.phoneNumber}`}>{formatPhoneNumberIntl(member.phoneNumber)}</Link>
         </div>
         <Carousel navButtons activeIndex={YEARS.findIndex((year) => year === new Date().getFullYear())}>
           {YEARS.map((year) => (
-            <div key={year} className="w-[300px] select-none md:w-[400px]">
+            <div key={year} className="w-[300px] select-none md:w-[400px] px-1">
               <p className="flex items-center justify-center rounded-t-2xl border border-b p-4 font-semibold">{year}</p>
               <div className="grid grid-cols-3">
                 {MONTHS.map((month, index) => {

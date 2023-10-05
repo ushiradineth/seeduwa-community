@@ -26,6 +26,7 @@ export const memberRouter = createTRPCRouter({
         houseId: input.House,
         lane: input.Lane,
         name: input.Name,
+        phoneNumber: input.Number,
       },
     });
   }),
@@ -36,11 +37,11 @@ export const memberRouter = createTRPCRouter({
   }),
 
   edit: protectedProcedure
-    .input(z.object({ id: z.string(), name: z.string(), houseId: z.string(), lane: z.string() }))
+    .input(z.object({ id: z.string(), name: z.string(), houseId: z.string(), lane: z.string(), number: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return await ctx.prisma.member.update({
         where: { id: input.id },
-        data: { name: input.name, houseId: input.houseId, lane: input.lane },
+        data: { name: input.name, houseId: input.houseId, lane: input.lane, phoneNumber: input.number },
       });
     }),
 

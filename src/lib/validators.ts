@@ -1,3 +1,4 @@
+import { isValidPhoneNumber } from "react-phone-number-input";
 import * as yup from "yup";
 
 export const idValidator = yup.string().max(30).required();
@@ -33,12 +34,20 @@ export type LoginFormData = yup.InferType<typeof LoginSchema>;
 export const CreateMemberSchema = yup.object().shape({
   Lane: textValidator,
   House: textValidator,
+  Number: yup
+    .string()
+    .trim()
+    .test("is-number", "Phone number is not valid", (value) => {
+      return isValidPhoneNumber(String(value));
+    })
+    .required("Phone number is required"),
   Name: textValidator,
 });
 
 export type CreateMemberFormData = yup.InferType<typeof CreateMemberSchema>;
 
 export const CreateRecordSchema = yup.object().shape({
+  Notify: yup.boolean().required(),
   Year: numberValidator,
   Month: yup.number().min(0).max(11).required(),
   Amount: numberValidator,
@@ -46,15 +55,6 @@ export const CreateRecordSchema = yup.object().shape({
 });
 
 export type CreateRecordFormData = yup.InferType<typeof CreateRecordSchema>;
-
-export const CreateRecordForMemberSchema = yup.object().shape({
-  Year: numberValidator,
-  Month: yup.number().min(0).max(11).required(),
-  Amount: numberValidator,
-  Member: yup.string().required(),
-});
-
-export type CreateRecordForMemberFormData = yup.InferType<typeof CreateRecordForMemberSchema>;
 
 export const EditRecordSchema = yup.object().shape({
   Amount: numberValidator,

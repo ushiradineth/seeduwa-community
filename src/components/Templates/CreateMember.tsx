@@ -1,8 +1,12 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
-import { useEffect, useState } from "react";
+import PhoneInput, { getCountryCallingCode } from "react-phone-number-input";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
+
+import "react-phone-number-input/style.css";
+
+import { toast } from "react-toastify";
 
 import { api } from "@/utils/api";
 import { LANE } from "@/lib/consts";
@@ -10,14 +14,15 @@ import { removeQueryParamsFromRouter } from "@/lib/utils";
 import { CreateMemberSchema, type CreateMemberFormData } from "@/lib/validators";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
-import { Input } from "../Atoms/Input";
+import { Input, inputStyle } from "../Atoms/Input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Molecules/Select";
 
 export default function CreateMember() {
-  const [error, setError] = useState("");
   const router = useRouter();
+  const [error, setError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const { mutate, isLoading } = api.member.create.useMutation({
     onSuccess: async () => {
@@ -43,6 +48,7 @@ export default function CreateMember() {
     form.setValue("Name", "");
     form.setValue("House", "");
     form.setValue("Lane", "");
+    form.setValue("Number", "");
   }, [router.query.create, form]);
 
   return (
@@ -69,6 +75,33 @@ export default function CreateMember() {
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="Number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone number</FormLabel>
+                  <FormControl>
+                    <PhoneInput
+                      // @ts-expect-error Type is not clear for this component
+                      ref={inputRef}
+                      onCountryChange={(e) => {
+                        if (inputRef.current && e) {
+                          inputRef.current.value = "+" + getCountryCallingCode(e);
+                        }
+                      }}
+                      className={inputStyle}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      value={field.value}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="House"

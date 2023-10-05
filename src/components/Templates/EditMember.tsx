@@ -1,10 +1,14 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
 import "react-calendar/dist/Calendar.css";
 
 import { useForm } from "react-hook-form";
+import PhoneInput, { getCountryCallingCode, parsePhoneNumber } from "react-phone-number-input";
+
+import "react-phone-number-input/style.css";
+
 import { toast } from "react-toastify";
 
 import { api } from "@/utils/api";
@@ -13,15 +17,16 @@ import { removeQueryParamsFromRouter } from "@/lib/utils";
 import { CreateMemberSchema, type CreateMemberFormData } from "@/lib/validators";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
-import { Input } from "../Atoms/Input";
+import { Input, inputStyle } from "../Atoms/Input";
 import Loader from "../Atoms/Loader";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Molecules/Select";
 
 export default function EditMember() {
-  const [error, setError] = useState("");
   const router = useRouter();
+  const [error, setError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const {
     data: member,
@@ -64,6 +69,7 @@ export default function EditMember() {
       name: data.Name,
       houseId: data.House,
       lane: data.Lane,
+      number: data.Number,
     });
   }
 
@@ -78,6 +84,7 @@ export default function EditMember() {
       form.setValue("Name", member.name);
       form.setValue("House", member.houseId);
       form.setValue("Lane", member.lane);
+      form.setValue("Number", member.phoneNumber);
     }
   }, [form, member]);
 
@@ -105,6 +112,34 @@ export default function EditMember() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="Number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone number</FormLabel>
+                    <FormControl>
+                      <PhoneInput
+                        // @ts-expect-error Type is not clear for this component
+                        ref={inputRef}
+                        onCountryChange={(e) => {
+                          if (inputRef.current && e) {
+                            inputRef.current.value = "+" + getCountryCallingCode(e);
+                          }
+                        }}
+                        defaultCountry={parsePhoneNumber(member?.phoneNumber ?? field.value)?.country ?? "LK"}
+                        className={inputStyle}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        value={field.value}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="House"
@@ -118,6 +153,7 @@ export default function EditMember() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="Lane"
@@ -144,6 +180,7 @@ export default function EditMember() {
                   </FormItem>
                 )}
               />
+
               <DialogFooter>
                 <Button
                   onClick={() => deleteMember({ id: member?.id ?? "" })}

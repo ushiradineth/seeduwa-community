@@ -9,6 +9,7 @@ import { prisma } from "@/server/db";
 
 export type Member = {
   id: string;
+  phoneNumber: string;
   houseId: string;
   name: string;
   lane: string;
@@ -82,6 +83,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     where,
     select: {
       id: true,
+      phoneNumber: true,
       houseId: true,
       name: true,
       lane: true,

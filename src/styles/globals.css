@@ -84,3 +84,12 @@ html {
     scrollbar-width: none; /* Firefox */
   }
 }
+
+.PhoneInputInput {
+  display: fle;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 16px;
+}

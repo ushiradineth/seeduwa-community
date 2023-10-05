@@ -1,4 +1,5 @@
 import { BadgeCheck, BadgeXIcon, Edit } from "lucide-react";
+import { formatPhoneNumberIntl } from "react-phone-number-input";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -25,9 +26,11 @@ export default function Members({ members: initialMembers, count, total, year, m
       <CardHeader>
         <CardTitle>Members</CardTitle>
         <CardDescription>
-          <p className="text-lg font-bold">
-            {count} members have {filter} for {month} {year} so far
-          </p>
+          {typeof router.query.members !== "undefined" && router.query.members !== "All" && (
+            <p className="text-lg font-bold">
+              {count} members have {filter} for {month} {year} so far
+            </p>
+          )}
         </CardDescription>
         <Search
           search={router.query.search as string}
@@ -42,6 +45,7 @@ export default function Members({ members: initialMembers, count, total, year, m
           <TableHeader>
             <TableRow>
               <TableHead className="text-center">Name</TableHead>
+              <TableHead className="text-center">Phone number</TableHead>
               <TableHead className="text-center">Address</TableHead>
               <TableHead className="text-center">
                 Paid for {month} {year}
@@ -58,6 +62,9 @@ export default function Members({ members: initialMembers, count, total, year, m
                       <Link className="max-w-24 flex truncate" href={`/member/${member.id}`}>
                         {member.name}
                       </Link>
+                    </TableCell>
+                    <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
+                      <Link href={`/member/${member.id}`}>{formatPhoneNumberIntl(member.phoneNumber)}</Link>
                     </TableCell>
                     <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
                       <Link href={`/member/${member.id}`}>

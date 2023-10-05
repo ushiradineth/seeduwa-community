@@ -64,7 +64,9 @@ export default function Members({ members: initialMembers, count, total, year, m
                       </Link>
                     </TableCell>
                     <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
-                      <Link href={`/member/${member.id}`}>{formatPhoneNumberIntl(member.phoneNumber)}</Link>
+                      <Link href={`/member/${member.id}`}>
+                        {member.phoneNumber !== "" ? formatPhoneNumberIntl(member.phoneNumber) : "-"}
+                      </Link>
                     </TableCell>
                     <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
                       <Link href={`/member/${member.id}`}>

@@ -154,9 +154,11 @@ export default function EditRecord() {
                 </Button>
               </DialogFooter>
             </form>
-            <DialogFooter className="flex items-center justify-center">
-              {error && <FormFieldError error={`Error: ${error}`} />}
-            </DialogFooter>
+            {error && (
+              <DialogFooter className="flex items-center justify-center">
+                <FormFieldError error={`Error: ${error}`} />
+              </DialogFooter>
+            )}
           </Form>
         )}
       </DialogContent>

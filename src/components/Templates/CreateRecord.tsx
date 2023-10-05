@@ -244,8 +244,12 @@ export default function CreateRecord() {
               </Button>
             </DialogFooter>
           </form>
+          {error && (
+            <DialogFooter className="flex items-center justify-center">
+              <FormFieldError error={`Error: ${error}`} />
+            </DialogFooter>
+          )}
         </Form>
-        <DialogFooter className="flex items-center justify-center">{error && <FormFieldError error={`Error: ${error}`} />}</DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -128,7 +128,7 @@ export default function EditMember() {
                             inputRef.current.value = "+" + getCountryCallingCode(e);
                           }
                         }}
-                        defaultCountry={parsePhoneNumber(member?.phoneNumber ?? field.value)?.country ?? "LK"}
+                        defaultCountry={parsePhoneNumber(member?.phoneNumber ?? field.value)?.country ?? undefined}
                         className={inputStyle}
                         onChange={field.onChange}
                         onBlur={field.onBlur}

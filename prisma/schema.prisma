@@ -22,7 +22,7 @@ model Member {
 
   houseId     String
   name        String
-  phoneNumber String
+  phoneNumber String  @default("")
   lane        String
   active      Boolean @default(true)
 

@@ -76,7 +76,7 @@ export default function Members({ members: initialMembers, count, total, year, m
                         {member.payment ? <BadgeCheck color="green" /> : <BadgeXIcon color="red" />}
                       </Link>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="flex items-center justify-center">
                       <button
                         onClick={() =>
                           router.push({
@@ -92,7 +92,7 @@ export default function Members({ members: initialMembers, count, total, year, m
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   No results.
                 </TableCell>
               </TableRow>

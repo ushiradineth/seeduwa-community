@@ -48,7 +48,19 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 
   const where =
     search !== ""
-      ? { AND: [{ active: true }, { OR: [{ name: { search: search } }, { houseId: { search: search } }, { lane: { search: search } }] }] }
+      ? {
+          AND: [
+            { active: true },
+            {
+              OR: [
+                { name: { search: search } },
+                { phoneNumber: { search: search } },
+                { houseId: { search: search } },
+                { lane: { search: search } },
+              ],
+            },
+          ],
+        }
       : { active: true };
 
   const members = await prisma.member.findMany({

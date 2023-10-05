@@ -68,7 +68,14 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       ? {
           AND: [
             { active: true },
-            { OR: [{ name: { search: search } }, { houseId: { search: search } }, { lane: { search: search } }] },
+            {
+              OR: [
+                { name: { search: search } },
+                { phoneNumber: { search: search } },
+                { houseId: { search: search } },
+                { lane: { search: search } },
+              ],
+            },
             { payments: { ...membersFilter } },
           ],
         }

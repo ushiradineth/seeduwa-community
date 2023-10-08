@@ -72,7 +72,7 @@ function Layout(props: { children: React.ReactNode }) {
         <NavBar />
         <LogOut onClick={() => signOut()} className="ml-auto mr-4 hidden cursor-pointer md:block" />
       </div>
-      <div className="flex w-screen flex-grow items-center justify-center p-4">
+      <div className="flex w-full flex-grow items-center justify-center px-4">
         <div
           style={{ zIndex: 50, position: "relative" }}
           className={`flex max-w-fit flex-grow flex-col justify-center overflow-hidden scroll-smooth text-white ${

@@ -43,11 +43,11 @@ export default function Auth() {
       <Head>
         <title>Login to the website</title>
       </Head>
-      <main className="flex h-screen flex-col items-center justify-center">
+      <>
         <Card className="mt-2 w-full">
           <Login />
         </Card>
-      </main>
+      </>
     </>
   );
 }

@@ -117,13 +117,13 @@ export default function TableDashboard({ members, count, year, itemsPerPage }: I
       <Head>
         <title>Dashboard - Seeduwa Village Security Association</title>
       </Head>
-      <main className="dark flex flex-col items-center justify-center px-4">
+      <>
         <div className="flex w-full justify-between gap-8 py-4">
           <Filter filterItems={YEARS} label="Year" paramKey="recordYear" value={year} />
           <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
         </div>
         <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} />
-      </main>
+      </>
     </>
   );
 }

@@ -31,7 +31,7 @@ function Layout(props: { children: React.ReactNode }) {
   const { status } = useSession();
   const router = useRouter();
 
-  const HOC = useCallback(
+  const Popups = useCallback(
     () => (
       <>
         <CreateRecord />
@@ -59,28 +59,30 @@ function Layout(props: { children: React.ReactNode }) {
   if (status === "authenticated" && router.pathname.startsWith("/auth")) void router.push("/");
 
   return (
-    <main className="dark flex min-h-screen min-w-fit flex-col overflow-hidden border-bc bg-bgc text-white">
+    <main className="dark flex min-h-screen flex-col border-bc bg-bgc text-white">
       <div
         style={{ zIndex: 100 }}
         className={`sticky top-0 flex h-14 items-center border-b bg-bgc/50 backdrop-blur ${
           NAVBAR_HIDDEN_PATHS.includes(router.pathname) && "hidden"
         }`}>
-        <Link href={"/"} className="mx-4 flex items-center justify-center gap-2">
+        <Link href={"/"} className="flex items-center justify-center gap-2">
           <Image src={icon} alt="Seeduwa Village Security Association Logo" width={30} className="ml-4" />
           <h1 className="font-sans text-lg font-semibold md:block">SVSA</h1>
         </Link>
         <NavBar />
         <LogOut onClick={() => signOut()} className="ml-auto mr-4 hidden cursor-pointer md:block" />
       </div>
-      <div
-        style={{ zIndex: 50, position: "relative" }}
-        className={`flex flex-grow flex-col items-center justify-center scroll-smooth text-white  ${
-          !NAVBAR_HIDDEN_PATHS.includes(router.pathname) && "my-10"
-        }`}>
-        <>
-          <HOC />
-          {props.children}
-        </>
+      <div className="flex w-screen flex-grow items-center justify-center p-4">
+        <div
+          style={{ zIndex: 50, position: "relative" }}
+          className={`flex max-w-fit flex-grow flex-col justify-center overflow-hidden scroll-smooth text-white ${
+            !NAVBAR_HIDDEN_PATHS.includes(router.pathname) && "my-10"
+          }`}>
+          <>
+            <Popups />
+            {props.children}
+          </>
+        </div>
       </div>
     </main>
   );
@@ -113,31 +115,19 @@ function NavSheet() {
           {status === "authenticated" && (
             <>
               <div className="flex w-full flex-col items-center justify-center gap-4">
-                <Button className="bg-white" variant={"ghost"} onClick={() => router.push("/member")}>
-                  View all members
-                </Button>
-                <Button
-                  className="bg-white"
-                  variant={"ghost"}
-                  onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
+                <SheetButton onClick={() => router.push("/member")}>View all members</SheetButton>
+                <SheetButton onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
                   Add new member
-                </Button>
+                </SheetButton>
                 <Separator />
-                <Button className="bg-white" variant={"ghost"} onClick={() => router.push("/record")}>
-                  View all payment records
-                </Button>
-                <Button
-                  className="bg-white"
-                  variant={"ghost"}
-                  onClick={() => router.push({ query: { ...router.query, create: "record" } }, undefined, { shallow: true })}>
+                <SheetButton onClick={() => router.push("/record")}>View all payment records</SheetButton>
+                <SheetButton onClick={() => router.push({ query: { ...router.query, create: "record" } }, undefined, { shallow: true })}>
                   Add new payment record
-                </Button>
+                </SheetButton>
               </div>
               <Separator />
               <div className="flex-col items-center justify-center gap-4">
-                <Button className="bg-white" variant={"ghost"} onClick={() => signOut()}>
-                  Log out
-                </Button>
+                <SheetButton onClick={() => signOut()}>Log out</SheetButton>
               </div>
             </>
           )}
@@ -194,5 +184,13 @@ function NavItems() {
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
+  );
+}
+
+function SheetButton({ onClick, children }: { onClick: () => void; children: React.ReactNode | string }) {
+  return (
+    <Button className="h-fit bg-white" variant={"ghost"} onClick={onClick}>
+      {children}
+    </Button>
   );
 }

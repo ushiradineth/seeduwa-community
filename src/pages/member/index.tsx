@@ -140,7 +140,7 @@ export default function AllMembers({
       <Head>
         <title>Members - Seeduwa Village Security Association</title>
       </Head>
-      <main className="dark flex flex-col items-center justify-center px-4">
+      <>
         <div className="flex w-full gap-8 py-4">
           <Filter label="Members" filterItems={MEMBERS_PAYMENT_FILTER} paramKey="members" value={membersParam} />
           {membersParam !== MEMBERS_PAYMENT_FILTER_ENUM.All && (
@@ -151,7 +151,7 @@ export default function AllMembers({
           )}
         </div>
         <Members members={members} count={count} total={total} year={year} month={month} membersParam={membersParam} />
-      </main>
+      </>
     </>
   );
 }

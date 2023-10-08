@@ -6,15 +6,29 @@ import { Button } from "@/components/Atoms/Button";
 import { removeQueryParamsFromRouter } from "@/lib/utils";
 import { Input } from "../Atoms/Input";
 
-function Search(props: { search: string; path: string; params: Record<string, unknown>; count: number; placeholder: string }) {
+function Search({
+  count,
+  path,
+  params,
+  placeholder,
+  search,
+  classname,
+}: {
+  classname?: string;
+  search: string;
+  path: string;
+  params: Record<string, unknown>;
+  count: number;
+  placeholder: string;
+}) {
   const router = useRouter();
-  const [internalSearch, setInternalSearch] = useState<string>(props.search === "undefined" ? "" : props.search);
+  const [internalSearch, setInternalSearch] = useState<string>(search === "undefined" ? "" : search);
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        let query = props.params as Record<string, string | number>;
+        let query = params as Record<string, string | number>;
         if (internalSearch !== "") {
           query.search = internalSearch;
           query = removeQueryParamsFromRouter(router, ["page"]) as Record<string, string | number>;
@@ -22,16 +36,16 @@ function Search(props: { search: string; path: string; params: Record<string, un
           query = removeQueryParamsFromRouter(router, ["search", "page"]) as Record<string, string | number>;
         }
 
-        void router.push({ href: props.path, query });
+        void router.push({ href: path, query });
       }}
-      className="my-8 flex w-full flex-col items-center justify-center">
+      className={`flex w-full flex-col items-center justify-center ${classname}`}>
       <div className="flex w-full items-center justify-center gap-2">
         <div className="flex h-fit w-full items-center justify-center gap-x-2 rounded-md border border-input bg-background">
           <Input
             name="search"
             className="border-0"
-            defaultValue={props.search}
-            placeholder={props.placeholder}
+            defaultValue={search}
+            placeholder={placeholder}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInternalSearch(e.currentTarget.value)}
             value={internalSearch}
           />
@@ -45,9 +59,9 @@ function Search(props: { search: string; path: string; params: Record<string, un
           <SearchIcon className="h-4 w-4 text-black" />
         </Button>
       </div>
-      {!(props.search === "" || typeof props.search === "undefined") && (
+      {!(search === "" || typeof search === "undefined") && (
         <p className="mt-4 text-sm text-muted-foreground">
-          Found {props.count} result{props.count === 1 ? "" : "s"} for &quot;{props.search}&quot;
+          Found {count} result{count === 1 ? "" : "s"} for &quot;{search}&quot;
         </p>
       )}
     </form>

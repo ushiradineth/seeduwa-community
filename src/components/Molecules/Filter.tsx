@@ -8,16 +8,18 @@ export default function Filter({
   value,
   paramKey,
   filterItems,
+  classname,
 }: {
   label: string;
   value: string | number | boolean;
   paramKey: string;
   filterItems: string[] | number[];
+  classname?: string;
 }) {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className={`flex flex-col gap-2 ${classname}`}>
       <Label>{label}</Label>
       <Select
         defaultValue={String(value)}

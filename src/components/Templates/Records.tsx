@@ -23,16 +23,17 @@ export default function Records({ records: initialRecords, count, total }: Props
     <Card>
       <CardHeader>
         <CardTitle>Records</CardTitle>
-        <CardDescription>A list of all Records.</CardDescription>
+        <CardDescription>A list of all records.</CardDescription>
+      </CardHeader>
+      <CardContent>
         <Search
+          classname="pb-4"
           search={router.query.search as string}
           placeholder="Search for Records"
           path={router.asPath}
           params={router.query}
           count={count}
         />
-      </CardHeader>
-      <CardContent>
         <Table className="border">
           <TableHeader>
             <TableRow>

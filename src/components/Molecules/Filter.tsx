@@ -19,7 +19,7 @@ export default function Filter({
   const router = useRouter();
 
   return (
-    <div className={`flex flex-col gap-2 ${classname}`}>
+    <div className={`flex w-full flex-col gap-2 ${classname}`}>
       <Label>{label}</Label>
       <Select
         defaultValue={String(value)}
@@ -28,7 +28,7 @@ export default function Filter({
           obj[paramKey] = value;
           void router.push({ query: { ...router.query, ...obj } });
         }}>
-        <SelectTrigger className="w-48">
+        <SelectTrigger className="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="dark z-[250] w-max">

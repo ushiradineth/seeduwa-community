@@ -3,6 +3,7 @@ import { getSession } from "next-auth/react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 
+import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import Dashboard from "@/components/Templates/Dashboard";
 import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, YEARS } from "@/lib/consts";
@@ -125,13 +126,13 @@ export default function TableDashboard({
       <Head>
         <title>Dashboard - Seeduwa Village Security Association</title>
       </Head>
-      <>
-        <div className="flex w-full justify-between gap-8 py-4">
+      <div className="flex flex-col gap-4">
+        <Card className="flex flex-col md:flex-row gap-4 p-4 justify-between">
           <Filter filterItems={YEARS} label="Year" paramKey="recordYear" value={year} />
           <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
-        </div>
+        </Card>
         <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} search={search} />
-      </>
+      </div>
     </>
   );
 }

@@ -2,6 +2,7 @@ import { getSession } from "next-auth/react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 
+import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import Members from "@/components/Templates/Members";
 import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, MEMBERS_PAYMENT_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
@@ -149,8 +150,8 @@ export default function AllMembers({
       <Head>
         <title>Members - Seeduwa Village Security Association</title>
       </Head>
-      <>
-        <div className="flex w-full gap-8 py-4">
+      <div className="flex flex-col gap-4">
+        <Card className="flex flex-col justify-between gap-4 p-4 md:flex-row">
           <Filter label="Members" filterItems={MEMBERS_PAYMENT_FILTER} paramKey="members" value={membersParam} />
           {membersParam !== MEMBERS_PAYMENT_FILTER_ENUM.All && (
             <>
@@ -158,14 +159,8 @@ export default function AllMembers({
               <Filter label="Year" filterItems={YEARS} paramKey="filterYear" value={String(year)} />
             </>
           )}
-          <Filter
-            classname="ml-auto"
-            filterItems={ITEMS_PER_PAGE_FILTER}
-            label="Items per page"
-            paramKey="itemsPerPage"
-            value={itemsPerPage}
-          />
-        </div>
+          <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
+        </Card>
         <Members
           members={members}
           count={count}
@@ -176,7 +171,7 @@ export default function AllMembers({
           itemsPerPage={itemsPerPage}
           search={search}
         />
-      </>
+      </div>
     </>
   );
 }

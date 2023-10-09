@@ -25,6 +25,7 @@ export type Props = {
   count: number;
   year: number;
   itemsPerPage: number;
+  search: string;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -107,11 +108,18 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       count,
       year: recordYear,
       itemsPerPage,
+      search,
     },
   };
 };
 
-export default function TableDashboard({ members, count, year, itemsPerPage }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function TableDashboard({
+  members,
+  count,
+  year,
+  itemsPerPage,
+  search,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
       <Head>
@@ -122,7 +130,7 @@ export default function TableDashboard({ members, count, year, itemsPerPage }: I
           <Filter filterItems={YEARS} label="Year" paramKey="recordYear" value={year} />
           <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
         </div>
-        <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} />
+        <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} search={search} />
       </>
     </>
   );

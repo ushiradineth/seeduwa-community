@@ -1,9 +1,11 @@
 import { TRPCError } from "@trpc/server";
+import moment from "moment";
 import { z } from "zod";
 
+import { MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
+import { commonAttribute } from "@/lib/utils";
 import { CreateMemberSchema } from "@/lib/validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { commonAttribute } from "@/lib/utils";
 
 export const memberRouter = createTRPCRouter({
   create: protectedProcedure.input(CreateMemberSchema).mutation(async ({ ctx, input }) => {
@@ -106,4 +108,155 @@ export const memberRouter = createTRPCRouter({
   get: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     return await ctx.prisma.member.findFirst({ where: { id: input.id, active: true } });
   }),
+
+  getMemberDocumentData: protectedProcedure
+    .input(
+      z.object({
+        search: z.string(),
+        members: z.string(),
+        year: z.number(),
+        month: z.string(),
+        type: z.union([z.literal("XSLX"), z.literal("PDF")]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const search = input.search ? input.search.split(" ").join(" <-> ") : "";
+      const membersParam = String(input.members ?? "All") as MEMBERS_PAYMENT_FILTER_ENUM;
+      const year = Number(input.year ?? new Date().getFullYear());
+      const month = String(input.month ?? MONTHS[new Date().getMonth()]);
+
+      let membersFilter = {};
+
+      const monthIndex = MONTHS.findIndex((value) => value === month);
+
+      if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
+        membersFilter = {
+          some: {
+            active: true,
+            date: { equals: new Date(year, monthIndex, 1) },
+          },
+        };
+      } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
+        membersFilter = {
+          none: {
+            active: true,
+            date: { equals: new Date(year, monthIndex, 1) },
+          },
+        };
+      }
+
+      const where =
+        search !== ""
+          ? {
+              AND: [
+                { active: true },
+                {
+                  OR: [
+                    { name: { search: search } },
+                    { phoneNumber: { search: search } },
+                    { houseId: { search: search } },
+                    { lane: { search: search } },
+                  ],
+                },
+                { payments: { ...membersFilter } },
+              ],
+            }
+          : {
+              active: true,
+              payments: { ...membersFilter },
+            };
+
+      const members = await ctx.prisma.member.findMany({
+        where,
+        select: {
+          id: true,
+          phoneNumber: true,
+          houseId: true,
+          name: true,
+          lane: true,
+          payments: { where: { active: true, date: { equals: new Date(year, monthIndex, 1) } }, select: { id: true, date: true } },
+        },
+        orderBy: {
+          lane: "asc",
+        },
+      });
+
+      return {
+        members: members.map((member) => ({
+          ...member,
+          payments: {},
+          payment: member.payments.length > 0,
+        })),
+        membersParam,
+        month,
+        year,
+      };
+    }),
+
+  getDashboardDocumentData: protectedProcedure
+    .input(
+      z.object({
+        search: z.string(),
+        year: z.number(),
+        type: z.union([z.literal("XSLX"), z.literal("PDF")]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const search = input.search ? input.search.split(" ").join(" | ") : "";
+      const year = YEARS.includes(input.year) ? input.year : new Date().getFullYear();
+
+      const where =
+        search !== ""
+          ? {
+              AND: [
+                { active: true },
+                {
+                  OR: [
+                    { name: { search: search } },
+                    { phoneNumber: { search: search } },
+                    { houseId: { search: search } },
+                    { lane: { search: search } },
+                  ],
+                },
+              ],
+            }
+          : { active: true };
+
+      const members = await ctx.prisma.member.findMany({
+        where,
+        select: {
+          id: true,
+          houseId: true,
+          name: true,
+          lane: true,
+          payments: {
+            where: {
+              active: true,
+              date: {
+                gt: moment().year(year).startOf("year").toDate(),
+                lt: moment().year(year).endOf("year").toDate(),
+              },
+            },
+            select: {
+              id: true,
+              date: true,
+              amount: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
+      return {
+        members: members.map((member) => ({
+          ...member,
+          payments: member.payments.map((payment) => {
+            return { ...payment, date: payment.date.toISOString() };
+          }),
+        })),
+        year,
+      };
+    }),
 });

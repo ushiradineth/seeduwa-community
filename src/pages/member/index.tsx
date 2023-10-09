@@ -4,7 +4,7 @@ import Head from "next/head";
 
 import Filter from "@/components/Molecules/Filter";
 import Members from "@/components/Templates/Members";
-import { ITEMS_PER_PAGE, MEMBERS_PAYMENT_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
+import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, MEMBERS_PAYMENT_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
 import { prisma } from "@/server/db";
 
 export type Member = {
@@ -23,6 +23,8 @@ export type Props = {
   membersParam: MEMBERS_PAYMENT_FILTER_ENUM;
   year: number;
   month: string;
+  itemsPerPage: number;
+  search: string;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -42,6 +44,9 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const membersParam = String(context.query.members ?? "All") as MEMBERS_PAYMENT_FILTER_ENUM;
   const year = Number(context.query.filterYear ?? new Date().getFullYear());
   const month = String(context.query.filterMonth ?? MONTHS[new Date().getMonth()]);
+  const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
+    ? Number(context.query.itemsPerPage)
+    : ITEMS_PER_PAGE;
 
   let membersFilter = {};
 
@@ -85,8 +90,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         };
 
   const members = await prisma.member.findMany({
-    take: ITEMS_PER_PAGE,
-    skip: context.query.page ? (Number(context.query.page) - 1) * ITEMS_PER_PAGE : 0,
+    take: itemsPerPage,
+    skip: context.query.page ? (Number(context.query.page) - 1) * itemsPerPage : 0,
     where,
     select: {
       id: true,
@@ -123,6 +128,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       membersParam,
       month,
       year,
+      itemsPerPage,
+      search,
     },
   };
 };
@@ -134,6 +141,8 @@ export default function AllMembers({
   membersParam,
   year,
   month,
+  itemsPerPage,
+  search,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
@@ -149,8 +158,24 @@ export default function AllMembers({
               <Filter label="Year" filterItems={YEARS} paramKey="filterYear" value={String(year)} />
             </>
           )}
+          <Filter
+            classname="ml-auto"
+            filterItems={ITEMS_PER_PAGE_FILTER}
+            label="Items per page"
+            paramKey="itemsPerPage"
+            value={itemsPerPage}
+          />
         </div>
-        <Members members={members} count={count} total={total} year={year} month={month} membersParam={membersParam} />
+        <Members
+          members={members}
+          count={count}
+          total={total}
+          year={year}
+          month={month}
+          membersParam={membersParam}
+          itemsPerPage={itemsPerPage}
+          search={search}
+        />
       </>
     </>
   );

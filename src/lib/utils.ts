@@ -64,3 +64,12 @@ export function commonAttribute(
   else if (member.houseId === input.houseId) return "house number";
   else if (member.phoneNumber === input.phoneNumber) return "phone number";
 }
+
+export function s2ab(s: string): ArrayBuffer {
+  const buf = new ArrayBuffer(s.length);
+  const view = new Uint8Array(buf);
+  for (let i = 0; i < s.length; i++) {
+    view[i] = s.charCodeAt(i) & 0xff;
+  }
+  return buf;
+}

@@ -1,22 +1,22 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import Calendar from "react-calendar";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import "react-calendar/dist/Calendar.css";
-
-import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
-
 import { api } from "@/utils/api";
-import { MONTHS } from "@/lib/consts";
+import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
 import { removeQueryParamsFromRouter } from "@/lib/utils";
 import { EditRecordSchema, type EditRecordFormData } from "@/lib/validators";
+import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
 import { Input } from "../Atoms/Input";
 import Loader from "../Atoms/Loader";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
+import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
 
 export default function EditRecord() {
   const [error, setError] = useState("");
@@ -61,6 +61,7 @@ export default function EditRecord() {
     editRecord({
       amount: data.Amount,
       id: record?.id ?? "",
+      paymentDate: data.PaymentDate,
     });
   }
 
@@ -84,8 +85,9 @@ export default function EditRecord() {
 
   useEffect(() => {
     form.clearErrors();
-    form.setValue("Amount", record?.amount ?? 2000);
-  }, [form, record?.amount]);
+    form.setValue("Amount", record?.amount ?? DEFAULT_AMOUNT);
+    form.setValue("PaymentDate", record?.createdAt ?? new Date());
+  }, [form, record]);
 
   return (
     <Dialog open={router.query.mode === "edit" && typeof router.query.payment === "string"} onOpenChange={() => exitPopup(true)}>
@@ -96,9 +98,13 @@ export default function EditRecord() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
               <DialogHeader>
-                <DialogTitle>Edit Record</DialogTitle>
+                <DialogTitle className="flex w-fit items-center justify-center gap-2">
+                  <p>Edit Record</p>
+                  <Badge key={record?.date.getFullYear()} className="w-fit">
+                    {MONTHS[Number(record?.date.getMonth() ?? 0)]} {record?.date.getFullYear()}
+                  </Badge>
+                </DialogTitle>
               </DialogHeader>
-
               <FormField
                 control={form.control}
                 name="Amount"
@@ -114,33 +120,36 @@ export default function EditRecord() {
               />
 
               <FormField
-                name="Month"
-                control={undefined}
-                render={() => (
+                control={form.control}
+                name="PaymentDate"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Month</FormLabel>
+                    <FormLabel>Payment Date</FormLabel>
                     <FormControl>
-                      <Input placeholder="Month" defaultValue={MONTHS[Number(record?.date.getMonth() ?? 0)]} disabled />
+                      <Popover>
+                        <PopoverTrigger asChild className="w-full">
+                          <Button
+                            type="button"
+                            variant={"outline"}
+                            className={"flex h-10 max-w-full justify-start text-left font-normal hover:bg-bgc"}>
+                            {field.value?.toDateString()}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="z-[1000] m-0 w-auto border-bc bg-bc p-0" align="start">
+                          <div className="z-[1000] max-w-[300px] rounded-sm bg-card text-white">
+                            <Calendar
+                              defaultView="month"
+                              defaultValue={field.value}
+                              onClickDay={(date) => form.setValue("PaymentDate", date)}
+                            />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <FormField
-                name="Year"
-                control={undefined}
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Year</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Year" defaultValue={record?.date.getFullYear()} disabled />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <DialogFooter className="gap-2 md:gap-0">
                 <Button
                   onClick={() => deleteRecord({ id: record?.id ?? "" })}

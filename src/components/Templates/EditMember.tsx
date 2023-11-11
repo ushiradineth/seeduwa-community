@@ -2,8 +2,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
-import "react-calendar/dist/Calendar.css";
-
 import { useForm } from "react-hook-form";
 import PhoneInput, { getCountryCallingCode, parsePhoneNumber } from "react-phone-number-input";
 

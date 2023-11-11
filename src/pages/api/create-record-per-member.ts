@@ -22,7 +22,7 @@ export default function handler(request: NextApiRequest, response: NextApiRespon
   //   async (month) =>
   //     await db.payment.create({
   //       data: {
-  //         amount: 2000,
+  //         amount: DEFAULT_AMOUNT,
   //         date: new Date(
   //           2023,
   //           MONTHS.findIndex((m) => m === month),

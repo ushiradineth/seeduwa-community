@@ -47,24 +47,16 @@ export const CreateMemberSchema = yup.object().shape({
 export type CreateMemberFormData = yup.InferType<typeof CreateMemberSchema>;
 
 export const CreateRecordSchema = yup.object().shape({
-  Year: numberValidator,
-  Month: yup.number().min(0).max(11).required(),
+  PaymentDate: yup.date().required(),
+  Months: yup.array(yup.date().required()).required(),
   Amount: numberValidator,
   Member: yup.string().required(),
 });
 
 export type CreateRecordFormData = yup.InferType<typeof CreateRecordSchema>;
 
-export const CreateRecordForMemberSchema = yup.object().shape({
-  Year: numberValidator,
-  Month: yup.number().min(0).max(11).required(),
-  Amount: numberValidator,
-  Member: yup.string().required(),
-});
-
-export type CreateRecordForMemberFormData = yup.InferType<typeof CreateRecordForMemberSchema>;
-
 export const EditRecordSchema = yup.object().shape({
+  PaymentDate: yup.date().required(),
   Amount: numberValidator,
 });
 

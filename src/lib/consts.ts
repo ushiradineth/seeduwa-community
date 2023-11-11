@@ -27,3 +27,5 @@ export enum MEMBERS_PAYMENT_FILTER_ENUM {
   Paid = "Paid",
   Unpaid = "Unpaid",
 }
+
+export const DEFAULT_AMOUNT = 2500;

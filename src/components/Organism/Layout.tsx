@@ -144,7 +144,7 @@ function NavItems() {
     <NavigationMenu className="absolute left-1/2 hidden -translate-x-1/2 transform md:block">
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuTrigger onClick={() => router.push("/member")}>Members</NavigationMenuTrigger>
+          <NavigationMenuTrigger>Members</NavigationMenuTrigger>
           <NavigationMenuContent>
             <div className={`flex w-[250px] flex-col gap-3 p-4 md:grid-cols-2`}>
               <Link href={"/member"}>
@@ -163,7 +163,7 @@ function NavItems() {
           </NavigationMenuContent>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuTrigger onClick={() => router.push("/record")}>Records</NavigationMenuTrigger>
+          <NavigationMenuTrigger>Records</NavigationMenuTrigger>
           <NavigationMenuContent>
             <div className={`flex w-[300px] flex-col gap-3 p-4 md:grid-cols-2`}>
               <Link href={"/record"}>

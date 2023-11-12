@@ -88,7 +88,7 @@ export default function EditMember() {
 
   return (
     <Dialog open={router.query.action === "edit" && typeof router.query.member === "string"} onOpenChange={() => exitPopup(true)}>
-      <DialogContent className="dark text-white sm:max-w-[425px]">
+      <DialogContent className="dark text-white sm:max-w-[425px] max-h-[90%]">
         {gettingMember || refetchingMember ? (
           <Loader background removeBackgroundColor height={"385px"} />
         ) : (

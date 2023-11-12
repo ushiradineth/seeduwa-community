@@ -55,7 +55,7 @@ export default function CreateMember() {
     <Dialog
       open={router.query.create === "member"}
       onOpenChange={() => router.push({ query: removeQueryParamsFromRouter(router, ["create"]) }, undefined, { shallow: true })}>
-      <DialogContent className="dark text-white sm:max-w-[425px]">
+      <DialogContent className="dark text-white sm:max-w-[425px] max-h-[90%]">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <DialogHeader>

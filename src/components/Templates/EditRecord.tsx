@@ -91,7 +91,7 @@ export default function EditRecord() {
 
   return (
     <Dialog open={router.query.mode === "edit" && typeof router.query.payment === "string"} onOpenChange={() => exitPopup(true)}>
-      <DialogContent className="dark text-white sm:max-w-[425px]">
+      <DialogContent className="dark text-white sm:max-w-[425px] max-h-[90%]">
         {gettingRecord || refetchingRecord ? (
           <Loader background removeBackgroundColor height={"385px"} />
         ) : (

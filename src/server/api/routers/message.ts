@@ -48,11 +48,10 @@ export const messageRouter = createTRPCRouter({
       });
 
       const message = messageRouter.createCaller({ ...ctx });
-      members.forEach(async (member) => {
-        await message.send({
-          recipient: member.phoneNumber,
-          text: input.text,
-        });
+      members.forEach((member) => {
+        void (async () => {
+          await message.send({ recipient: member.phoneNumber, text: input.text });
+        })();
       });
     }),
 });

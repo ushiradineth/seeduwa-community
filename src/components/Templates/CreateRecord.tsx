@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, LANE, MONTHS, YEARS } from "@/lib/consts";
-import { generateMessage, removeQueryParamsFromRouter } from "@/lib/utils";
+import { generateThankYouMessage, removeQueryParamsFromRouter } from "@/lib/utils";
 import { CreateRecordSchema, type CreateRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -78,7 +78,7 @@ export default function CreateRecord() {
     form.setValue("Months", []);
     form.setValue("PaymentDate", new Date());
     form.setValue("Notify", false);
-    form.setValue("Text", generateMessage(DEFAULT_AMOUNT, []));
+    form.setValue("Text", generateThankYouMessage(DEFAULT_AMOUNT, []));
   }, [router.query.create, form]);
 
   return (
@@ -172,7 +172,7 @@ export default function CreateRecord() {
                       type="number"
                       {...field}
                       onChange={(e) => {
-                        form.setValue("Text", generateMessage(Number(e.target.value), form.watch("Months")));
+                        form.setValue("Text", generateThankYouMessage(Number(e.target.value), form.watch("Months")));
                         field.onChange(e);
                       }}
                     />
@@ -299,7 +299,7 @@ export default function CreateRecord() {
                                       .sort((a, b) => a.getTime() - b.getTime()),
                                   );
 
-                              form.setValue("Text", generateMessage(form.getValues("Amount"), form.getValues("Months")));
+                              form.setValue("Text", generateThankYouMessage(form.getValues("Amount"), form.getValues("Months")));
                             }}
                             tileClassName={(args) => {
                               if (

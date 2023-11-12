@@ -76,8 +76,10 @@ export function s2ab(s: string): ArrayBuffer {
   return buf;
 }
 
-export function generateMessage(amount: number, months: Date[]) {
-  return `Your payment of ${amount * months.length} LKR ${months.length > 1 ? `(${amount} LKR Per Month) ` : ""}for ${months
+export function generateThankYouMessage(amount: number, months: Date[]) {
+  return `Your payment of LKR ${(amount * months.length).toLocaleString()} ${
+    months.length > 1 ? `(LKR ${amount.toLocaleString()} Per Month) ` : ""
+  }for ${months
     .map(
       (month, index) =>
         `${MONTHS[month.getMonth()]} ${month.getFullYear()}${
@@ -85,4 +87,10 @@ export function generateMessage(amount: number, months: Date[]) {
         }`,
     )
     .join("")} has been received. Thank you! - Seeduwa Village Security Association`;
+}
+
+export function generateUnpaidNotificationMessage(amount: number, months: Date) {
+  return `Kindly settle your payment of LKR ${amount.toLocaleString()} for ${
+    MONTHS[months.getMonth()]
+  }. Your prompt attention is appreciated. - Seeduwa Village Security Association`;
 }

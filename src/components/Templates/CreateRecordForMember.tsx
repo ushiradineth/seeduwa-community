@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
-import { generateMessage, removeQueryParamsFromRouter } from "@/lib/utils";
+import { generateThankYouMessage, removeQueryParamsFromRouter } from "@/lib/utils";
 import { CreateRecordSchema, type CreateRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -75,7 +75,7 @@ export default function CreateRecordForMember() {
       new Date(Number(router.query.year ?? new Date().getFullYear()), Number(router.query.month ?? new Date().getMonth()), 1),
     ]);
     form.setValue("PaymentDate", new Date());
-    form.setValue("Text", generateMessage(DEFAULT_AMOUNT, form.getValues("Months")));
+    form.setValue("Text", generateThankYouMessage(DEFAULT_AMOUNT, form.getValues("Months")));
   }, [router.query.create, form, router.query.month, router.query.year, creatingRecord, router.query.memberId]);
 
   return (
@@ -104,7 +104,7 @@ export default function CreateRecordForMember() {
                       type="number"
                       {...field}
                       onChange={(e) => {
-                        form.setValue("Text", generateMessage(Number(e.target.value), form.watch("Months")));
+                        form.setValue("Text", generateThankYouMessage(Number(e.target.value), form.watch("Months")));
                         field.onChange(e);
                       }}
                     />

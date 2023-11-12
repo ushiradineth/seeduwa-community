@@ -1,7 +1,7 @@
 import { type inferRouterOutputs } from "@trpc/server";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { BadgeCheck, BadgeXIcon, Edit, FileText, MoreVertical, Plus, Sheet } from "lucide-react";
+import { BadgeCheck, BadgeXIcon, Edit, FileText, MessageCircle, MoreVertical, Plus, Sheet } from "lucide-react";
 import { formatPhoneNumberIntl } from "react-phone-number-input";
 import * as XLSX from "xlsx";
 import { useEffect, useState } from "react";
@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/Molecules/DropdownMenu";
-import { ITEMS_PER_PAGE, MEMBERS_PAYMENT_FILTER_ENUM } from "@/lib/consts";
+import { ITEMS_PER_PAGE, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS } from "@/lib/consts";
 import { s2ab } from "@/lib/utils";
 import { type Member, type Props } from "@/pages/member";
 import { type AppRouter } from "@/server/api/root";
@@ -50,6 +50,14 @@ export default function Members({ members: initialMembers, count, total, year, m
           <OptionMenu
             onClickPDF={() => mutate({ members: membersParam, month, year, search, type: "PDF" })}
             onClickXSLX={() => mutate({ members: membersParam, month, year, search, type: "XSLX" })}
+            month={
+              new Date(
+                year,
+                MONTHS.findIndex((value) => value === month),
+                1,
+              )
+            }
+            filter={membersParam}
           />
         </CardTitle>
         <CardDescription>
@@ -144,7 +152,17 @@ export default function Members({ members: initialMembers, count, total, year, m
   );
 }
 
-function OptionMenu({ onClickPDF, onClickXSLX }: { onClickPDF: () => void; onClickXSLX: () => void }) {
+function OptionMenu({
+  onClickPDF,
+  onClickXSLX,
+  month,
+  filter,
+}: {
+  readonly onClickPDF: () => void;
+  readonly onClickXSLX: () => void;
+  readonly month: Date;
+  readonly filter: MEMBERS_PAYMENT_FILTER_ENUM;
+}) {
   const router = useRouter();
 
   return (
@@ -160,6 +178,20 @@ function OptionMenu({ onClickPDF, onClickXSLX }: { onClickPDF: () => void; onCli
           onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
           Add new member <Plus className="ml-auto" size={20} />
         </DropdownMenuItem>
+        {filter === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="flex cursor-pointer gap-4"
+              onClick={() =>
+                router.push({ query: { ...router.query, mode: "notify", month: month.getMonth(), year: month.getFullYear() } }, undefined, {
+                  shallow: true,
+                })
+              }>
+              Notify Unpaid Members <MessageCircle className="ml-auto" size={20} />
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="flex cursor-pointer gap-4" onClick={onClickPDF}>
           Download as PDF <FileText className="ml-auto" size={20} />

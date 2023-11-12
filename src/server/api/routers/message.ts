@@ -31,4 +31,28 @@ export const messageRouter = createTRPCRouter({
         console.error("Request failed:", error);
       });
   }),
+
+  notifyUnpaidMembers: protectedProcedure
+    .input(z.object({ amount: z.number(), month: z.date(), text: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const members = await ctx.prisma.member.findMany({
+        where: {
+          active: true,
+          payments: {
+            none: {
+              active: true,
+              date: { equals: new Date(input.month.getFullYear(), input.month.getMonth(), 1) },
+            },
+          },
+        },
+      });
+
+      const message = messageRouter.createCaller({ ...ctx });
+      members.forEach(async (member) => {
+        await message.send({
+          recipient: member.phoneNumber,
+          text: input.text,
+        });
+      });
+    }),
 });

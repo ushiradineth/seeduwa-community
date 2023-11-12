@@ -51,6 +51,7 @@ export const CreateRecordSchema = yup.object().shape({
   Months: yup.array(yup.date().required()).required(),
   Amount: numberValidator,
   Member: yup.string().required(),
+  Notify: yup.boolean().default(false),
 });
 
 export type CreateRecordFormData = yup.InferType<typeof CreateRecordSchema>;

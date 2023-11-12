@@ -78,8 +78,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         where: {
           active: true,
           date: {
-            gt: moment().year(recordYear).startOf("year").toDate(),
-            lt: moment().year(recordYear).endOf("year").toDate(),
+            gt: moment().year(recordYear).startOf("year").utcOffset(0, true).format(),
+            lt: moment().year(recordYear).endOf("year").utcOffset(0, true).format(),
           },
         },
         select: {
@@ -127,7 +127,7 @@ export default function TableDashboard({
         <title>Dashboard - Seeduwa Village Security Association</title>
       </Head>
       <div className="flex flex-col gap-4">
-        <Card className="flex flex-col md:flex-row gap-4 p-4 justify-between">
+        <Card className="flex flex-col justify-between gap-4 p-4 md:flex-row">
           <Filter filterItems={YEARS} label="Year" paramKey="recordYear" value={year} />
           <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
         </Card>

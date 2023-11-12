@@ -1,3 +1,4 @@
+import moment from "moment";
 import { getSession } from "next-auth/react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
@@ -57,14 +58,14 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     membersFilter = {
       some: {
         active: true,
-        date: { equals: new Date(year, monthIndex, 1) },
+        date: { equals: moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).format() },
       },
     };
   } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
     membersFilter = {
       none: {
         active: true,
-        date: { equals: new Date(year, monthIndex, 1) },
+        date: { equals: moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).format() },
       },
     };
   }
@@ -100,7 +101,10 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       houseId: true,
       name: true,
       lane: true,
-      payments: { where: { active: true, date: { equals: new Date(year, monthIndex, 1) } }, select: { id: true, date: true } },
+      payments: {
+        where: { active: true, date: { equals: moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).format() } },
+        select: { id: true, date: true },
+      },
     },
     orderBy: {
       _relevance: {

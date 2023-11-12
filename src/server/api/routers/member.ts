@@ -233,8 +233,8 @@ export const memberRouter = createTRPCRouter({
             where: {
               active: true,
               date: {
-                gt: moment().year(year).startOf("year").toDate(),
-                lt: moment().year(year).endOf("year").toDate(),
+                gt: moment().year(year).startOf("year").utcOffset(0, true).format(),
+                lt: moment().year(year).endOf("year").utcOffset(0, true).format(),
               },
             },
             select: {

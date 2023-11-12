@@ -7,6 +7,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
+import { Button } from "@/components/Atoms/Button";
 import { Card } from "@/components/Molecules/Card";
 import Carousel from "@/components/Molecules/Carousel";
 import { MONTHS, YEARS } from "@/lib/consts";
@@ -94,18 +95,28 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
       </Head>
       <Card className="flex flex-col justify-center gap-4 p-4">
         <div className="flex flex-col gap-1">
-          <span className="flex">
+          <span className="flex items-center">
             <p className="text-2xl font-semibold">{member.name}</p>
-            <p className="ml-auto">LKR {Number(total).toLocaleString()}</p>
+            <Button
+              className="ml-auto w-fit"
+              onClick={() =>
+                router.push({
+                  href: router.asPath,
+                  query: { ...router.query, member: member.id, action: "edit" },
+                })
+              }>
+              Edit
+            </Button>
           </span>
           <p>
             No.{member.houseId} - {member.lane}
           </p>
           <Link href={`tel:${member.phoneNumber}`}>{formatPhoneNumberIntl(member.phoneNumber)}</Link>
+          <p>LKR {Number(total).toLocaleString()}</p>
         </div>
         <Carousel navButtons activeIndex={YEARS.findIndex((year) => year === new Date().getFullYear())}>
           {YEARS.map((year) => (
-            <div key={year} className="w-[300px] select-none md:w-[400px] px-1">
+            <div key={year} className="w-[300px] select-none px-1 md:w-[400px]">
               <p className="flex items-center justify-center rounded-t-2xl border border-b p-4 font-semibold">{year}</p>
               <div className="grid grid-cols-3">
                 {MONTHS.map((month, index) => {

@@ -1,9 +1,8 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
-
 import { useForm } from "react-hook-form";
 import PhoneInput, { getCountryCallingCode, parsePhoneNumber } from "react-phone-number-input";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
 
 import "react-phone-number-input/style.css";
 
@@ -50,6 +49,7 @@ export default function EditMember() {
     onSuccess: async () => {
       await exitPopup(false);
       toast.success("Member deleted successfully");
+      void router.push("/");
     },
     onError: (error) => {
       setError(error.message);
@@ -88,7 +88,7 @@ export default function EditMember() {
 
   return (
     <Dialog open={router.query.action === "edit" && typeof router.query.member === "string"} onOpenChange={() => exitPopup(true)}>
-      <DialogContent className="dark text-white sm:max-w-[425px] max-h-[90%]">
+      <DialogContent className="dark max-h-[90%] text-white sm:max-w-[425px]">
         {gettingMember || refetchingMember ? (
           <Loader background removeBackgroundColor height={"385px"} />
         ) : (

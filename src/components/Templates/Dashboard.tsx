@@ -1,13 +1,12 @@
-import { type inferRouterOutputs } from "@trpc/server";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { FileText, MoreVertical, Sheet } from "lucide-react";
+import { FileText, MessagesSquare, MoreVertical, Sheet } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { api } from "@/utils/api";
+import { api, type RouterOutputs } from "@/utils/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +18,6 @@ import {
 import { MONTHS } from "@/lib/consts";
 import { s2ab } from "@/lib/utils";
 import { type Member, type Props } from "@/pages";
-import { type AppRouter } from "@/server/api/root";
 import PageNumbers from "../Atoms/PageNumbers";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../Molecules/Card";
 import Search from "../Molecules/Search";
@@ -142,6 +140,8 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
 }
 
 function OptionMenu({ onClickPDF, onClickXSLX }: { readonly onClickPDF: () => void; readonly onClickXSLX: () => void }) {
+  const router = useRouter();
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="ml-auto">
@@ -156,14 +156,22 @@ function OptionMenu({ onClickPDF, onClickXSLX }: { readonly onClickPDF: () => vo
         <DropdownMenuItem className="flex cursor-pointer gap-4" onClick={onClickXSLX}>
           Download as Excel <Sheet className="ml-auto" size={20} />
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="flex cursor-pointer gap-4"
+          onClick={() =>
+            router.push({ query: { ...router.query, mode: "broadcast" } }, undefined, {
+              shallow: true,
+            })
+          }>
+          Broadcast Message <MessagesSquare className="ml-auto" size={20} />
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-type RouterOutput = inferRouterOutputs<AppRouter>;
-
-function generatePDF(data: RouterOutput["member"]["getDashboardDocumentData"]) {
+function generatePDF(data: RouterOutputs["member"]["getDashboardDocumentData"]) {
   const pdfDocument = new jsPDF("landscape");
   const pageWidth = pdfDocument.internal.pageSize.width || pdfDocument.internal.pageSize.getWidth();
 
@@ -197,7 +205,7 @@ function generatePDF(data: RouterOutput["member"]["getDashboardDocumentData"]) {
   pdfDocument.save(`SVSA - ${data.year}.pdf`);
 }
 
-function generateXSLX(data: RouterOutput["member"]["getDashboardDocumentData"]) {
+function generateXSLX(data: RouterOutputs["member"]["getDashboardDocumentData"]) {
   const workbook = XLSX.utils.book_new();
   const header = ["Member Name", ...MONTHS];
 

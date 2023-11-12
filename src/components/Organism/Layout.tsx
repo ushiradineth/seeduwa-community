@@ -19,6 +19,7 @@ import {
   navigationMenuTriggerStyle,
 } from "../Molecules/NavigationMenu";
 import { Sheet, SheetContent, SheetTrigger } from "../Molecules/Sheet";
+import BroadcastMessage from "../Templates/BroadcastMessage";
 import CreateMember from "../Templates/CreateMember";
 import CreateRecord from "../Templates/CreateRecord";
 import CreateRecordForMember from "../Templates/CreateRecordForMember";
@@ -41,6 +42,7 @@ function Layout(props: { children: React.ReactNode }) {
         <EditRecord />
         <EditMember />
         <NotifyUnpaidMembers />
+        <BroadcastMessage />
       </>
     ),
     [],

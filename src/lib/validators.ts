@@ -71,3 +71,9 @@ export const NotifyUnpaidMembersSchema = yup.object().shape({
 });
 
 export type NotifyUnpaidMembersFormData = yup.InferType<typeof NotifyUnpaidMembersSchema>;
+
+export const BroadcastSchema = yup.object().shape({
+  Text: yup.string().default("").min(1),
+});
+
+export type BroadcastFormData = yup.InferType<typeof BroadcastSchema>;

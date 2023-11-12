@@ -54,4 +54,19 @@ export const messageRouter = createTRPCRouter({
         })();
       });
     }),
+
+  broadcast: protectedProcedure.input(z.object({ text: z.string() })).mutation(async ({ input, ctx }) => {
+    const members = await ctx.prisma.member.findMany({
+      where: {
+        active: true,
+      },
+    });
+
+    const message = messageRouter.createCaller({ ...ctx });
+    members.forEach((member) => {
+      void (async () => {
+        await message.send({ recipient: member.phoneNumber, text: input.text });
+      })();
+    });
+  }),
 });

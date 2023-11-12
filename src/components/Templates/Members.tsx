@@ -1,7 +1,7 @@
 import { type inferRouterOutputs } from "@trpc/server";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { BadgeCheck, BadgeXIcon, Edit, FileText, MessageCircle, MoreVertical, Plus, Sheet } from "lucide-react";
+import { BadgeCheck, BadgeXIcon, Edit, FileText, MessagesSquare, MoreVertical, Plus, Sheet } from "lucide-react";
 import { formatPhoneNumberIntl } from "react-phone-number-input";
 import * as XLSX from "xlsx";
 import { useEffect, useState } from "react";
@@ -63,7 +63,7 @@ export default function Members({ members: initialMembers, count, total, year, m
         <CardDescription>
           {typeof router.query.members !== "undefined" && router.query.members !== "All" ? (
             <p className="text-lg font-bold">
-              {count} members have {filter} for {month} {year} so far
+              {count} member(s) have {filter} for {month} {year} so far
             </p>
           ) : (
             <p>A list of all members.</p>
@@ -188,7 +188,7 @@ function OptionMenu({
                   shallow: true,
                 })
               }>
-              Notify Unpaid Members <MessageCircle className="ml-auto" size={20} />
+              Notify Unpaid Members <MessagesSquare className="ml-auto" size={20} />
             </DropdownMenuItem>
           </>
         )}

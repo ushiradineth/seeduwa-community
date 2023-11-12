@@ -84,5 +84,5 @@ export function generateMessage(amount: number, months: Date[]) {
           index !== months.length - 1 ? (index === months.length - 2 ? " and " : ", ") : ""
         }`,
     )
-    .join("")} has been received. Thank you!`;
+    .join("")} has been received. Thank you! - Seeduwa Village Security Association`;
 }

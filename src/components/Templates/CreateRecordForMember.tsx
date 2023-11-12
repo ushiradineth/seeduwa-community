@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { CalendarIcon, X } from "lucide-react";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -14,13 +13,13 @@ import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
 import { Input } from "../Atoms/Input";
+import { Switch } from "../Atoms/Switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
 
 export default function CreateRecordForMember() {
   const [error, setError] = useState("");
-  const [monthPicker, setMonthPicker] = useState(false);
   const router = useRouter();
 
   const { mutate: createRecord, isLoading: creatingRecord } = api.record.create.useMutation({
@@ -44,6 +43,7 @@ export default function CreateRecordForMember() {
       memberId: data.Member,
       months: data.Months,
       paymentDate: data.PaymentDate,
+      notify: data.Notify,
     });
   }
 
@@ -81,7 +81,12 @@ export default function CreateRecordForMember() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <DialogHeader>
-              <DialogTitle>Add New Record</DialogTitle>
+              <DialogTitle className="flex w-fit items-center justify-center gap-2">
+                <p>Add New Record</p>
+                <Badge key={Number(router.query.year ?? new Date().getFullYear())} className="w-fit">
+                  {MONTHS[Number(router.query.month ?? new Date().getMonth())]} {Number(router.query.year ?? new Date().getFullYear())}
+                </Badge>
+              </DialogTitle>
             </DialogHeader>
 
             <FormField
@@ -132,86 +137,16 @@ export default function CreateRecordForMember() {
 
             <FormField
               control={form.control}
-              name="Months"
+              name="Notify"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Month</FormLabel>
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Notify member?</FormLabel>
+                    <FormDescription>Send a SMS Notification as a record of payment</FormDescription>
+                  </div>
                   <FormControl>
-                    <Popover open={monthPicker} onOpenChange={(open) => setMonthPicker(open)}>
-                      <div className="flex w-full gap-2">
-                        <PopoverTrigger asChild className="w-full" disabled={form.getValues("Member") === ""}>
-                          <Button
-                            type="button"
-                            onClick={() => field.value.length === 0 && setMonthPicker(!monthPicker)}
-                            variant={"outline"}
-                            className={"flex h-12 max-w-fit justify-start text-left font-normal hover:bg-bgc"}>
-                            <CalendarIcon className="h-4 w-4" />
-                          </Button>
-                        </PopoverTrigger>
-
-                        {field.value?.length === 0 ? (
-                          <Button
-                            variant={"outline"}
-                            disabled={form.getValues("Member") === ""}
-                            type="button"
-                            onClick={() => field.value.length === 0 && setMonthPicker(!monthPicker)}
-                            className={"flex h-full w-full justify-center text-left font-normal hover:bg-bgc"}>
-                            {form.getValues("Member") === "" ? "Pick a user" : "Pick payment month(s)"}
-                          </Button>
-                        ) : (
-                          <div className="flex w-full flex-wrap gap-1 rounded-sm border p-2">
-                            {field.value?.map((month) => {
-                              return (
-                                <Badge key={month.toDateString()}>
-                                  {MONTHS[new Date(month).getMonth()]} {month.getFullYear()}
-                                  <X
-                                    className="h-5 cursor-pointer"
-                                    onClick={() =>
-                                      form.setValue(
-                                        "Months",
-                                        field.value.filter((deletedMonth) => deletedMonth !== month),
-                                      )
-                                    }
-                                  />
-                                </Badge>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-
-                      <PopoverContent className="z-[1000] m-0 w-auto border-bc bg-bc p-0" align="start">
-                        <div className="z-[1000] max-w-[300px] rounded-sm bg-card text-white">
-                          <Calendar
-                            defaultView="year"
-                            maxDetail="year"
-                            minDetail="year"
-                            onClickMonth={(month) =>
-                              form
-                                .getValues("Months")
-                                .filter(
-                                  (innerMonth) =>
-                                    month.getMonth() === innerMonth.getMonth() && month.getFullYear() === innerMonth.getFullYear(),
-                                ).length === 0
-                                ? form.setValue("Months", [...field.value, month])
-                                : form.setValue(
-                                    "Months",
-                                    form
-                                      .getValues("Months")
-                                      .filter(
-                                        (deletedMonth) =>
-                                          month.getMonth() !== deletedMonth.getMonth() ||
-                                          month.getFullYear() !== deletedMonth.getFullYear(),
-                                      ),
-                                  )
-                            }
-                            tileDisabled={() => form.getValues("Months").length > 0}
-                          />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />

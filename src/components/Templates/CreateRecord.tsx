@@ -1,22 +1,23 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CalendarIcon, X } from "lucide-react";
-import { useRouter } from "next/router";
-import { useCallback, useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
+import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, LANE, MONTHS, YEARS } from "@/lib/consts";
 import { removeQueryParamsFromRouter } from "@/lib/utils";
 import { CreateRecordSchema, type CreateRecordFormData } from "@/lib/validators";
-import { api } from "@/utils/api";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
 import { Input } from "../Atoms/Input";
 import Loader from "../Atoms/Loader";
+import { Switch } from "../Atoms/Switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Molecules/Select";
 
@@ -49,6 +50,7 @@ export default function CreateRecord() {
       memberId: data.Member,
       months: data.Months,
       paymentDate: data.PaymentDate,
+      notify: data.Notify,
     });
   }
 
@@ -73,6 +75,7 @@ export default function CreateRecord() {
     form.setValue("Amount", DEFAULT_AMOUNT);
     form.setValue("Months", []);
     form.setValue("PaymentDate", new Date());
+    form.setValue("Notify", false);
   }, [router.query.create, form]);
 
   return (
@@ -235,7 +238,7 @@ export default function CreateRecord() {
                                 <Badge key={month.toDateString()}>
                                   {MONTHS[new Date(month).getMonth()]} {month.getFullYear()}
                                   <X
-                                    className="cursor-pointer h-5"
+                                    className="h-5 cursor-pointer"
                                     onClick={() =>
                                       form.setValue(
                                         "Months",
@@ -258,9 +261,9 @@ export default function CreateRecord() {
                             minDetail="year"
                             onClickMonth={(clickedMonth) =>
                               months.filter(
-                                (payedMonth) =>
-                                  clickedMonth.getMonth() === payedMonth.getMonth() &&
-                                  clickedMonth.getFullYear() === payedMonth.getFullYear(),
+                                (paidMonth) =>
+                                  clickedMonth.getMonth() === paidMonth.getMonth() &&
+                                  clickedMonth.getFullYear() === paidMonth.getFullYear(),
                               ).length === 0 &&
                               form
                                 .getValues("Months")
@@ -292,11 +295,11 @@ export default function CreateRecord() {
                                 return "react-calendar--selected_tiles";
                               } else if (
                                 months.filter(
-                                  (payedMonth) =>
-                                    args.date.getMonth() === payedMonth.getMonth() && args.date.getFullYear() === payedMonth.getFullYear(),
+                                  (paidMonth) =>
+                                    args.date.getMonth() === paidMonth.getMonth() && args.date.getFullYear() === paidMonth.getFullYear(),
                                 ).length !== 0
                               ) {
-                                return "react-calendar--payed_tiles";
+                                return "react-calendar--paid_tiles";
                               }
                             }}
                           />
@@ -305,6 +308,22 @@ export default function CreateRecord() {
                     </Popover>
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="Notify"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Notify member?</FormLabel>
+                    <FormDescription>Send a SMS Notification as a record of payment</FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
                 </FormItem>
               )}
             />

@@ -52,6 +52,7 @@ export const CreateRecordSchema = yup.object().shape({
   Amount: numberValidator,
   Member: yup.string().required(),
   Notify: yup.boolean().default(false),
+  Text: yup.string().default(""),
 });
 
 export type CreateRecordFormData = yup.InferType<typeof CreateRecordSchema>;

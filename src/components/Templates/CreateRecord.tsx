@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, LANE, MONTHS, YEARS } from "@/lib/consts";
-import { removeQueryParamsFromRouter } from "@/lib/utils";
+import { generateMessage, removeQueryParamsFromRouter } from "@/lib/utils";
 import { CreateRecordSchema, type CreateRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -16,6 +16,7 @@ import FormFieldError from "../Atoms/FormFieldError";
 import { Input } from "../Atoms/Input";
 import Loader from "../Atoms/Loader";
 import { Switch } from "../Atoms/Switch";
+import { Textarea } from "../Atoms/Textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
@@ -51,6 +52,7 @@ export default function CreateRecord() {
       months: data.Months,
       paymentDate: data.PaymentDate,
       notify: data.Notify,
+      text: data.Text,
     });
   }
 
@@ -76,13 +78,14 @@ export default function CreateRecord() {
     form.setValue("Months", []);
     form.setValue("PaymentDate", new Date());
     form.setValue("Notify", false);
+    form.setValue("Text", generateMessage(DEFAULT_AMOUNT, []));
   }, [router.query.create, form]);
 
   return (
     <Dialog
       open={router.query.create === "record"}
       onOpenChange={() => router.push({ query: removeQueryParamsFromRouter(router, ["create"]) }, undefined, { shallow: true })}>
-      <DialogContent className="dark text-white sm:max-w-[425px]">
+      <DialogContent className="dark max-h-[90%] overflow-y-auto text-white sm:max-w-[425px]">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <DialogHeader>
@@ -164,7 +167,15 @@ export default function CreateRecord() {
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input placeholder="Amount" type="number" {...field} />
+                    <Input
+                      placeholder="Amount"
+                      type="number"
+                      {...field}
+                      onChange={(e) => {
+                        form.setValue("Text", generateMessage(Number(e.target.value), form.watch("Months")));
+                        field.onChange(e);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -208,7 +219,7 @@ export default function CreateRecord() {
               name="Months"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Month</FormLabel>
+                  <FormLabel>Month(s)</FormLabel>
                   <FormControl>
                     <Popover open={monthPicker} onOpenChange={(open) => setMonthPicker(open)}>
                       <div className="flex w-full gap-2">
@@ -225,7 +236,7 @@ export default function CreateRecord() {
                         {field.value?.length === 0 ? (
                           <Button
                             variant={"outline"}
-                            disabled={form.getValues("Member") === ""}
+                            disabled={form.watch("Member") === ""}
                             type="button"
                             onClick={() => field.value.length === 0 && setMonthPicker(!monthPicker)}
                             className={"flex h-full w-full justify-center text-left font-normal hover:bg-bgc"}>
@@ -253,13 +264,13 @@ export default function CreateRecord() {
                         )}
                       </div>
 
-                      <PopoverContent className="z-[1000] m-0 w-auto border-bc bg-bc p-0" align="start">
+                      <PopoverContent className="z-[1100] m-0 w-auto border-bc bg-bc p-0" align="start">
                         <div className="z-[1000] max-w-[300px] rounded-sm bg-card text-white">
                           <Calendar
                             defaultView="year"
                             maxDetail="year"
                             minDetail="year"
-                            onClickMonth={(clickedMonth) =>
+                            onClickMonth={(clickedMonth) => {
                               months.filter(
                                 (paidMonth) =>
                                   clickedMonth.getMonth() === paidMonth.getMonth() &&
@@ -272,7 +283,10 @@ export default function CreateRecord() {
                                     clickedMonth.getMonth() === selectedMonth.getMonth() &&
                                     clickedMonth.getFullYear() === selectedMonth.getFullYear(),
                                 ).length === 0
-                                ? form.setValue("Months", [...field.value, clickedMonth])
+                                ? form.setValue(
+                                    "Months",
+                                    [...field.value, clickedMonth].sort((a, b) => a.getTime() - b.getTime()),
+                                  )
                                 : form.setValue(
                                     "Months",
                                     form
@@ -281,9 +295,12 @@ export default function CreateRecord() {
                                         (deletedMonth) =>
                                           clickedMonth.getMonth() !== deletedMonth.getMonth() ||
                                           clickedMonth.getFullYear() !== deletedMonth.getFullYear(),
-                                      ),
-                                  )
-                            }
+                                      )
+                                      .sort((a, b) => a.getTime() - b.getTime()),
+                                  );
+
+                              form.setValue("Text", generateMessage(form.getValues("Amount"), form.getValues("Months")));
+                            }}
                             tileClassName={(args) => {
                               if (
                                 form
@@ -316,14 +333,31 @@ export default function CreateRecord() {
               control={form.control}
               name="Notify"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Notify member?</FormLabel>
-                    <FormDescription>Send a SMS Notification as a record of payment</FormDescription>
+                <FormItem className="flex flex-col gap-2 rounded-lg border p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Notify member?</FormLabel>
+                      <FormDescription>Send a SMS Notification as a record of payment</FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
                   </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
+                  {field.value && (
+                    <FormField
+                      control={form.control}
+                      name="Text"
+                      render={({ field: innerField }) => (
+                        <FormItem>
+                          <FormLabel>Message</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Notification Message" {...innerField} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </FormItem>
               )}
             />

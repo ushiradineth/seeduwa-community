@@ -3,6 +3,8 @@ import moment from "moment";
 import { twMerge } from "tailwind-merge";
 import { type NextRouter } from "next/router";
 
+import { MONTHS } from "./consts";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -72,4 +74,15 @@ export function s2ab(s: string): ArrayBuffer {
     view[i] = s.charCodeAt(i) & 0xff;
   }
   return buf;
+}
+
+export function generateMessage(amount: number, months: Date[]) {
+  return `Your payment of ${amount * months.length} LKR ${months.length > 1 ? `(${amount} LKR Per Month) ` : ""}for ${months
+    .map(
+      (month, index) =>
+        `${MONTHS[month.getMonth()]} ${month.getFullYear()}${
+          index !== months.length - 1 ? (index === months.length - 2 ? " and " : ", ") : ""
+        }`,
+    )
+    .join("")} has been received. Thank you!`;
 }

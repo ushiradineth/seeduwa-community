@@ -7,13 +7,14 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
-import { removeQueryParamsFromRouter } from "@/lib/utils";
+import { generateMessage, removeQueryParamsFromRouter } from "@/lib/utils";
 import { CreateRecordSchema, type CreateRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
 import { Input } from "../Atoms/Input";
 import { Switch } from "../Atoms/Switch";
+import { Textarea } from "../Atoms/Textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
@@ -44,6 +45,7 @@ export default function CreateRecordForMember() {
       months: data.Months,
       paymentDate: data.PaymentDate,
       notify: data.Notify,
+      text: data.Text,
     });
   }
 
@@ -73,11 +75,12 @@ export default function CreateRecordForMember() {
       new Date(Number(router.query.year ?? new Date().getFullYear()), Number(router.query.month ?? new Date().getMonth()), 1),
     ]);
     form.setValue("PaymentDate", new Date());
+    form.setValue("Text", generateMessage(DEFAULT_AMOUNT, form.getValues("Months")));
   }, [router.query.create, form, router.query.month, router.query.year, creatingRecord, router.query.memberId]);
 
   return (
     <Dialog open={router.query.mode === "new"} onOpenChange={() => exitPopup(true)}>
-      <DialogContent className="dark text-white sm:max-w-[425px]">
+      <DialogContent className="dark max-h-[90%] text-white sm:max-w-[425px]">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <DialogHeader>
@@ -96,7 +99,15 @@ export default function CreateRecordForMember() {
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input placeholder="Amount" type="number" {...field} />
+                    <Input
+                      placeholder="Amount"
+                      type="number"
+                      {...field}
+                      onChange={(e) => {
+                        form.setValue("Text", generateMessage(Number(e.target.value), form.watch("Months")));
+                        field.onChange(e);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -139,14 +150,31 @@ export default function CreateRecordForMember() {
               control={form.control}
               name="Notify"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Notify member?</FormLabel>
-                    <FormDescription>Send a SMS Notification as a record of payment</FormDescription>
+                <FormItem className="flex flex-col gap-2 rounded-lg border p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Notify member?</FormLabel>
+                      <FormDescription>Send a SMS Notification as a record of payment</FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
                   </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
+                  {field.value && (
+                    <FormField
+                      control={form.control}
+                      name="Text"
+                      render={({ field: innerField }) => (
+                        <FormItem>
+                          <FormLabel>Message</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Notification Message" {...innerField} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </FormItem>
               )}
             />

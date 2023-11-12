@@ -222,7 +222,9 @@ function generateXSLX(data: RouterOutput["member"]["getMemberDocumentData"]) {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `SVSA - ${data.membersParam} members for ${data.month} ${data.year}.xlsx`;
+  a.download = `SVSA - ${data.membersParam} ${
+    data.membersParam !== MEMBERS_PAYMENT_FILTER_ENUM.All ? `members for ${data.month} ${data.year}` : ""
+  }.xlsx`;
 
   a.click();
 

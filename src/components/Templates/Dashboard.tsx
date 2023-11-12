@@ -1,7 +1,7 @@
 import { type inferRouterOutputs } from "@trpc/server";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { FileText, MoreVertical, Plus, Sheet } from "lucide-react";
+import { FileText, MoreVertical, Sheet } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -141,8 +141,7 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
   );
 }
 
-function OptionMenu({ onClickPDF, onClickXSLX }: { onClickPDF: () => void; onClickXSLX: () => void }) {
-
+function OptionMenu({ onClickPDF, onClickXSLX }: { readonly onClickPDF: () => void; readonly onClickXSLX: () => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="ml-auto">

@@ -142,7 +142,6 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
 }
 
 function OptionMenu({ onClickPDF, onClickXSLX }: { onClickPDF: () => void; onClickXSLX: () => void }) {
-  const router = useRouter();
 
   return (
     <DropdownMenu>
@@ -150,13 +149,7 @@ function OptionMenu({ onClickPDF, onClickXSLX }: { onClickPDF: () => void; onCli
         <MoreVertical size={20} className="cursor-pointer" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="dark">
-        <DropdownMenuLabel>Members</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="flex cursor-pointer gap-4"
-          onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
-          Add new member <Plus className="ml-auto" size={20} />
-        </DropdownMenuItem>
+        <DropdownMenuLabel>Dashboard</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="flex cursor-pointer gap-4" onClick={onClickPDF}>
           Download as PDF <FileText className="ml-auto" size={20} />

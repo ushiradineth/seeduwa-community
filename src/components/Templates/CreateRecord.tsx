@@ -90,7 +90,7 @@ export default function CreateRecord() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <DialogHeader>
               <DialogTitle>Create Record</DialogTitle>
-              <DialogDescription>Add new payment record to the SVS List.</DialogDescription>
+              <DialogDescription>Add new payment record.</DialogDescription>
             </DialogHeader>
             <FormField
               control={undefined}

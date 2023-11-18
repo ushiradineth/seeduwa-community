@@ -60,7 +60,7 @@ export default function CreateMember() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <DialogHeader>
               <DialogTitle>Create Member</DialogTitle>
-              <DialogDescription>Add new member to the SVS List.</DialogDescription>
+              <DialogDescription>Add new member.</DialogDescription>
             </DialogHeader>
             <FormField
               control={form.control}

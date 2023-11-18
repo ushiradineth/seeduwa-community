@@ -20,7 +20,6 @@ export type Record = {
 export type Props = {
   records: Record[];
   count: number;
-  total: number;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -73,8 +72,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     where,
   });
 
-  const total = await prisma.payment.count();
-
   return {
     props: {
       records: records.map((record) => ({
@@ -83,18 +80,17 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         paymentAt: record.paymentAt.toDateString(),
       })),
       count,
-      total,
     },
   };
 };
 
-export default function AllRecords({ records, count, total }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function AllRecords({ records, count }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
       <Head>
         <title>Records - Seeduwa Village Security Association</title>
       </Head>
-      <Records records={records} count={count} total={total} />
+      <Records records={records} count={count} />
     </>
   );
 }

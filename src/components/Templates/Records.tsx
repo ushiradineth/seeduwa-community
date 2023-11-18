@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Records({ records: initialRecords, count, total }: Props) {
+export default function Records({ records: initialRecords, count }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
   const [records, setRecords] = useState<Record[]>(initialRecords);
@@ -99,7 +99,6 @@ export default function Records({ records: initialRecords, count, total }: Props
               </TableRow>
             )}
           </TableBody>
-          <TableCaption>Currently, a total of {total} Records are on SVC</TableCaption>
         </Table>
       </CardContent>
       {count !== 0 && count > ITEMS_PER_PAGE && (

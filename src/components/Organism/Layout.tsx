@@ -1,4 +1,4 @@
-import { Coins, LogOut, Menu, Plus, User } from "lucide-react";
+import { Coins, LogOut, Menu, Plus, Receipt, User } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
@@ -20,9 +20,11 @@ import {
 } from "../Molecules/NavigationMenu";
 import { Sheet, SheetContent, SheetTrigger } from "../Molecules/Sheet";
 import BroadcastMessage from "../Templates/BroadcastMessage";
+import CreateExpense from "../Templates/CreateExpense";
 import CreateMember from "../Templates/CreateMember";
 import CreateRecord from "../Templates/CreateRecord";
 import CreateRecordForMember from "../Templates/CreateRecordForMember";
+import EditExpense from "../Templates/EditExpense";
 import EditMember from "../Templates/EditMember";
 import EditRecord from "../Templates/EditRecord";
 import NotifyUnpaidMembers from "../Templates/NotifyUnpaidMembers";
@@ -43,6 +45,8 @@ function Layout(props: { children: React.ReactNode }) {
         <EditMember />
         <NotifyUnpaidMembers />
         <BroadcastMessage />
+        <CreateExpense />
+        <EditExpense />
       </>
     ),
     [],
@@ -119,14 +123,19 @@ function NavSheet() {
           {status === "authenticated" && (
             <>
               <div className="flex w-full flex-col items-center justify-center gap-4">
-                <SheetButton onClick={() => router.push("/member")}>View all members</SheetButton>
+                <SheetButton onClick={() => router.push("/member")}>Members</SheetButton>
                 <SheetButton onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
-                  Add new member
+                  New Member
                 </SheetButton>
                 <Separator />
-                <SheetButton onClick={() => router.push("/record")}>View all payment records</SheetButton>
+                <SheetButton onClick={() => router.push("/record")}>Payment Records</SheetButton>
                 <SheetButton onClick={() => router.push({ query: { ...router.query, create: "record" } }, undefined, { shallow: true })}>
-                  Add new payment record
+                  New Payment Record
+                </SheetButton>
+                <Separator />
+                <SheetButton onClick={() => router.push("/expense")}>Expense Records</SheetButton>
+                <SheetButton onClick={() => router.push({ query: { ...router.query, create: "expense" } }, undefined, { shallow: true })}>
+                  New Expense Record
                 </SheetButton>
               </div>
               <Separator />
@@ -153,14 +162,14 @@ function NavItems() {
             <div className={`flex w-[250px] flex-col gap-3 p-4 md:grid-cols-2`}>
               <Link href={"/member"}>
                 <NavigationMenuItem style={{ width: "100%" }} className={navigationMenuTriggerStyle()}>
-                  View all members <User className="ml-auto" />
+                  Members <User className="ml-auto" />
                 </NavigationMenuItem>
               </Link>
               <NavigationMenuItem
                 style={{ width: "100%" }}
                 className={navigationMenuTriggerStyle()}
                 onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
-                Add new member
+                New Member
                 <Plus className="ml-auto" />
               </NavigationMenuItem>
             </div>
@@ -172,7 +181,7 @@ function NavItems() {
             <div className={`flex w-[300px] flex-col gap-3 p-4 md:grid-cols-2`}>
               <Link href={"/record"}>
                 <NavigationMenuItem style={{ width: "100%" }} className={navigationMenuTriggerStyle()}>
-                  View all payment records
+                  Payment Records
                   <Coins className="ml-auto" />
                 </NavigationMenuItem>
               </Link>
@@ -180,7 +189,27 @@ function NavItems() {
                 style={{ width: "100%" }}
                 className={navigationMenuTriggerStyle()}
                 onClick={() => router.push({ query: { ...router.query, create: "record" } }, undefined, { shallow: true })}>
-                Add new payment record
+                New Payment Record
+                <Plus className="ml-auto" />
+              </NavigationMenuItem>
+            </div>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>Expenses</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className={`flex w-[300px] flex-col gap-3 p-4 md:grid-cols-2`}>
+              <Link href={"/expense"}>
+                <NavigationMenuItem style={{ width: "100%" }} className={navigationMenuTriggerStyle()}>
+                  Expense Records
+                  <Receipt className="ml-auto" />
+                </NavigationMenuItem>
+              </Link>
+              <NavigationMenuItem
+                style={{ width: "100%" }}
+                className={navigationMenuTriggerStyle()}
+                onClick={() => router.push({ query: { ...router.query, create: "expense" } }, undefined, { shallow: true })}>
+                New Expense Record
                 <Plus className="ml-auto" />
               </NavigationMenuItem>
             </div>

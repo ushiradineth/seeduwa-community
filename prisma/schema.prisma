@@ -46,8 +46,9 @@ model Payment {
 model Expense {
   id        String   @id @default(cuid())
   name      String
-  createdAt DateTime @default(now())
-  expenseAt DateTime @default(now())
+  createdAt DateTime @default(now()) // when the record was created
+  expenseAt DateTime @default(now()) // when the expense was made
+  month     DateTime @default(now()) // which month the expense is for
   amount    Float
   active    Boolean  @default(true)
 }

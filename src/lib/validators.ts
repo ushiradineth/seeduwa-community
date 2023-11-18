@@ -77,3 +77,20 @@ export const BroadcastSchema = yup.object().shape({
 });
 
 export type BroadcastFormData = yup.InferType<typeof BroadcastSchema>;
+
+export const CreateExpenseSchema = yup.object().shape({
+  Months: yup.array(yup.date().required()).required().min(1),
+  ExpenseDate: yup.date().required(),
+  Amount: numberValidator,
+  Name: yup.string().required(),
+});
+
+export type CreateExpenseFormData = yup.InferType<typeof CreateExpenseSchema>;
+
+export const EditExpenseSchema = yup.object().shape({
+  ExpenseDate: yup.date().required(),
+  Amount: numberValidator,
+  Name: yup.string().required(),
+});
+
+export type EditExpenseFormData = yup.InferType<typeof EditExpenseSchema>;

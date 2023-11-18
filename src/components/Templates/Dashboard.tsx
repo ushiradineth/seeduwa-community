@@ -26,7 +26,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 export default function Dashboard({ members: initialMembers, count, year, itemsPerPage, search }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
-  const [Members, setMembers] = useState<Member[]>(initialMembers);
+  const [members, setMembers] = useState<Member[]>(initialMembers);
   const { mutate } = api.member.getDashboardDocumentData.useMutation({
     onSuccess: (data, variables) => {
       if (variables.type === "PDF") generatePDF(data);
@@ -36,7 +36,7 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
 
   const paymentFilter = useCallback((month: string, year: number, member: Member) => {
     return member.payments.find((payment) => {
-      const paymentDate = new Date(payment.paymentAt);
+      const paymentDate = new Date(payment.month);
       const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
       const paymentYear = paymentDate.getFullYear().toString();
 
@@ -45,8 +45,8 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
   }, []);
 
   useEffect(() => {
-    initialMembers !== Members && setMembers(initialMembers);
-  }, [initialMembers, Members]);
+    initialMembers !== members && setMembers(initialMembers);
+  }, [initialMembers, members]);
 
   return (
     <Card>
@@ -77,8 +77,8 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Members.length !== 0 ? (
-              Members.map((member) => {
+            {members.length !== 0 ? (
+              members.map((member) => {
                 return (
                   <TableRow key={member.id}>
                     <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
@@ -190,7 +190,7 @@ function generatePDF(data: RouterOutputs["member"]["getDashboardDocumentData"]) 
       ...data.members.map((member) => {
         const paymentsByMonth = MONTHS.map((month) => {
           const payment = member.payments.find((p) => {
-            const paymentDate = new Date(p.paymentAt);
+            const paymentDate = new Date(p.month);
             const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
             return paymentMonth === month;
           });
@@ -214,7 +214,7 @@ function generateXSLX(data: RouterOutputs["member"]["getDashboardDocumentData"])
     ...data.members.map((member) => {
       const paymentsByMonth = MONTHS.map((month) => {
         const payment = member.payments.find((p) => {
-          const paymentDate = new Date(p.paymentAt);
+          const paymentDate = new Date(p.month);
           const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
           return paymentMonth === month;
         });

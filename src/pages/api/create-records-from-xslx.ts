@@ -62,11 +62,14 @@ export default function handler(request: NextApiRequest, response: NextApiRespon
   //           },
   //         },
   //         amount: payment.amount,
-  //         paymentAt: new Date(
-  //           2023,
-  //           MONTHS.findIndex((m) => m === payment.month),
-  //           1,
-  //         ),
+  //         month: month={moment(
+          //     moment()
+          //     .year(year)
+          //     .month(MONTHS.findIndex((value) => value === month))
+          //     .startOf("month")
+          //     .utcOffset(0, true)
+          //     .format(),
+          // ).toDate()}
   //       },
   //     });
   //   });

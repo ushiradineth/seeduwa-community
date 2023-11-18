@@ -28,7 +28,7 @@ export type Props = {
       createdAt: string;
       amount: number;
       active: boolean;
-      paymentAt: string;
+      month: string;
       memberId: string;
     }[];
   };
@@ -63,7 +63,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         ...member,
         createdAt: formalizeDate(member.createdAt),
         payments: member.payments.map((payment: Payment) => {
-          return { ...payment, createdAt: formalizeDate(payment.createdAt), paymentAt: formalizeDate(payment.paymentAt) };
+          return {
+            ...payment,
+            createdAt: formalizeDate(payment.createdAt),
+            paymentAt: formalizeDate(payment.paymentAt),
+            month: formalizeDate(payment.month),
+          };
         }),
       },
     },
@@ -76,7 +81,7 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
   const paymentFilter = useCallback(
     (month: string, year: number) => {
       return member.payments.find((payment) => {
-        const paymentDate = new Date(payment.paymentAt);
+        const paymentDate = new Date(payment.month);
         const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
         const paymentYear = paymentDate.getFullYear().toString();
 

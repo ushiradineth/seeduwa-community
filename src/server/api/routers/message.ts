@@ -1,3 +1,4 @@
+import moment from "moment";
 import { z } from "zod";
 
 import { env } from "@/env.mjs";
@@ -41,7 +42,9 @@ export const messageRouter = createTRPCRouter({
           payments: {
             none: {
               active: true,
-              paymentAt: { equals: new Date(input.month.getFullYear(), input.month.getMonth(), 1) },
+              month: {
+                equals: moment().year(input.month.getFullYear()).month(input.month.getMonth()).startOf("month").utcOffset(0, true).toDate(),
+              },
             },
           },
         },

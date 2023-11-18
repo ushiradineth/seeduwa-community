@@ -2,6 +2,7 @@ import { type inferRouterOutputs } from "@trpc/server";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { BadgeCheck, BadgeXIcon, Edit, FileText, MessagesSquare, MoreVertical, Plus, Sheet } from "lucide-react";
+import moment from "moment";
 import { formatPhoneNumberIntl } from "react-phone-number-input";
 import * as XLSX from "xlsx";
 import { useEffect, useState } from "react";
@@ -50,13 +51,14 @@ export default function Members({ members: initialMembers, count, total, year, m
           <OptionMenu
             onClickPDF={() => mutate({ members: membersParam, month, year, search, type: "PDF" })}
             onClickXSLX={() => mutate({ members: membersParam, month, year, search, type: "XSLX" })}
-            month={
-              new Date(
-                year,
-                MONTHS.findIndex((value) => value === month),
-                1,
-              )
-            }
+            month={moment(
+              moment()
+                .year(year)
+                .month(MONTHS.findIndex((value) => value === month))
+                .startOf("month")
+                .utcOffset(0, true)
+                .format(),
+            ).toDate()}
             filter={membersParam}
           />
         </CardTitle>
@@ -88,7 +90,7 @@ export default function Members({ members: initialMembers, count, total, year, m
               <TableHead className="text-center">
                 Paid for {month} {year}
               </TableHead>
-              <TableHead className="text-center">Action</TableHead>
+              <TableHead className="text-center">Edit</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -97,7 +99,7 @@ export default function Members({ members: initialMembers, count, total, year, m
                 return (
                   <TableRow key={member.id}>
                     <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
-                      <Link className="max-w-24 flex truncate" href={`/member/${member.id}`}>
+                      <Link className="max-w-24 flex items-center justify-center truncate" href={`/member/${member.id}`}>
                         {member.name}
                       </Link>
                     </TableCell>

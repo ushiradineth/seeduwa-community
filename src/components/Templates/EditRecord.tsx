@@ -100,8 +100,8 @@ export default function EditRecord() {
               <DialogHeader>
                 <DialogTitle className="flex w-fit items-center justify-center gap-2">
                   <p>Edit Record</p>
-                  <Badge key={record?.paymentAt.getFullYear()} className="w-fit">
-                    {MONTHS[Number(record?.paymentAt.getMonth() ?? 0)]} {record?.paymentAt.getFullYear()}
+                  <Badge key={record?.month.getFullYear()} className="w-fit">
+                    {MONTHS[Number(record?.month.getMonth() ?? 0)]} {record?.month.getFullYear()}
                   </Badge>
                 </DialogTitle>
               </DialogHeader>

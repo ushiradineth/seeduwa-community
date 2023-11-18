@@ -40,7 +40,7 @@ export default function Records({ records: initialRecords, count, total }: Props
               <TableHead className="text-center">Member</TableHead>
               <TableHead className="text-center">Period</TableHead>
               <TableHead className="text-center">Amount</TableHead>
-              <TableHead className="text-center">Action</TableHead>
+              <TableHead className="text-center">Edit</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -49,11 +49,13 @@ export default function Records({ records: initialRecords, count, total }: Props
                 return (
                   <TableRow key={record.id}>
                     <TableCell onClick={() => router.push(`/member/${record.member.id}`)} className="cursor-pointer text-center">
-                      <Link href={`/member/${record.member.id}`}>{record.member.name}</Link>
+                      <Link href={`/member/${record.member.id}`} className="max-w-24 flex items-center justify-center truncate">
+                        {record.member.name}
+                      </Link>
                     </TableCell>
                     <TableCell onClick={() => router.push(`/record/${record.id}`)} className="cursor-pointer text-center">
                       <Link href={`/record/${record.id}`}>
-                        {MONTHS[new Date(record.paymentAt).getMonth()]} {new Date(record.paymentAt).getFullYear()}
+                        {MONTHS[new Date(record.month).getMonth()]} {new Date(record.month).getFullYear()}
                       </Link>
                     </TableCell>
                     <TableCell onClick={() => router.push(`/record/${record.id}`)} className="cursor-pointer text-center">
@@ -69,8 +71,8 @@ export default function Records({ records: initialRecords, count, total }: Props
                                 ...router.query,
                                 mode: "edit",
                                 payment: record.id,
-                                month: new Date(record.paymentAt).getMonth(),
-                                year: new Date(record.paymentAt).getFullYear(),
+                                month: new Date(record.month).getMonth(),
+                                year: new Date(record.month).getFullYear(),
                               },
                             },
                             undefined,

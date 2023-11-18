@@ -62,8 +62,8 @@ export default function CreateRecord() {
     YEARS?.forEach((year) => {
       const a = members
         ?.find((member) => form.watch("Member") === member.id)
-        ?.payments.filter((payment) => payment.paymentAt.getFullYear() === year)
-        .map((payment) => payment.paymentAt);
+        ?.payments.filter((payment) => payment.month.getFullYear() === year)
+        .map((payment) => payment.month);
 
       if (a) paidMonths.push(...a);
     });

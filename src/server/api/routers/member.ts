@@ -98,7 +98,7 @@ export const memberRouter = createTRPCRouter({
       },
       include: {
         payments: {
-          select: { paymentAt: true },
+          select: { month: true },
           where: { active: true },
         },
       },
@@ -124,25 +124,14 @@ export const memberRouter = createTRPCRouter({
       const membersParam = String(input.members ?? "All") as MEMBERS_PAYMENT_FILTER_ENUM;
       const year = Number(input.year ?? new Date().getFullYear());
       const month = String(input.month ?? MONTHS[new Date().getMonth()]);
-
       let membersFilter = {};
-
       const monthIndex = MONTHS.findIndex((value) => value === month);
+      const paymentMonth = moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).toDate();
 
       if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
-        membersFilter = {
-          some: {
-            active: true,
-            date: { equals: new Date(year, monthIndex, 1) },
-          },
-        };
+        membersFilter = { some: { active: true, month: { equals: paymentMonth } } };
       } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
-        membersFilter = {
-          none: {
-            active: true,
-            date: { equals: new Date(year, monthIndex, 1) },
-          },
-        };
+        membersFilter = { none: { active: true, month: { equals: paymentMonth } } };
       }
 
       const where =
@@ -161,10 +150,7 @@ export const memberRouter = createTRPCRouter({
                 { payments: { ...membersFilter } },
               ],
             }
-          : {
-              active: true,
-              payments: { ...membersFilter },
-            };
+          : { active: true, payments: { ...membersFilter } };
 
       const members = await ctx.prisma.member.findMany({
         where,
@@ -175,14 +161,15 @@ export const memberRouter = createTRPCRouter({
           name: true,
           lane: true,
           payments: {
-            where: { active: true, paymentAt: { equals: new Date(year, monthIndex, 1) } },
-            select: { id: true, paymentAt: true },
+            where: {
+              active: true,
+              month: { equals: paymentMonth },
+            },
+            select: { id: true, month: true },
           },
         },
-        
-        orderBy: {
-          lane: "asc",
-        },
+
+        orderBy: { lane: "asc" },
       });
 
       return {
@@ -236,14 +223,14 @@ export const memberRouter = createTRPCRouter({
           payments: {
             where: {
               active: true,
-              paymentAt: {
-                gt: moment().year(year).startOf("year").utcOffset(0, true).format(),
-                lt: moment().year(year).endOf("year").utcOffset(0, true).format(),
+              month: {
+                gte: moment().year(year).startOf("year").utcOffset(0, true).toDate(),
+                lte: moment().year(year).endOf("year").utcOffset(0, true).toDate(),
               },
             },
             select: {
               id: true,
-              paymentAt: true,
+              month: true,
               amount: true,
             },
           },
@@ -257,7 +244,7 @@ export const memberRouter = createTRPCRouter({
         members: members.map((member) => ({
           ...member,
           payments: member.payments.map((payment) => {
-            return { ...payment, paymentAt: payment.paymentAt.toISOString() };
+            return { ...payment, month: payment.month.toISOString() };
           }),
         })),
         year,

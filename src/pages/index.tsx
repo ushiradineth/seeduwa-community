@@ -16,7 +16,7 @@ export type Member = {
   lane: string;
   payments: {
     id: string;
-    paymentAt: string;
+    month: string;
     amount: number;
   }[];
 };
@@ -77,14 +77,14 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       payments: {
         where: {
           active: true,
-          paymentAt: {
-            gt: moment().year(recordYear).startOf("year").utcOffset(0, true).format(),
-            lt: moment().year(recordYear).endOf("year").utcOffset(0, true).format(),
+          month: {
+            gte: moment().year(recordYear).startOf("year").utcOffset(0, true).format(),
+            lte: moment().year(recordYear).endOf("year").utcOffset(0, true).format(),
           },
         },
         select: {
           id: true,
-          paymentAt: true,
+          month: true,
           amount: true,
         },
       },
@@ -103,7 +103,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       members: members.map((member) => ({
         ...member,
         payments: member.payments.map((payment) => {
-          return { ...payment, paymentAt: payment.paymentAt.toISOString() };
+          return { ...payment, month: payment.month.toISOString() };
         }),
       })),
       count,

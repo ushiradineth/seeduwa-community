@@ -49,23 +49,22 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
     ? Number(context.query.itemsPerPage)
     : ITEMS_PER_PAGE;
-
   let membersFilter = {};
-
   const monthIndex = MONTHS.findIndex((value) => value === month);
+  const paymentMonth = moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).format();
 
   if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
     membersFilter = {
       some: {
         active: true,
-        date: { equals: moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).format() },
+        month: { equals: paymentMonth },
       },
     };
   } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
     membersFilter = {
       none: {
         active: true,
-        date: { equals: moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).format() },
+        month: { equals: paymentMonth },
       },
     };
   }
@@ -102,17 +101,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       name: true,
       lane: true,
       payments: {
-        where: { active: true, paymentAt: { equals: moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).format() } },
-        select: { id: true, paymentAt: true },
+        where: { active: true, month: { equals: paymentMonth } },
+        select: { id: true, month: true },
       },
     },
-    orderBy: {
-      _relevance: {
-        fields: ["name", "houseId", "lane"],
-        search,
-        sort: "asc",
-      },
-    },
+    orderBy: { lane: "asc" },
   });
 
   const count = await prisma.member.count({

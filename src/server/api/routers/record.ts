@@ -31,6 +31,7 @@ export const recordRouter = createTRPCRouter({
                 amount: input.amount,
                 memberId: input.memberId,
                 paymentAt: moment(month).utcOffset(0, true).format(),
+                createdAt: moment(input.paymentDate).utcOffset(0, true).format(),
               },
               select: {
                 paymentAt: true,

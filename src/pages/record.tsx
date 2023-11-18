@@ -10,6 +10,7 @@ export type Record = {
   id: string;
   amount: number;
   month: string;
+  paymentAt: string;
   member: {
     id: string;
     name: string;
@@ -55,6 +56,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       id: true,
       amount: true,
       month: true,
+      paymentAt: true,
       member: {
         select: {
           id: true,
@@ -78,6 +80,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       records: records.map((record) => ({
         ...record,
         month: record.month.toDateString(),
+        paymentAt: record.paymentAt.toDateString(),
       })),
       count,
       total,
@@ -91,9 +94,7 @@ export default function AllRecords({ records, count, total }: InferGetServerSide
       <Head>
         <title>Records - Seeduwa Village Security Association</title>
       </Head>
-      <>
-        <Records records={records} count={count} total={total} />
-      </>
+      <Records records={records} count={count} total={total} />
     </>
   );
 }

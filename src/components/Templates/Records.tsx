@@ -13,11 +13,11 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 export default function Records({ records: initialRecords, count, total }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
-  const [Records, setRecords] = useState<Record[]>(initialRecords);
+  const [records, setRecords] = useState<Record[]>(initialRecords);
 
   useEffect(() => {
-    initialRecords !== Records && setRecords(initialRecords);
-  }, [initialRecords, Records]);
+    initialRecords !== records && setRecords(initialRecords);
+  }, [initialRecords, records]);
 
   return (
     <Card>
@@ -38,14 +38,15 @@ export default function Records({ records: initialRecords, count, total }: Props
           <TableHeader>
             <TableRow>
               <TableHead className="text-center">Member</TableHead>
-              <TableHead className="text-center">Period</TableHead>
               <TableHead className="text-center">Amount</TableHead>
+              <TableHead className="text-center">Period</TableHead>
+              <TableHead className="text-center">Paid on</TableHead>
               <TableHead className="text-center">Edit</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Records.length !== 0 ? (
-              Records.map((record) => {
+            {records.length !== 0 ? (
+              records.map((record) => {
                 return (
                   <TableRow key={record.id}>
                     <TableCell onClick={() => router.push(`/member/${record.member.id}`)} className="cursor-pointer text-center">
@@ -54,12 +55,15 @@ export default function Records({ records: initialRecords, count, total }: Props
                       </Link>
                     </TableCell>
                     <TableCell onClick={() => router.push(`/record/${record.id}`)} className="cursor-pointer text-center">
+                      <Link href={`/record/${record.id}`}>LKR {record.amount.toLocaleString()}</Link>
+                    </TableCell>
+                    <TableCell onClick={() => router.push(`/record/${record.id}`)} className="cursor-pointer text-center">
                       <Link href={`/record/${record.id}`}>
                         {MONTHS[new Date(record.month).getMonth()]} {new Date(record.month).getFullYear()}
                       </Link>
                     </TableCell>
                     <TableCell onClick={() => router.push(`/record/${record.id}`)} className="cursor-pointer text-center">
-                      <Link href={`/record/${record.id}`}>LKR {record.amount.toLocaleString()}</Link>
+                      <Link href={`/record/${record.id}`}>{record.paymentAt}</Link>
                     </TableCell>
                     <TableCell>
                       <button

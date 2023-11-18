@@ -86,12 +86,12 @@ export default function EditRecord() {
   useEffect(() => {
     form.clearErrors();
     form.setValue("Amount", record?.amount ?? DEFAULT_AMOUNT);
-    form.setValue("PaymentDate", record?.createdAt ?? new Date());
+    form.setValue("PaymentDate", record?.paymentAt ?? new Date());
   }, [form, record]);
 
   return (
     <Dialog open={router.query.mode === "edit" && typeof router.query.payment === "string"} onOpenChange={() => exitPopup(true)}>
-      <DialogContent className="dark text-white sm:max-w-[425px] max-h-[90%]">
+      <DialogContent className="dark max-h-[90%] text-white sm:max-w-[425px]">
         {gettingRecord || refetchingRecord ? (
           <Loader background removeBackgroundColor height={"385px"} />
         ) : (
@@ -100,8 +100,8 @@ export default function EditRecord() {
               <DialogHeader>
                 <DialogTitle className="flex w-fit items-center justify-center gap-2">
                   <p>Edit Record</p>
-                  <Badge key={record?.date.getFullYear()} className="w-fit">
-                    {MONTHS[Number(record?.date.getMonth() ?? 0)]} {record?.date.getFullYear()}
+                  <Badge key={record?.paymentAt.getFullYear()} className="w-fit">
+                    {MONTHS[Number(record?.paymentAt.getMonth() ?? 0)]} {record?.paymentAt.getFullYear()}
                   </Badge>
                 </DialogTitle>
               </DialogHeader>

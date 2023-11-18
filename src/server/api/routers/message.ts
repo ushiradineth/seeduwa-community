@@ -41,7 +41,7 @@ export const messageRouter = createTRPCRouter({
           payments: {
             none: {
               active: true,
-              date: { equals: new Date(input.month.getFullYear(), input.month.getMonth(), 1) },
+              paymentAt: { equals: new Date(input.month.getFullYear(), input.month.getMonth(), 1) },
             },
           },
         },

@@ -98,7 +98,7 @@ export const memberRouter = createTRPCRouter({
       },
       include: {
         payments: {
-          select: { date: true },
+          select: { paymentAt: true },
           where: { active: true },
         },
       },
@@ -174,8 +174,12 @@ export const memberRouter = createTRPCRouter({
           houseId: true,
           name: true,
           lane: true,
-          payments: { where: { active: true, date: { equals: new Date(year, monthIndex, 1) } }, select: { id: true, date: true } },
+          payments: {
+            where: { active: true, paymentAt: { equals: new Date(year, monthIndex, 1) } },
+            select: { id: true, paymentAt: true },
+          },
         },
+        
         orderBy: {
           lane: "asc",
         },
@@ -232,14 +236,14 @@ export const memberRouter = createTRPCRouter({
           payments: {
             where: {
               active: true,
-              date: {
+              paymentAt: {
                 gt: moment().year(year).startOf("year").utcOffset(0, true).format(),
                 lt: moment().year(year).endOf("year").utcOffset(0, true).format(),
               },
             },
             select: {
               id: true,
-              date: true,
+              paymentAt: true,
               amount: true,
             },
           },
@@ -253,7 +257,7 @@ export const memberRouter = createTRPCRouter({
         members: members.map((member) => ({
           ...member,
           payments: member.payments.map((payment) => {
-            return { ...payment, date: payment.date.toISOString() };
+            return { ...payment, paymentAt: payment.paymentAt.toISOString() };
           }),
         })),
         year,

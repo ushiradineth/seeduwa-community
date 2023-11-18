@@ -36,7 +36,7 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
 
   const paymentFilter = useCallback((month: string, year: number, member: Member) => {
     return member.payments.find((payment) => {
-      const paymentDate = new Date(payment.date);
+      const paymentDate = new Date(payment.paymentAt);
       const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
       const paymentYear = paymentDate.getFullYear().toString();
 
@@ -141,7 +141,7 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
 
 function OptionMenu({ onClickPDF, onClickXSLX }: { readonly onClickPDF: () => void; readonly onClickXSLX: () => void }) {
   const router = useRouter();
-  
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="ml-auto">
@@ -190,7 +190,7 @@ function generatePDF(data: RouterOutputs["member"]["getDashboardDocumentData"]) 
       ...data.members.map((member) => {
         const paymentsByMonth = MONTHS.map((month) => {
           const payment = member.payments.find((p) => {
-            const paymentDate = new Date(p.date);
+            const paymentDate = new Date(p.paymentAt);
             const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
             return paymentMonth === month;
           });
@@ -214,7 +214,7 @@ function generateXSLX(data: RouterOutputs["member"]["getDashboardDocumentData"])
     ...data.members.map((member) => {
       const paymentsByMonth = MONTHS.map((month) => {
         const payment = member.payments.find((p) => {
-          const paymentDate = new Date(p.date);
+          const paymentDate = new Date(p.paymentAt);
           const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
           return paymentMonth === month;
         });

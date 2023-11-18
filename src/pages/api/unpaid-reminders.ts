@@ -27,7 +27,7 @@ export default async function handler(request: NextApiRequest, response: NextApi
       payments: {
         none: {
           active: true,
-          date: { equals: month },
+          paymentAt: { equals: month },
         },
       },
     },

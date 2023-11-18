@@ -9,7 +9,7 @@ import { prisma } from "@/server/db";
 export type Record = {
   id: string;
   amount: number;
-  date: string;
+  paymentAt: string;
   member: {
     id: string;
     name: string;
@@ -54,7 +54,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     select: {
       id: true,
       amount: true,
-      date: true,
+      paymentAt: true,
       member: {
         select: {
           id: true,
@@ -63,7 +63,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       },
     },
     orderBy: {
-      createdAt: "desc",
+      paymentAt: "desc",
     },
   });
 
@@ -77,7 +77,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     props: {
       records: records.map((record) => ({
         ...record,
-        date: record.date.toISOString(),
+        paymentAt: record.paymentAt.toISOString(),
       })),
       count,
       total,

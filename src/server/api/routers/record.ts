@@ -22,7 +22,7 @@ export const recordRouter = createTRPCRouter({
       input.months.forEach((month, index) => {
         void (async () => {
           const exisitingRecord = await ctx.prisma.payment.findMany({
-            where: { memberId: input.memberId, date: moment(month).utcOffset(0, true).format(), active: true },
+            where: { memberId: input.memberId, paymentAt: moment(month).utcOffset(0, true).format(), active: true },
           });
 
           if (exisitingRecord.length === 0) {
@@ -30,11 +30,10 @@ export const recordRouter = createTRPCRouter({
               data: {
                 amount: input.amount,
                 memberId: input.memberId,
-                date: moment(month).utcOffset(0, true).format(),
-                createdAt: input.paymentDate,
+                paymentAt: moment(month).utcOffset(0, true).format(),
               },
               select: {
-                date: true,
+                paymentAt: true,
                 member: {
                   select: {
                     phoneNumber: true,
@@ -68,7 +67,7 @@ export const recordRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return await ctx.prisma.payment.update({
         where: { id: input.id },
-        data: { amount: input.amount, createdAt: moment(input.paymentDate).utcOffset(0, true).format() },
+        data: { amount: input.amount, paymentAt: moment(input.paymentDate).utcOffset(0, true).format() },
       });
     }),
 

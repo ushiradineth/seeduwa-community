@@ -102,8 +102,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       name: true,
       lane: true,
       payments: {
-        where: { active: true, date: { equals: moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).format() } },
-        select: { id: true, date: true },
+        where: { active: true, paymentAt: { equals: moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).format() } },
+        select: { id: true, paymentAt: true },
       },
     },
     orderBy: {

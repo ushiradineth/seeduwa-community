@@ -53,7 +53,7 @@ export default function Records({ records: initialRecords, count, total }: Props
                     </TableCell>
                     <TableCell onClick={() => router.push(`/record/${record.id}`)} className="cursor-pointer text-center">
                       <Link href={`/record/${record.id}`}>
-                        {MONTHS[new Date(record.date).getMonth()]} {new Date(record.date).getFullYear()}
+                        {MONTHS[new Date(record.paymentAt).getMonth()]} {new Date(record.paymentAt).getFullYear()}
                       </Link>
                     </TableCell>
                     <TableCell onClick={() => router.push(`/record/${record.id}`)} className="cursor-pointer text-center">
@@ -69,8 +69,8 @@ export default function Records({ records: initialRecords, count, total }: Props
                                 ...router.query,
                                 mode: "edit",
                                 payment: record.id,
-                                month: new Date(record.date).getMonth(),
-                                year: new Date(record.date).getFullYear(),
+                                month: new Date(record.paymentAt).getMonth(),
+                                year: new Date(record.paymentAt).getFullYear(),
                               },
                             },
                             undefined,

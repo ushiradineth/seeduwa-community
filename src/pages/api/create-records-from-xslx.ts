@@ -62,7 +62,7 @@ export default function handler(request: NextApiRequest, response: NextApiRespon
   //           },
   //         },
   //         amount: payment.amount,
-  //         date: new Date(
+  //         paymentAt: new Date(
   //           2023,
   //           MONTHS.findIndex((m) => m === payment.month),
   //           1,

@@ -26,7 +26,7 @@ export default function Filter({
         onValueChange={(value) => {
           const obj: Record<string, string | number | boolean> = {};
           obj[paramKey] = value;
-          void router.push({ query: { ...router.query, ...obj } });
+          void router.push({ query: { ...router.query, ...obj, page: 1 } });
         }}>
         <SelectTrigger className="w-full">
           <SelectValue />

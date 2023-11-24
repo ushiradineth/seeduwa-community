@@ -7,7 +7,7 @@
 
 // const excelFilePath = "./a.xlsx";
 
-// export default function handler(request: NextApiRequest, response: NextApiResponse) {
+// export default async function handler(request: NextApiRequest, response: NextApiResponse) {
 //   const db = prisma;
 //   XLSX.set_fs(fs);
 //   const workbook = XLSX.readFile(excelFilePath);
@@ -15,7 +15,14 @@
 //   const worksheet = workbook.Sheets[sheetName];
 //   const months = ["March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-//   const members = [];
+//   const members: {
+//     memberId: string;
+//     lane: string | null;
+//     houseid: string | null;
+//     name: string | null;
+//     number: string | undefined;
+//     payments: { month: string; amount: number }[];
+//   }[] = [];
 
 //   for (let rowIndex = 2; ; rowIndex++) {
 //     const row = XLSX.utils.encode_row(rowIndex);
@@ -23,8 +30,6 @@
 //     const houseid = worksheet[`B${row}`] ? String(worksheet[`B${row}`].v).trim() : null;
 //     const name = worksheet[`C${row}`] ? String(worksheet[`C${row}`].v).trim() : null;
 //     const number = worksheet[`D${row}`] ? String(worksheet[`D${row}`].v).trim() : undefined;
-
-//     console.log(houseid);
 
 //     if (!houseid && !name && !lane) {
 //       break;
@@ -59,30 +64,29 @@
 //     members.push(rowData);
 //   }
 
-//   members.forEach(async (member) => {
-//     const memberData = await db.member.create({
+//   for (const member of members) {
+//     // Create member
+//     const createdMember = await db.member.create({
 //       data: {
 //         houseId: member.houseid!,
 //         lane: member.lane!,
 //         name: member.name!,
-//         phoneNumber: member.number ?? undefined,
+//         phoneNumber: member.number,
 //       },
 //     });
 
+//     // Create payments for the member
 //     member.payments.forEach(async (payment) => {
 //       await db.payment.create({
 //         data: {
-//           member: {
-//             connect: {
-//               id: memberData?.id,
-//             },
-//           },
+//           memberId: createdMember.id,
 //           amount: payment.amount,
 //           month: moment().year(2023).month(payment.month).startOf("month").utcOffset(0, true).toDate(),
+//           paymentAt: moment().year(2023).month(payment.month).startOf("month").utcOffset(0, true).toDate(),
 //         },
 //       });
 //     });
-//   });
+//   }
 
 //   response.status(200).json({ members });
 // }

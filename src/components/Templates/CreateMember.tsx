@@ -27,7 +27,7 @@ export default function CreateMember() {
   const { mutate, isLoading } = api.member.create.useMutation({
     onSuccess: async () => {
       await router.push({ query: removeQueryParamsFromRouter(router, ["create"]) });
-      toast.success("Member created successfully");
+      toast.success("Member added successfully");
     },
     onError: (error) => {
       setError(error.message);

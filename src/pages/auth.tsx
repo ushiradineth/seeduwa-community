@@ -63,11 +63,12 @@ function Login() {
 
   const [loading, setLoading] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
+  const [error, setError] = useState("");
 
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     const auth = await signIn("credentials", { username: data.Username, password: data.Password, redirect: false, callbackUrl: "/" });
-    auth?.status === 401 && toast.error("Incorrect Credentials");
+    auth?.status === 401 && setError("Incorrect Credentials");
     if (auth?.status !== 401 && auth?.error) {
       console.error(auth.error);
       toast.error("An unknown error has occured");
@@ -97,12 +98,16 @@ function Login() {
                 placeholder="*****"
                 type={isEnabled ? "text" : "password"}
                 {...register("Password")}
+                onChange={async (e) => {
+                  await register("Password").onChange(e);
+                  setError("");
+                }}
               />
-              <div onClick={() => setIsEnabled(!isEnabled)} className="mr-2 cursor-pointer" color={isEnabled ? "gray" : "white"}>
+              <button onClick={() => setIsEnabled(!isEnabled)} className="mr-2 cursor-pointer" color={isEnabled ? "gray" : "white"}>
                 {isEnabled ? <EyeIcon /> : <EyeOffIcon />}
-              </div>
+              </button>
             </div>
-            <FormFieldError error={errors.Password?.message} />
+            <FormFieldError error={errors.Password?.message ?? error} />
           </div>
         </CardContent>
         <CardFooter>

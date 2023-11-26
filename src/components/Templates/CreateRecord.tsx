@@ -26,7 +26,7 @@ export default function CreateRecord() {
   const { mutate: createRecord, isLoading: creatingRecord } = api.record.create.useMutation({
     onSuccess: async () => {
       await router.push({ query: removeQueryParamsFromRouter(router, ["create"]) });
-      toast.success("Record created successfully");
+      toast.success("Record added successfully");
     },
     onError: (error) => {
       setError(error.message);

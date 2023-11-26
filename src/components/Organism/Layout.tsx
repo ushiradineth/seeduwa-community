@@ -86,10 +86,8 @@ function Layout(props: { children: React.ReactNode }) {
           className={`flex max-w-fit flex-grow flex-col justify-center overflow-hidden scroll-smooth text-white ${
             !NAVBAR_HIDDEN_PATHS.includes(router.pathname) && "my-10"
           }`}>
-          <>
-            <Popups />
-            {props.children}
-          </>
+          <Popups />
+          {props.children}
         </div>
       </div>
     </main>
@@ -118,29 +116,36 @@ function NavSheet() {
         <Menu />
       </SheetTrigger>
       <SheetContent className="dark mt-14 block">
-        <div className="flex h-full flex-col items-center justify-start gap-4 px-4 py-12">
+        <div className="flex h-full flex-col items-end justify-start pb-12 pt-4">
           {status === "unauthenticated" && <Link href={"/auth"}>Sign in</Link>}
           {status === "authenticated" && (
             <>
-              <div className="flex w-full flex-col items-center justify-center gap-4">
-                <SheetButton onClick={() => router.push("/member")}>Members</SheetButton>
+              <div className="flex w-full flex-col items-end justify-center">
+                <SheetButton onClick={() => router.push("/member")}>
+                  Members <User />
+                </SheetButton>
                 <SheetButton onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
-                  New Member
+                  New Member <Plus />
                 </SheetButton>
-                <Separator />
-                <SheetButton onClick={() => router.push("/payment")}>Payments</SheetButton>
+                <Separator className="my-4" />
+                <SheetButton onClick={() => router.push("/payment")}>
+                  Payments <Coins />
+                </SheetButton>
                 <SheetButton onClick={() => router.push({ query: { ...router.query, create: "payment" } }, undefined, { shallow: true })}>
-                  New Payment
+                  New Payment <Plus />
                 </SheetButton>
-                <Separator />
-                <SheetButton onClick={() => router.push("/expense")}>Expenses</SheetButton>
+                <Separator className="my-4" />
+                <SheetButton onClick={() => router.push("/expense")}>
+                  Expenses <Receipt />
+                </SheetButton>
                 <SheetButton onClick={() => router.push({ query: { ...router.query, create: "expense" } }, undefined, { shallow: true })}>
-                  New Expense
+                  New Expense <Plus />
                 </SheetButton>
               </div>
-              <Separator />
-              <div className="flex-col items-center justify-center gap-4">
-                <SheetButton onClick={() => signOut()}>Log out</SheetButton>
+              <div className="mt-auto">
+                <SheetButton onClick={() => signOut()}>
+                  Log out <LogOut />
+                </SheetButton>
               </div>
             </>
           )}
@@ -222,7 +227,7 @@ function NavItems() {
 
 function SheetButton({ onClick, children }: { onClick: () => void; children: React.ReactNode | string }) {
   return (
-    <Button className="h-fit bg-white" variant={"ghost"} onClick={onClick}>
+    <Button className="h-fit gap-2 text-white" variant={"ghost"} onClick={onClick}>
       {children}
     </Button>
   );

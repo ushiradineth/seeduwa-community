@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
-import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
+import { DEFAULT_AMOUNT, MONTHS, RECORD_TYPE } from "@/lib/consts";
 import { removeQueryParamsFromRouter } from "@/lib/utils";
 import { EditRecordSchema, type EditRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
@@ -17,6 +17,7 @@ import Loader from "../Atoms/Loader";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Molecules/Select";
 
 export default function EditRecord() {
   const [error, setError] = useState("");
@@ -63,6 +64,7 @@ export default function EditRecord() {
       id: record?.id ?? "",
       recordDate: data.RecordDate,
       name: data.Name,
+      recordType: data.RecordType,
     });
   }
 
@@ -89,6 +91,7 @@ export default function EditRecord() {
     form.setValue("Name", record?.name ?? "");
     form.setValue("Amount", record?.amount ?? DEFAULT_AMOUNT);
     form.setValue("RecordDate", record?.recordAt ?? new Date());
+    form.setValue("RecordType", String(record?.type));
   }, [form, record]);
 
   return (
@@ -130,6 +133,33 @@ export default function EditRecord() {
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
                       <Input placeholder="Amount" type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="RecordType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Record Type</FormLabel>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={record?.type ?? field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select record type" />
+                        </SelectTrigger>
+                        <SelectContent className="dark z-[250] w-max">
+                          {RECORD_TYPE.map((type) => {
+                            return (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

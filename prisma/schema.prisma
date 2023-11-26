@@ -43,12 +43,18 @@ model Payment {
   @@index([memberId])
 }
 
+enum RecordType {
+  Income
+  Expense
+}
+
 model Record {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  createdAt DateTime @default(now()) // when the record was created
-  recordAt  DateTime @default(now()) // when the record was made
-  month     DateTime @default(now()) // which month the record is for
+  createdAt DateTime   @default(now()) // when the record was created
+  recordAt  DateTime   @default(now()) // when the record was made
+  month     DateTime   @default(now()) // which month the record is for
   amount    Float
-  active    Boolean  @default(true)
+  type      RecordType @default(Income)
+  active    Boolean    @default(true)
 }

@@ -43,7 +43,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   }
 
   const search = context.query.search ? (context.query.search as string).split(" ").join(" <-> ") : "";
-  const membersParam = String(context.query.members ?? "All") as MEMBERS_PAYMENT_FILTER_ENUM;
+  const membersParam = String(context.query.members ?? MEMBERS_PAYMENT_FILTER_ENUM.All) as MEMBERS_PAYMENT_FILTER_ENUM;
   const year = Number(context.query.filterYear ?? new Date().getFullYear());
   const month = String(context.query.filterMonth ?? MONTHS[new Date().getMonth()]);
   const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))

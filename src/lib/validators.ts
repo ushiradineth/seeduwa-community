@@ -1,6 +1,8 @@
 import { isValidPhoneNumber } from "react-phone-number-input";
 import * as yup from "yup";
 
+import { RECORD_TYPE } from "./consts";
+
 export const LoginSchema = yup
   .object()
   .shape({
@@ -68,7 +70,7 @@ export type BroadcastFormData = yup.InferType<typeof BroadcastSchema>;
 export const CreateRecordSchema = yup.object().shape({
   Months: yup.array(yup.date().required()).required().min(1, "Atleast one month should be picked"),
   RecordDate: yup.date().required("Record Date is required"),
-  RecordType: yup.boolean().required("Record Type is required"),
+  RecordType: yup.string().oneOf(RECORD_TYPE, `Record Type has to be either Income or Expense`).required("Record Type is required"),
   Amount: yup.number().required(),
   Name: yup.string().required(),
 });
@@ -77,6 +79,7 @@ export type CreateRecordFormData = yup.InferType<typeof CreateRecordSchema>;
 
 export const EditRecordSchema = yup.object().shape({
   RecordDate: yup.date().required("Record Date is required"),
+  RecordType: yup.string().oneOf(RECORD_TYPE, `Record Type has to be either Income or Expense`).required("Record Type is required"),
   Amount: yup.number().required(),
   Name: yup.string().required(),
 });

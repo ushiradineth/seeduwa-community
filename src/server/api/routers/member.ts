@@ -121,7 +121,7 @@ export const memberRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const search = input.search ? input.search.split(" ").join(" <-> ") : "";
-      const membersParam = String(input.members ?? "All") as MEMBERS_PAYMENT_FILTER_ENUM;
+      const membersParam = String(input.members ?? MEMBERS_PAYMENT_FILTER_ENUM.All) as MEMBERS_PAYMENT_FILTER_ENUM;
       const year = Number(input.year ?? new Date().getFullYear());
       const month = String(input.month ?? MONTHS[new Date().getMonth()]);
       let membersFilter = {};

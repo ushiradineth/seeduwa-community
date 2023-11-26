@@ -1,18 +1,23 @@
+import { RecordType } from "@prisma/client";
 import moment from "moment";
+import * as yup from "yup";
 import { z } from "zod";
 
-import { MONTHS } from "@/lib/consts";
+import { MONTHS, RECORD_TYPE } from "@/lib/consts";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const recordRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
-      z.object({
-        amount: z.number(),
-        months: z.array(z.date()),
-        recordDate: z.date(),
-        name: z.string(),
-      }),
+      yup
+        .object({
+          amount: yup.number().required(),
+          months: yup.array(yup.date().required()).required(),
+          recordDate: yup.date().required(),
+          name: yup.string().required(),
+          recordType: yup.string().oneOf(RECORD_TYPE, `Record Type has to be either Income or Expense`).required("Record Type is required"),
+        })
+        .required(),
     )
     .mutation(({ ctx, input }) => {
       input.months.forEach((month) => {
@@ -23,6 +28,12 @@ export const recordRouter = createTRPCRouter({
               amount: input.amount,
               month: moment(month).startOf("month").utcOffset(0, true).toDate(),
               recordAt: moment(input.recordDate).startOf("day").utcOffset(0, true).toDate(),
+              type:
+                input.recordType === RecordType.Income.toString()
+                  ? RecordType.Income
+                  : input.recordType === RecordType.Expense.toString()
+                  ? RecordType.Expense
+                  : undefined,
             },
             select: {
               recordAt: true,
@@ -37,11 +48,31 @@ export const recordRouter = createTRPCRouter({
   }),
 
   edit: protectedProcedure
-    .input(z.object({ id: z.string(), name: z.string(), amount: z.number(), recordDate: z.date() }))
+    .input(
+      yup
+        .object({
+          id: yup.string().required(),
+          name: yup.string().required(),
+          amount: yup.number().required(),
+          recordDate: yup.date().required(),
+          recordType: yup.string().oneOf(RECORD_TYPE, `Record Type has to be either Income or Expense`).required("Record Type is required"),
+        })
+        .required(),
+    )
     .mutation(async ({ ctx, input }) => {
       return await ctx.prisma.record.update({
         where: { id: input.id },
-        data: { name: input.name, amount: input.amount, recordAt: moment(input.recordDate).utcOffset(0, true).toDate() },
+        data: {
+          name: input.name,
+          amount: input.amount,
+          recordAt: moment(input.recordDate).utcOffset(0, true).toDate(),
+          type:
+            input.recordType === RecordType.Income.toString()
+              ? RecordType.Income
+              : input.recordType === RecordType.Expense.toString()
+              ? RecordType.Expense
+              : undefined,
+        },
       });
     }),
 
@@ -53,12 +84,14 @@ export const recordRouter = createTRPCRouter({
 
   getRecordsDocumentData: protectedProcedure
     .input(
-      z.object({
-        search: z.string(),
-        month: z.string(),
-        year: z.number(),
-        type: z.union([z.literal("XSLX"), z.literal("PDF")]),
-      }),
+      yup
+        .object({
+          search: yup.string(),
+          month: yup.string(),
+          year: yup.number(),
+          type: yup.string().oneOf(["XSLX", "PDF"]).required(),
+        })
+        .required(),
     )
     .mutation(async ({ ctx, input }) => {
       const search = input.search ? input.search.split(" ").join(" <-> ") : "";
@@ -80,9 +113,40 @@ export const recordRouter = createTRPCRouter({
           name: true,
           amount: true,
           recordAt: true,
+          type: true,
         },
-        orderBy: { month: "desc" },
+        orderBy: { recordAt: "asc" },
       });
+
+      const income = await ctx.prisma.record.aggregate({
+        where: {
+          month: {
+            lt: recordDate,
+          },
+          type: "Income",
+          active: true,
+          OR: [{ name: { contains: input.search } }],
+        },
+        _sum: {
+          amount: true,
+        },
+      });
+
+      const expense = await ctx.prisma.record.aggregate({
+        where: {
+          month: {
+            lt: recordDate,
+          },
+          type: "Expense",
+          active: true,
+          OR: [{ name: { contains: input.search } }],
+        },
+        _sum: {
+          amount: true,
+        },
+      });
+
+      const balance = (income._sum.amount ?? 0) - (expense._sum.amount ?? 0);
 
       return {
         records: records.map((record) => ({
@@ -91,6 +155,7 @@ export const recordRouter = createTRPCRouter({
         })),
         year,
         month,
+        balance: Number(balance),
       };
     }),
 });

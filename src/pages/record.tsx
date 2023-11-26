@@ -6,7 +6,7 @@ import Head from "next/head";
 import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import Records from "@/components/Templates/Records";
-import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, MONTHS, YEARS } from "@/lib/consts";
+import { MONTHS, YEARS } from "@/lib/consts";
 import { prisma } from "@/server/db";
 
 export type Record = {
@@ -16,6 +16,7 @@ export type Record = {
   createdAt: string;
   recordAt: string;
   month: string;
+  type: string;
 };
 
 export type Props = {
@@ -23,8 +24,8 @@ export type Props = {
   count: number;
   year: number;
   month: string;
-  itemsPerPage: number;
   search: string;
+  balance: number;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -45,17 +46,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const month = String(context.query.filterMonth ?? MONTHS[new Date().getMonth()]);
   const monthIndex = MONTHS.findIndex((value) => value === month);
   const recordDate = moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).toDate();
-  const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
-    ? Number(context.query.itemsPerPage)
-    : ITEMS_PER_PAGE;
   const where =
     search !== ""
       ? { AND: [{ month: { equals: recordDate } }, { active: true }, { OR: [{ name: { search: search } }] }] }
       : { AND: [{ month: { equals: recordDate } }, { active: true }] };
 
   const records = await prisma.record.findMany({
-    take: itemsPerPage,
-    skip: context.query.page ? (Number(context.query.page) - 1) * itemsPerPage : 0,
     where,
     select: {
       id: true,
@@ -64,13 +60,44 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       month: true,
       name: true,
       amount: true,
+      type: true,
     },
-    orderBy: { month: "desc" },
+    orderBy: { recordAt: "asc" },
   });
 
   const count = await prisma.record.count({
     where,
   });
+
+  const income = await prisma.record.aggregate({
+    where: {
+      month: {
+        lt: recordDate,
+      },
+      type: "Income",
+      active: true,
+      OR: [{ name: { contains: search } }],
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  const expense = await prisma.record.aggregate({
+    where: {
+      month: {
+        lt: recordDate,
+      },
+      type: "Expense",
+      active: true,
+      OR: [{ name: { contains: search } }],
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  const balance = (income._sum.amount ?? 0) - (expense._sum.amount ?? 0);
 
   return {
     props: {
@@ -79,12 +106,13 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         createdAt: record.createdAt.toDateString(),
         recordAt: record.recordAt.toDateString(),
         month: record.month.toDateString(),
+        type: record.type.toString(),
       })),
       count,
       year,
       month,
-      itemsPerPage,
       search,
+      balance,
     },
   };
 };
@@ -92,10 +120,10 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 export default function RecordDashboard({
   records,
   count,
-  itemsPerPage,
   search,
   year,
   month,
+  balance,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
@@ -103,12 +131,13 @@ export default function RecordDashboard({
         <title>Records - Seeduwa Village Security Association</title>
       </Head>
       <div className="flex flex-col gap-4">
-        <Card className="flex flex-col justify-between gap-4 p-4 md:flex-row">
-          <Filter label="Month" filterItems={MONTHS} paramKey="filterMonth" value={month} />
-          <Filter label="Year" filterItems={YEARS} paramKey="filterYear" value={String(year)} />
-          <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
+        <Card className="flex flex-col justify-evenly gap-4 p-4">
+          <div className="flex w-full gap-4">
+            <Filter label="Month" filterItems={MONTHS} paramKey="filterMonth" value={month} />
+            <Filter label="Year" filterItems={YEARS} paramKey="filterYear" value={String(year)} />
+          </div>
         </Card>
-        <Records records={records} count={count} year={year} month={month} itemsPerPage={itemsPerPage} search={search} />
+        <Records records={records} count={count} year={year} month={month} search={search} balance={balance} />
       </div>
     </>
   );

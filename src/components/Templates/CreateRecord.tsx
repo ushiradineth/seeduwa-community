@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
-import { MONTHS } from "@/lib/consts";
+import { MONTHS, RECORD_TYPE } from "@/lib/consts";
 import { removeQueryParamsFromRouter } from "@/lib/utils";
 import { CreateRecordSchema, type CreateRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
@@ -17,6 +17,7 @@ import { Input } from "../Atoms/Input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Molecules/Select";
 
 export default function CreateRecord() {
   const [error, setError] = useState("");
@@ -44,6 +45,7 @@ export default function CreateRecord() {
       recordDate: data.RecordDate,
       months: data.Months,
       name: data.Name,
+      recordType: data.RecordType,
     });
   }
 
@@ -89,6 +91,33 @@ export default function CreateRecord() {
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
                     <Input placeholder="Amount" type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="RecordType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Record Type</FormLabel>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select record type" />
+                      </SelectTrigger>
+                      <SelectContent className="dark z-[250] w-max">
+                        {RECORD_TYPE.map((type) => {
+                          return (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

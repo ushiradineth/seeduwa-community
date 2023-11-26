@@ -9,7 +9,7 @@ import { useRouter } from "next/router";
 import { api } from "@/utils/api";
 import { MONTHS } from "@/lib/consts";
 import { removeQueryParamsFromRouter } from "@/lib/utils";
-import { CreateExpenseSchema, type CreateExpenseFormData } from "@/lib/validators";
+import { CreateRecordSchema, type CreateRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
@@ -18,15 +18,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
 
-export default function CreateExpense() {
+export default function CreateRecord() {
   const [error, setError] = useState("");
   const [monthPicker, setMonthPicker] = useState(false);
   const router = useRouter();
 
-  const { mutate: createExpense, isLoading: creatingExpense } = api.expense.create.useMutation({
+  const { mutate: createRecord, isLoading: creatingRecord } = api.record.create.useMutation({
     onSuccess: async () => {
       await router.push({ query: removeQueryParamsFromRouter(router, ["create"]) });
-      toast.success("Expense created successfully");
+      toast.success("Record created successfully");
     },
     onError: (error) => {
       setError(error.message);
@@ -34,14 +34,14 @@ export default function CreateExpense() {
     onMutate: () => setError(""),
   });
 
-  const form = useForm<CreateExpenseFormData>({
-    resolver: yupResolver(CreateExpenseSchema),
+  const form = useForm<CreateRecordFormData>({
+    resolver: yupResolver(CreateRecordSchema),
   });
 
-  function onSubmit(data: CreateExpenseFormData) {
-    createExpense({
+  function onSubmit(data: CreateRecordFormData) {
+    createRecord({
       amount: data.Amount,
-      expenseDate: data.ExpenseDate,
+      recordDate: data.RecordDate,
       months: data.Months,
       name: data.Name,
     });
@@ -52,19 +52,19 @@ export default function CreateExpense() {
     form.resetField("Name");
     form.resetField("Amount");
     form.setValue("Months", [new Date()]);
-    form.setValue("ExpenseDate", new Date());
+    form.setValue("RecordDate", new Date());
   }, [router.query.create, form]);
 
   return (
     <Dialog
-      open={router.query.create === "expense"}
+      open={router.query.create === "record"}
       onOpenChange={() => router.push({ query: removeQueryParamsFromRouter(router, ["create"]) }, undefined, { shallow: true })}>
       <DialogContent className="dark h-fit max-h-[90%] text-white sm:max-w-[425px]">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <DialogHeader>
-              <DialogTitle>Create Expense</DialogTitle>
-              <DialogDescription>Add new expense.</DialogDescription>
+              <DialogTitle>Create Record</DialogTitle>
+              <DialogDescription>Add new record.</DialogDescription>
             </DialogHeader>
 
             <FormField
@@ -97,10 +97,10 @@ export default function CreateExpense() {
 
             <FormField
               control={form.control}
-              name="ExpenseDate"
+              name="RecordDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Expense Date</FormLabel>
+                  <FormLabel>Record Date</FormLabel>
                   <FormControl>
                     <Popover>
                       <PopoverTrigger asChild className="w-full">
@@ -116,7 +116,7 @@ export default function CreateExpense() {
                           <Calendar
                             defaultView="month"
                             defaultValue={field.value}
-                            onClickDay={(date) => form.setValue("ExpenseDate", date)}
+                            onClickDay={(date) => form.setValue("RecordDate", date)}
                           />
                         </div>
                       </PopoverContent>
@@ -152,7 +152,7 @@ export default function CreateExpense() {
                             type="button"
                             onClick={() => field.value.length === 0 && setMonthPicker(!monthPicker)}
                             className={"flex h-full w-full justify-center text-left font-normal hover:bg-bgc"}>
-                            Pick expense month(s)
+                            Pick record month(s)
                           </Button>
                         ) : (
                           <div className="flex w-full flex-wrap gap-1 rounded-sm border p-2">
@@ -228,8 +228,8 @@ export default function CreateExpense() {
             />
 
             <DialogFooter>
-              <Button loading={creatingExpense} type="submit">
-                Add expense
+              <Button loading={creatingRecord} type="submit">
+                Confirm
               </Button>
             </DialogFooter>
           </form>

@@ -17,18 +17,18 @@ import {
 } from "@/components/Molecules/DropdownMenu";
 import { ITEMS_PER_PAGE } from "@/lib/consts";
 import { s2ab } from "@/lib/utils";
-import { type Expense, type Props } from "@/pages/expense";
+import { type Props, type Record } from "@/pages/record";
 import { type AppRouter } from "@/server/api/root";
 import PageNumbers from "../Atoms/PageNumbers";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../Molecules/Card";
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Expenses({ expenses: initialExpenses, count, year, month, search }: Props) {
+export default function Records({ records: initialRecords, count, year, month, search }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
-  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
-  const { mutate } = api.expense.getExpensesDocumentData.useMutation({
+  const [records, setRecords] = useState<Record[]>(initialRecords);
+  const { mutate } = api.record.getRecordsDocumentData.useMutation({
     onSuccess: (data, variables) => {
       if (variables.type === "PDF") generatePDF(data);
       else if (variables.type === "XSLX") generateXSLX(data);
@@ -36,14 +36,14 @@ export default function Expenses({ expenses: initialExpenses, count, year, month
   });
 
   useEffect(() => {
-    initialExpenses !== expenses && setExpenses(initialExpenses);
-  }, [initialExpenses, expenses]);
+    initialRecords !== records && setRecords(initialRecords);
+  }, [initialRecords, records]);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex w-full items-center justify-center gap-2">
-          <p>Expenses</p>
+          <p>Records</p>
           <OptionMenu
             onClickPDF={() => mutate({ month, year, search, type: "PDF" })}
             onClickXSLX={() => mutate({ month, year, search, type: "XSLX" })}
@@ -51,7 +51,7 @@ export default function Expenses({ expenses: initialExpenses, count, year, month
         </CardTitle>
         <CardDescription>
           <p className="text-lg font-bold">
-            Total expenses for {month} {year} is LKR {expenses.reduce((acc, cur) => acc + cur.amount, 0).toLocaleString()} so far
+            Total balance for {month} {year} is LKR {records.reduce((acc, cur) => acc + cur.amount, 0).toLocaleString()} so far
           </p>
         </CardDescription>
       </CardHeader>
@@ -59,7 +59,7 @@ export default function Expenses({ expenses: initialExpenses, count, year, month
         <Search
           classname="pb-4"
           search={router.query.search as string}
-          placeholder="Search for expenses"
+          placeholder="Search for records"
           path={router.asPath}
           params={router.query}
           count={count}
@@ -74,25 +74,25 @@ export default function Expenses({ expenses: initialExpenses, count, year, month
             </TableRow>
           </TableHeader>
           <TableBody>
-            {expenses.length !== 0 ? (
-              expenses.map((expense) => {
+            {records.length !== 0 ? (
+              records.map((record) => {
                 return (
-                  <TableRow key={expense.id}>
+                  <TableRow key={record.id}>
                     <TableCell className="cursor-pointer text-center">
-                      <p className="max-w-24 flex items-center justify-center truncate">{expense.name}</p>
+                      <p className="max-w-24 flex items-center justify-center truncate">{record.name}</p>
                     </TableCell>
                     <TableCell className="cursor-pointer text-center">
-                      <p>{expense.amount.toLocaleString()}</p>
+                      <p>{record.amount.toLocaleString()}</p>
                     </TableCell>
                     <TableCell className="cursor-pointer text-center">
-                      <p>{expense.expenseAt}</p>
+                      <p>{record.recordAt}</p>
                     </TableCell>
                     <TableCell className="flex items-center justify-center">
                       <button
                         onClick={() =>
                           router.push({
                             href: router.asPath,
-                            query: { ...router.query, expense: expense.id, mode: "edit" },
+                            query: { ...router.query, record: record.id, mode: "edit" },
                           })
                         }>
                         <Edit />
@@ -131,12 +131,12 @@ function OptionMenu({ onClickPDF, onClickXSLX }: { readonly onClickPDF: () => vo
         <MoreVertical size={20} className="cursor-pointer" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="dark">
-        <DropdownMenuLabel>Expenses</DropdownMenuLabel>
+        <DropdownMenuLabel>Records</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="flex cursor-pointer gap-4"
-          onClick={() => router.push({ query: { ...router.query, create: "expense" } }, undefined, { shallow: true })}>
-          Add new expense <Plus className="ml-auto" size={20} />
+          onClick={() => router.push({ query: { ...router.query, create: "record" } }, undefined, { shallow: true })}>
+          New record <Plus className="ml-auto" size={20} />
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="flex cursor-pointer gap-4" onClick={onClickPDF}>
@@ -152,11 +152,11 @@ function OptionMenu({ onClickPDF, onClickXSLX }: { readonly onClickPDF: () => vo
 
 type RouterOutput = inferRouterOutputs<AppRouter>;
 
-function generatePDF(data: RouterOutput["expense"]["getExpensesDocumentData"]) {
+function generatePDF(data: RouterOutput["record"]["getRecordsDocumentData"]) {
   const pdfDocument = new jsPDF();
   const pageWidth = pdfDocument.internal.pageSize.width || pdfDocument.internal.pageSize.getWidth();
 
-  pdfDocument.text(`Expenses for ${data.month} ${data.year}`, pageWidth / 2, 10, { align: "center" });
+  pdfDocument.text(`Records for ${data.month} ${data.year}`, pageWidth / 2, 10, { align: "center" });
 
   const head = [["Name", "Paid on", "Amount"]];
 
@@ -170,35 +170,35 @@ function generatePDF(data: RouterOutput["expense"]["getExpensesDocumentData"]) {
     },
     theme: "grid",
     body: [
-      ...data.expenses.map((expense) => {
-        return [expense.name, new Date(expense.expenseAt).toDateString(), expense.amount.toLocaleString()];
+      ...data.records.map((record) => {
+        return [record.name, new Date(record.recordAt).toDateString(), record.amount.toLocaleString()];
       }),
-      ["", "Total:", data.expenses.reduce((acc, cur) => acc + cur.amount, 0).toLocaleString()],
+      ["", "Total:", data.records.reduce((acc, cur) => acc + cur.amount, 0).toLocaleString()],
     ],
   });
 
-  pdfDocument.save(`SVSA - Expenses for ${data.month} ${data.year}.pdf`);
+  pdfDocument.save(`SVSA - Records for ${data.month} ${data.year}.pdf`);
 }
 
-function generateXSLX(data: RouterOutput["expense"]["getExpensesDocumentData"]) {
+function generateXSLX(data: RouterOutput["record"]["getRecordsDocumentData"]) {
   const workbook = XLSX.utils.book_new();
   const header = ["Name", "Paid on", "Amount"];
 
   const worksheetData = [
     header,
-    ...data.expenses.map((expense) => [expense.name, new Date(expense.expenseAt).toDateString(), expense.amount.toLocaleString()]),
-    ["", "Total:", data.expenses.reduce((acc, cur) => acc + cur.amount, 0).toLocaleString()],
+    ...data.records.map((record) => [record.name, new Date(record.recordAt).toDateString(), record.amount.toLocaleString()]),
+    ["", "Total:", data.records.reduce((acc, cur) => acc + cur.amount, 0).toLocaleString()],
   ];
 
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses");
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Records");
   const xlsxFile: string = XLSX.write(workbook, { bookType: "xlsx", type: "binary" });
   const blob = new Blob([s2ab(xlsxFile)], { type: "application/octet-stream" });
 
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `SVSA - Expenses for ${data.month} ${data.year}.xlsx`;
+  a.download = `SVSA - Records for ${data.month} ${data.year}.xlsx`;
 
   a.click();
 

@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
 import { removeQueryParamsFromRouter } from "@/lib/utils";
-import { EditExpenseSchema, type EditExpenseFormData } from "@/lib/validators";
+import { EditRecordSchema, type EditRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
@@ -18,23 +18,23 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
 
-export default function EditExpense() {
+export default function EditRecord() {
   const [error, setError] = useState("");
   const router = useRouter();
 
   const {
-    data: expense,
-    isLoading: gettingExpense,
-    isRefetching: refetchingExpense,
-  } = api.expense.get.useQuery(
-    { id: String(router.query.expense) },
-    { enabled: router.query.mode === "edit" && typeof router.query.expense === "string" },
+    data: record,
+    isLoading: gettingRecord,
+    isRefetching: refetchingRecord,
+  } = api.record.get.useQuery(
+    { id: String(router.query.record) },
+    { enabled: router.query.mode === "edit" && typeof router.query.record === "string" },
   );
 
-  const { mutate: editExpense, isLoading: editingExpense } = api.expense.edit.useMutation({
+  const { mutate: editRecord, isLoading: editingRecord } = api.record.edit.useMutation({
     onSuccess: async () => {
       await exitPopup(false);
-      toast.success("Expense updated successfully");
+      toast.success("Record updated successfully");
     },
     onError: (error) => {
       setError(error.message);
@@ -42,10 +42,10 @@ export default function EditExpense() {
     onMutate: () => setError(""),
   });
 
-  const { mutate: deleteExpense, isLoading: deletingExpense } = api.expense.delete.useMutation({
+  const { mutate: deleteRecord, isLoading: deletingRecord } = api.record.delete.useMutation({
     onSuccess: async () => {
       await exitPopup(false);
-      toast.success("Expense deleted successfully");
+      toast.success("Record deleted successfully");
     },
     onError: (error) => {
       setError(error.message);
@@ -53,15 +53,15 @@ export default function EditExpense() {
     onMutate: () => setError(""),
   });
 
-  const form = useForm<EditExpenseFormData>({
-    resolver: yupResolver(EditExpenseSchema),
+  const form = useForm<EditRecordFormData>({
+    resolver: yupResolver(EditRecordSchema),
   });
 
-  function onSubmit(data: EditExpenseFormData) {
-    editExpense({
+  function onSubmit(data: EditRecordFormData) {
+    editRecord({
       amount: data.Amount,
-      id: expense?.id ?? "",
-      expenseDate: data.ExpenseDate,
+      id: record?.id ?? "",
+      recordDate: data.RecordDate,
       name: data.Name,
     });
   }
@@ -72,7 +72,7 @@ export default function EditExpense() {
         {
           query: removeQueryParamsFromRouter(router, [
             "mode",
-            "expense",
+            "record",
             "month",
             "year",
             `${router.pathname === "/member/[memberId]" ? "" : "memberId"}`,
@@ -86,24 +86,24 @@ export default function EditExpense() {
 
   useEffect(() => {
     form.clearErrors();
-    form.setValue("Name", expense?.name ?? "");
-    form.setValue("Amount", expense?.amount ?? DEFAULT_AMOUNT);
-    form.setValue("ExpenseDate", expense?.expenseAt ?? new Date());
-  }, [form, expense]);
+    form.setValue("Name", record?.name ?? "");
+    form.setValue("Amount", record?.amount ?? DEFAULT_AMOUNT);
+    form.setValue("RecordDate", record?.recordAt ?? new Date());
+  }, [form, record]);
 
   return (
-    <Dialog open={router.query.mode === "edit" && typeof router.query.expense === "string"} onOpenChange={() => exitPopup(true)}>
+    <Dialog open={router.query.mode === "edit" && typeof router.query.record === "string"} onOpenChange={() => exitPopup(true)}>
       <DialogContent className="dark max-h-[90%] text-white sm:max-w-[425px]">
-        {gettingExpense || refetchingExpense ? (
+        {gettingRecord || refetchingRecord ? (
           <Loader background removeBackgroundColor height={"385px"} />
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
               <DialogHeader>
                 <DialogTitle className="flex w-fit items-center justify-center gap-2">
-                  <p>Edit Expense</p>
-                  <Badge key={expense?.month.getFullYear()} className="w-fit">
-                    {MONTHS[Number(expense?.month.getMonth() ?? 0)]} {expense?.month.getFullYear()}
+                  <p>Edit Record</p>
+                  <Badge key={record?.month.getFullYear()} className="w-fit">
+                    {MONTHS[Number(record?.month.getMonth() ?? 0)]} {record?.month.getFullYear()}
                   </Badge>
                 </DialogTitle>
               </DialogHeader>
@@ -138,10 +138,10 @@ export default function EditExpense() {
 
               <FormField
                 control={form.control}
-                name="ExpenseDate"
+                name="RecordDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Expense Date</FormLabel>
+                    <FormLabel>Record Date</FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild className="w-full">
@@ -157,7 +157,7 @@ export default function EditExpense() {
                             <Calendar
                               defaultView="month"
                               defaultValue={field.value}
-                              onClickDay={(date) => form.setValue("ExpenseDate", date)}
+                              onClickDay={(date) => form.setValue("RecordDate", date)}
                             />
                           </div>
                         </PopoverContent>
@@ -169,14 +169,14 @@ export default function EditExpense() {
               />
               <DialogFooter className="gap-2 md:gap-0">
                 <Button
-                  onClick={() => deleteExpense({ id: expense?.id ?? "" })}
+                  onClick={() => deleteRecord({ id: record?.id ?? "" })}
                   type="button"
                   variant={"destructive"}
-                  loading={deletingExpense}>
-                  Delete expense
+                  loading={deletingRecord}>
+                  Delete
                 </Button>
-                <Button loading={editingExpense} type="submit">
-                  Edit expense
+                <Button loading={editingRecord} type="submit">
+                  Confirm
                 </Button>
               </DialogFooter>
             </form>

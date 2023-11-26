@@ -43,12 +43,12 @@ model Payment {
   @@index([memberId])
 }
 
-model Expense {
+model Record {
   id        String   @id @default(cuid())
   name      String
-  createdAt DateTime @default(now()) // when the expense was created
-  expenseAt DateTime @default(now()) // when the expense was made
-  month     DateTime @default(now()) // which month the expense is for
+  createdAt DateTime @default(now()) // when the record was created
+  recordAt  DateTime @default(now()) // when the record was made
+  month     DateTime @default(now()) // which month the record is for
   amount    Float
   active    Boolean  @default(true)
 }

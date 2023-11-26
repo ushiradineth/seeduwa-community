@@ -5,21 +5,21 @@ import Head from "next/head";
 
 import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
-import Expenses from "@/components/Templates/Expenses";
+import Records from "@/components/Templates/Records";
 import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, MONTHS, YEARS } from "@/lib/consts";
 import { prisma } from "@/server/db";
 
-export type Expense = {
+export type Record = {
   id: string;
   name: string;
   amount: number;
   createdAt: string;
-  expenseAt: string;
+  recordAt: string;
   month: string;
 };
 
 export type Props = {
-  expenses: Expense[];
+  records: Record[];
   count: number;
   year: number;
   month: string;
@@ -44,23 +44,23 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const year = Number(context.query.filterYear ?? new Date().getFullYear());
   const month = String(context.query.filterMonth ?? MONTHS[new Date().getMonth()]);
   const monthIndex = MONTHS.findIndex((value) => value === month);
-  const expenseDate = moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).toDate();
+  const recordDate = moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).toDate();
   const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
     ? Number(context.query.itemsPerPage)
     : ITEMS_PER_PAGE;
   const where =
     search !== ""
-      ? { AND: [{ month: { equals: expenseDate } }, { active: true }, { OR: [{ name: { search: search } }] }] }
-      : { AND: [{ month: { equals: expenseDate } }, { active: true }] };
+      ? { AND: [{ month: { equals: recordDate } }, { active: true }, { OR: [{ name: { search: search } }] }] }
+      : { AND: [{ month: { equals: recordDate } }, { active: true }] };
 
-  const expenses = await prisma.expense.findMany({
+  const records = await prisma.record.findMany({
     take: itemsPerPage,
     skip: context.query.page ? (Number(context.query.page) - 1) * itemsPerPage : 0,
     where,
     select: {
       id: true,
       createdAt: true,
-      expenseAt: true,
+      recordAt: true,
       month: true,
       name: true,
       amount: true,
@@ -68,17 +68,17 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     orderBy: { month: "desc" },
   });
 
-  const count = await prisma.expense.count({
+  const count = await prisma.record.count({
     where,
   });
 
   return {
     props: {
-      expenses: expenses.map((expense) => ({
-        ...expense,
-        createdAt: expense.createdAt.toDateString(),
-        expenseAt: expense.expenseAt.toDateString(),
-        month: expense.month.toDateString(),
+      records: records.map((record) => ({
+        ...record,
+        createdAt: record.createdAt.toDateString(),
+        recordAt: record.recordAt.toDateString(),
+        month: record.month.toDateString(),
       })),
       count,
       year,
@@ -89,8 +89,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   };
 };
 
-export default function ExpenseDashboard({
-  expenses,
+export default function RecordDashboard({
+  records,
   count,
   itemsPerPage,
   search,
@@ -100,7 +100,7 @@ export default function ExpenseDashboard({
   return (
     <>
       <Head>
-        <title>Expenses - Seeduwa Village Security Association</title>
+        <title>Records - Seeduwa Village Security Association</title>
       </Head>
       <div className="flex flex-col gap-4">
         <Card className="flex flex-col justify-between gap-4 p-4 md:flex-row">
@@ -108,7 +108,7 @@ export default function ExpenseDashboard({
           <Filter label="Year" filterItems={YEARS} paramKey="filterYear" value={String(year)} />
           <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
         </Card>
-        <Expenses expenses={expenses} count={count} year={year} month={month} itemsPerPage={itemsPerPage} search={search} />
+        <Records records={records} count={count} year={year} month={month} itemsPerPage={itemsPerPage} search={search} />
       </div>
     </>
   );

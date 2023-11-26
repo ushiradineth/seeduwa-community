@@ -46,7 +46,7 @@ export const CreateMemberSchema = yup.object().shape({
 
 export type CreateMemberFormData = yup.InferType<typeof CreateMemberSchema>;
 
-export const CreateRecordSchema = yup.object().shape({
+export const CreatePaymentSchema = yup.object().shape({
   PaymentDate: yup.date().required(),
   Months: yup.array(yup.date().required()).required().min(1),
   Amount: numberValidator,
@@ -55,14 +55,14 @@ export const CreateRecordSchema = yup.object().shape({
   Text: yup.string().default(""),
 });
 
-export type CreateRecordFormData = yup.InferType<typeof CreateRecordSchema>;
+export type CreatePaymentFormData = yup.InferType<typeof CreatePaymentSchema>;
 
-export const EditRecordSchema = yup.object().shape({
+export const EditPaymentSchema = yup.object().shape({
   PaymentDate: yup.date().required(),
   Amount: numberValidator,
 });
 
-export type EditRecordFormData = yup.InferType<typeof EditRecordSchema>;
+export type EditPaymentFormData = yup.InferType<typeof EditPaymentSchema>;
 
 export const NotifyUnpaidMembersSchema = yup.object().shape({
   Text: yup.string().default(""),

@@ -2,11 +2,11 @@ import { getSession } from "next-auth/react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 
-import Records from "@/components/Templates/Records";
+import Payments from "@/components/Templates/Payments";
 import { ITEMS_PER_PAGE } from "@/lib/consts";
 import { prisma } from "@/server/db";
 
-export type Record = {
+export type Payment = {
   id: string;
   amount: number;
   month: string;
@@ -18,7 +18,7 @@ export type Record = {
 };
 
 export type Props = {
-  records: Record[];
+  payments: Payment[];
   count: number;
 };
 
@@ -47,7 +47,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         }
       : { active: true };
 
-  const records = await prisma.payment.findMany({
+  const payments = await prisma.payment.findMany({
     take: ITEMS_PER_PAGE,
     skip: context.query.page ? (Number(context.query.page) - 1) * ITEMS_PER_PAGE : 0,
     where,
@@ -74,23 +74,23 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 
   return {
     props: {
-      records: records.map((record) => ({
-        ...record,
-        month: record.month.toDateString(),
-        paymentAt: record.paymentAt.toDateString(),
+      payments: payments.map((payment) => ({
+        ...payment,
+        month: payment.month.toDateString(),
+        paymentAt: payment.paymentAt.toDateString(),
       })),
       count,
     },
   };
 };
 
-export default function AllRecords({ records, count }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function AllPayments({ payments, count }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
       <Head>
-        <title>Records - Seeduwa Village Security Association</title>
+        <title>Payments - Seeduwa Village Security Association</title>
       </Head>
-      <Records records={records} count={count} />
+      <Payments payments={payments} count={count} />
     </>
   );
 }

@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
 import { removeQueryParamsFromRouter } from "@/lib/utils";
-import { EditRecordSchema, type EditRecordFormData } from "@/lib/validators";
+import { EditPaymentSchema, type EditPaymentFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
@@ -18,23 +18,23 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
 
-export default function EditRecord() {
+export default function EditPayment() {
   const [error, setError] = useState("");
   const router = useRouter();
 
   const {
-    data: record,
-    isLoading: gettingRecord,
-    isRefetching: refetchingRecord,
-  } = api.record.get.useQuery(
+    data: payment,
+    isLoading: gettingPayment,
+    isRefetching: refetchingPayment,
+  } = api.payment.get.useQuery(
     { id: String(router.query.payment) },
     { enabled: router.query.mode === "edit" && typeof router.query.payment === "string" },
   );
 
-  const { mutate: editRecord, isLoading: editingRecord } = api.record.edit.useMutation({
+  const { mutate: editPayment, isLoading: editingPayment } = api.payment.edit.useMutation({
     onSuccess: async () => {
       await exitPopup(false);
-      toast.success("Record updated successfully");
+      toast.success("Payment updated successfully");
     },
     onError: (error) => {
       setError(error.message);
@@ -42,10 +42,10 @@ export default function EditRecord() {
     onMutate: () => setError(""),
   });
 
-  const { mutate: deleteRecord, isLoading: deletingRecord } = api.record.delete.useMutation({
+  const { mutate: deletePayment, isLoading: deletingPayment } = api.payment.delete.useMutation({
     onSuccess: async () => {
       await exitPopup(false);
-      toast.success("Record deleted successfully");
+      toast.success("Payment deleted successfully");
     },
     onError: (error) => {
       setError(error.message);
@@ -53,14 +53,14 @@ export default function EditRecord() {
     onMutate: () => setError(""),
   });
 
-  const form = useForm<EditRecordFormData>({
-    resolver: yupResolver(EditRecordSchema),
+  const form = useForm<EditPaymentFormData>({
+    resolver: yupResolver(EditPaymentSchema),
   });
 
-  function onSubmit(data: EditRecordFormData) {
-    editRecord({
+  function onSubmit(data: EditPaymentFormData) {
+    editPayment({
       amount: data.Amount,
-      id: record?.id ?? "",
+      id: payment?.id ?? "",
       paymentDate: data.PaymentDate,
     });
   }
@@ -85,23 +85,23 @@ export default function EditRecord() {
 
   useEffect(() => {
     form.clearErrors();
-    form.setValue("Amount", record?.amount ?? DEFAULT_AMOUNT);
-    form.setValue("PaymentDate", record?.paymentAt ?? new Date());
-  }, [form, record]);
+    form.setValue("Amount", payment?.amount ?? DEFAULT_AMOUNT);
+    form.setValue("PaymentDate", payment?.paymentAt ?? new Date());
+  }, [form, payment]);
 
   return (
     <Dialog open={router.query.mode === "edit" && typeof router.query.payment === "string"} onOpenChange={() => exitPopup(true)}>
       <DialogContent className="dark max-h-[90%] text-white sm:max-w-[425px]">
-        {gettingRecord || refetchingRecord ? (
+        {gettingPayment || refetchingPayment ? (
           <Loader background removeBackgroundColor height={"385px"} />
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
               <DialogHeader>
                 <DialogTitle className="flex w-fit items-center justify-center gap-2">
-                  <p>Edit Record</p>
-                  <Badge key={record?.month.getFullYear()} className="w-fit">
-                    {MONTHS[Number(record?.month.getMonth() ?? 0)]} {record?.month.getFullYear()}
+                  <p>Edit Payment</p>
+                  <Badge key={payment?.month.getFullYear()} className="w-fit">
+                    {MONTHS[Number(payment?.month.getMonth() ?? 0)]} {payment?.month.getFullYear()}
                   </Badge>
                 </DialogTitle>
               </DialogHeader>
@@ -152,14 +152,14 @@ export default function EditRecord() {
               />
               <DialogFooter className="gap-2 md:gap-0">
                 <Button
-                  onClick={() => deleteRecord({ id: record?.id ?? "" })}
+                  onClick={() => deletePayment({ id: payment?.id ?? "" })}
                   type="button"
                   variant={"destructive"}
-                  loading={deletingRecord}>
-                  Delete record
+                  loading={deletingPayment}>
+                  Delete
                 </Button>
-                <Button loading={editingRecord} type="submit">
-                  Edit record
+                <Button loading={editingPayment} type="submit">
+                  Confirm
                 </Button>
               </DialogFooter>
             </form>

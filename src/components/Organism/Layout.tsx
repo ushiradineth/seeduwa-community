@@ -22,11 +22,11 @@ import { Sheet, SheetContent, SheetTrigger } from "../Molecules/Sheet";
 import BroadcastMessage from "../Templates/BroadcastMessage";
 import CreateExpense from "../Templates/CreateExpense";
 import CreateMember from "../Templates/CreateMember";
-import CreateRecord from "../Templates/CreateRecord";
-import CreateRecordForMember from "../Templates/CreateRecordForMember";
+import CreatePayment from "../Templates/CreatePayment";
+import CreatePaymentForMember from "../Templates/CreatePaymentForMember";
 import EditExpense from "../Templates/EditExpense";
 import EditMember from "../Templates/EditMember";
-import EditRecord from "../Templates/EditRecord";
+import EditPayment from "../Templates/EditPayment";
 import NotifyUnpaidMembers from "../Templates/NotifyUnpaidMembers";
 
 const NAVBAR_HIDDEN_PATHS = ["/auth", "/auth/reset"];
@@ -38,10 +38,10 @@ function Layout(props: { children: React.ReactNode }) {
   const Popups = useCallback(
     () => (
       <>
-        <CreateRecord />
+        <CreatePayment />
         <CreateMember />
-        <CreateRecordForMember />
-        <EditRecord />
+        <CreatePaymentForMember />
+        <EditPayment />
         <EditMember />
         <NotifyUnpaidMembers />
         <BroadcastMessage />
@@ -128,14 +128,14 @@ function NavSheet() {
                   New Member
                 </SheetButton>
                 <Separator />
-                <SheetButton onClick={() => router.push("/record")}>Payment Records</SheetButton>
-                <SheetButton onClick={() => router.push({ query: { ...router.query, create: "record" } }, undefined, { shallow: true })}>
-                  New Payment Record
+                <SheetButton onClick={() => router.push("/payment")}>Payments</SheetButton>
+                <SheetButton onClick={() => router.push({ query: { ...router.query, create: "payment" } }, undefined, { shallow: true })}>
+                  New Payment
                 </SheetButton>
                 <Separator />
-                <SheetButton onClick={() => router.push("/expense")}>Expense Records</SheetButton>
+                <SheetButton onClick={() => router.push("/expense")}>Expenses</SheetButton>
                 <SheetButton onClick={() => router.push({ query: { ...router.query, create: "expense" } }, undefined, { shallow: true })}>
-                  New Expense Record
+                  New Expense
                 </SheetButton>
               </div>
               <Separator />
@@ -176,20 +176,20 @@ function NavItems() {
           </NavigationMenuContent>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuTrigger>Records</NavigationMenuTrigger>
+          <NavigationMenuTrigger>Payments</NavigationMenuTrigger>
           <NavigationMenuContent>
             <div className={`flex w-[300px] flex-col gap-3 p-4 md:grid-cols-2`}>
-              <Link href={"/record"}>
+              <Link href={"/payment"}>
                 <NavigationMenuItem style={{ width: "100%" }} className={navigationMenuTriggerStyle()}>
-                  Payment Records
+                  Payments
                   <Coins className="ml-auto" />
                 </NavigationMenuItem>
               </Link>
               <NavigationMenuItem
                 style={{ width: "100%" }}
                 className={navigationMenuTriggerStyle()}
-                onClick={() => router.push({ query: { ...router.query, create: "record" } }, undefined, { shallow: true })}>
-                New Payment Record
+                onClick={() => router.push({ query: { ...router.query, create: "payment" } }, undefined, { shallow: true })}>
+                New Payment
                 <Plus className="ml-auto" />
               </NavigationMenuItem>
             </div>
@@ -201,7 +201,7 @@ function NavItems() {
             <div className={`flex w-[300px] flex-col gap-3 p-4 md:grid-cols-2`}>
               <Link href={"/expense"}>
                 <NavigationMenuItem style={{ width: "100%" }} className={navigationMenuTriggerStyle()}>
-                  Expense Records
+                  Expenses
                   <Receipt className="ml-auto" />
                 </NavigationMenuItem>
               </Link>
@@ -209,7 +209,7 @@ function NavItems() {
                 style={{ width: "100%" }}
                 className={navigationMenuTriggerStyle()}
                 onClick={() => router.push({ query: { ...router.query, create: "expense" } }, undefined, { shallow: true })}>
-                New Expense Record
+                New Expense
                 <Plus className="ml-auto" />
               </NavigationMenuItem>
             </div>

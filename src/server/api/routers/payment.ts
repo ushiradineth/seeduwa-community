@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { messageRouter } from "./message";
 
-export const recordRouter = createTRPCRouter({
+export const paymentRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
       z.object({
@@ -22,11 +22,11 @@ export const recordRouter = createTRPCRouter({
       input.months.forEach((month, index) => {
         void (async () => {
           const paymentMonth = moment(month).startOf("month").utcOffset(0, true).toDate();
-          const exisitingRecord = await ctx.prisma.payment.findMany({
+          const exisitingPayment = await ctx.prisma.payment.findMany({
             where: { memberId: input.memberId, month: paymentMonth, active: true },
           });
 
-          if (exisitingRecord.length === 0) {
+          if (exisitingPayment.length === 0) {
             const payment = await ctx.prisma.payment.create({
               data: {
                 amount: input.amount,

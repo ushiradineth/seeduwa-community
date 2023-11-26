@@ -9,7 +9,7 @@ import { useRouter } from "next/router";
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, LANE, MONTHS, YEARS } from "@/lib/consts";
 import { generateThankYouMessage, removeQueryParamsFromRouter } from "@/lib/utils";
-import { CreateRecordSchema, type CreateRecordFormData } from "@/lib/validators";
+import { CreatePaymentSchema, type CreatePaymentFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
@@ -22,16 +22,16 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Molecules/Select";
 
-export default function CreateRecord() {
+export default function CreatePayment() {
   const [error, setError] = useState("");
   const [months, setMonths] = useState<Date[]>([]);
   const [monthPicker, setMonthPicker] = useState(false);
   const router = useRouter();
 
-  const { mutate: createRecord, isLoading: creatingRecord } = api.record.create.useMutation({
+  const { mutate: createPayment, isLoading: creatingPayment } = api.payment.create.useMutation({
     onSuccess: async () => {
       await router.push({ query: removeQueryParamsFromRouter(router, ["create"]) });
-      toast.success("Record created successfully");
+      toast.success("Payment added successfully");
     },
     onError: (error) => {
       setError(error.message);
@@ -41,12 +41,12 @@ export default function CreateRecord() {
 
   const { data: members, mutate: getMembers, isLoading: gettingMembers } = api.member.getAllByLane.useMutation();
 
-  const form = useForm<CreateRecordFormData>({
-    resolver: yupResolver(CreateRecordSchema),
+  const form = useForm<CreatePaymentFormData>({
+    resolver: yupResolver(CreatePaymentSchema),
   });
 
-  function onSubmit(data: CreateRecordFormData) {
-    createRecord({
+  function onSubmit(data: CreatePaymentFormData) {
+    createPayment({
       amount: data.Amount,
       memberId: data.Member,
       months: data.Months,
@@ -83,14 +83,14 @@ export default function CreateRecord() {
 
   return (
     <Dialog
-      open={router.query.create === "record"}
+      open={router.query.create === "payment"}
       onOpenChange={() => router.push({ query: removeQueryParamsFromRouter(router, ["create"]) }, undefined, { shallow: true })}>
       <DialogContent className="dark max-h-[90%] overflow-y-auto text-white sm:max-w-[425px]">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <DialogHeader>
-              <DialogTitle>Create Record</DialogTitle>
-              <DialogDescription>Add new payment record.</DialogDescription>
+              <DialogTitle>Add payment</DialogTitle>
+              <DialogDescription>Add new payment payment.</DialogDescription>
             </DialogHeader>
             <FormField
               control={undefined}
@@ -337,7 +337,7 @@ export default function CreateRecord() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Notify member?</FormLabel>
-                      <FormDescription>Send a SMS Notification as a record of payment</FormDescription>
+                      <FormDescription>Send a SMS Notification as a payment of payment</FormDescription>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -363,8 +363,8 @@ export default function CreateRecord() {
             />
 
             <DialogFooter>
-              <Button loading={creatingRecord} type="submit">
-                Save record
+              <Button loading={creatingPayment} type="submit">
+                Confirm
               </Button>
             </DialogFooter>
           </form>

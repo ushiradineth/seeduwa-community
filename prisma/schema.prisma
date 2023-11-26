@@ -31,7 +31,7 @@ model Member {
 
 model Payment {
   id        String   @id @default(cuid())
-  createdAt DateTime @default(now()) // when the record was created
+  createdAt DateTime @default(now()) // when the payment was created
   paymentAt DateTime @default(now()) // when the payment was made
   month     DateTime @default(now()) // which month the payment is for
   amount    Float
@@ -46,7 +46,7 @@ model Payment {
 model Expense {
   id        String   @id @default(cuid())
   name      String
-  createdAt DateTime @default(now()) // when the record was created
+  createdAt DateTime @default(now()) // when the expense was created
   expenseAt DateTime @default(now()) // when the expense was made
   month     DateTime @default(now()) // which month the expense is for
   amount    Float

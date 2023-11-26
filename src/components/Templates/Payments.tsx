@@ -4,32 +4,32 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { ITEMS_PER_PAGE, MONTHS } from "@/lib/consts";
-import { type Props, type Record } from "@/pages/record";
+import { type Payment, type Props } from "@/pages/payment";
 import PageNumbers from "../Atoms/PageNumbers";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../Molecules/Card";
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Records({ records: initialRecords, count }: Props) {
+export default function Payments({ payments: initialPayments, count }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
-  const [records, setRecords] = useState<Record[]>(initialRecords);
+  const [payments, setPayments] = useState<Payment[]>(initialPayments);
 
   useEffect(() => {
-    initialRecords !== records && setRecords(initialRecords);
-  }, [initialRecords, records]);
+    initialPayments !== payments && setPayments(initialPayments);
+  }, [initialPayments, payments]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Records</CardTitle>
-        <CardDescription>A list of all records.</CardDescription>
+        <CardTitle>Payments</CardTitle>
+        <CardDescription>A list of all payments.</CardDescription>
       </CardHeader>
       <CardContent>
         <Search
           classname="pb-4"
           search={router.query.search as string}
-          placeholder="Search for Records"
+          placeholder="Search for Payments"
           path={router.asPath}
           params={router.query}
           count={count}
@@ -45,25 +45,25 @@ export default function Records({ records: initialRecords, count }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {records.length !== 0 ? (
-              records.map((record) => {
+            {payments.length !== 0 ? (
+              payments.map((payment) => {
                 return (
-                  <TableRow key={record.id}>
-                    <TableCell onClick={() => router.push(`/member/${record.member.id}`)} className="cursor-pointer text-center">
-                      <Link href={`/member/${record.member.id}`} className="max-w-24 flex items-center justify-center truncate">
-                        {record.member.name}
+                  <TableRow key={payment.id}>
+                    <TableCell onClick={() => router.push(`/member/${payment.member.id}`)} className="cursor-pointer text-center">
+                      <Link href={`/member/${payment.member.id}`} className="max-w-24 flex items-center justify-center truncate">
+                        {payment.member.name}
                       </Link>
                     </TableCell>
-                    <TableCell onClick={() => router.push(`/record/${record.id}`)} className="cursor-pointer text-center">
-                      <Link href={`/record/${record.id}`}>LKR {record.amount.toLocaleString()}</Link>
+                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer text-center">
+                      <Link href={`/payment/${payment.id}`}>LKR {payment.amount.toLocaleString()}</Link>
                     </TableCell>
-                    <TableCell onClick={() => router.push(`/record/${record.id}`)} className="cursor-pointer text-center">
-                      <Link href={`/record/${record.id}`}>
-                        {MONTHS[new Date(record.month).getMonth()]} {new Date(record.month).getFullYear()}
+                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer text-center">
+                      <Link href={`/payment/${payment.id}`}>
+                        {MONTHS[new Date(payment.month).getMonth()]} {new Date(payment.month).getFullYear()}
                       </Link>
                     </TableCell>
-                    <TableCell onClick={() => router.push(`/record/${record.id}`)} className="cursor-pointer text-center">
-                      <Link href={`/record/${record.id}`}>{record.paymentAt}</Link>
+                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer text-center">
+                      <Link href={`/payment/${payment.id}`}>{payment.paymentAt}</Link>
                     </TableCell>
                     <TableCell>
                       <button
@@ -74,9 +74,9 @@ export default function Records({ records: initialRecords, count }: Props) {
                               query: {
                                 ...router.query,
                                 mode: "edit",
-                                payment: record.id,
-                                month: new Date(record.month).getMonth(),
-                                year: new Date(record.month).getFullYear(),
+                                payment: payment.id,
+                                month: new Date(payment.month).getMonth(),
+                                year: new Date(payment.month).getFullYear(),
                               },
                             },
                             undefined,

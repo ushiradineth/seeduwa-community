@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
 import { generateThankYouMessage, removeQueryParamsFromRouter } from "@/lib/utils";
-import { CreateRecordSchema, type CreateRecordFormData } from "@/lib/validators";
+import { CreatePaymentSchema, type CreatePaymentFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
@@ -19,14 +19,14 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
 
-export default function CreateRecordForMember() {
+export default function CreatePaymentForMember() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const { mutate: createRecord, isLoading: creatingRecord } = api.record.create.useMutation({
+  const { mutate: createPayment, isLoading: creatingPayment } = api.payment.create.useMutation({
     onSuccess: async () => {
       await exitPopup(false);
-      toast.success("Record created successfully");
+      toast.success("Payment added successfully");
     },
     onError: (error) => {
       setError(error.message);
@@ -34,12 +34,12 @@ export default function CreateRecordForMember() {
     onMutate: () => setError(""),
   });
 
-  const form = useForm<CreateRecordFormData>({
-    resolver: yupResolver(CreateRecordSchema),
+  const form = useForm<CreatePaymentFormData>({
+    resolver: yupResolver(CreatePaymentSchema),
   });
 
-  function onSubmit(data: CreateRecordFormData) {
-    createRecord({
+  function onSubmit(data: CreatePaymentFormData) {
+    createPayment({
       amount: data.Amount,
       memberId: data.Member,
       months: data.Months,
@@ -76,7 +76,7 @@ export default function CreateRecordForMember() {
     ]);
     form.setValue("PaymentDate", new Date());
     form.setValue("Text", generateThankYouMessage(DEFAULT_AMOUNT, form.getValues("Months")));
-  }, [router.query.create, form, router.query.month, router.query.year, creatingRecord, router.query.memberId]);
+  }, [router.query.create, form, router.query.month, router.query.year, creatingPayment, router.query.memberId]);
 
   return (
     <Dialog open={router.query.mode === "new"} onOpenChange={() => exitPopup(true)}>
@@ -85,7 +85,7 @@ export default function CreateRecordForMember() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <DialogHeader>
               <DialogTitle className="flex w-fit items-center justify-center gap-2">
-                <p>Add New Record</p>
+                <p>Add New Payment</p>
                 <Badge key={Number(router.query.year ?? new Date().getFullYear())} className="w-fit">
                   {MONTHS[Number(router.query.month ?? new Date().getMonth())]} {Number(router.query.year ?? new Date().getFullYear())}
                 </Badge>
@@ -154,7 +154,7 @@ export default function CreateRecordForMember() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Notify member?</FormLabel>
-                      <FormDescription>Send a SMS Notification as a record of payment</FormDescription>
+                      <FormDescription>Send a SMS Notification as a payment of payment</FormDescription>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -180,8 +180,8 @@ export default function CreateRecordForMember() {
             />
 
             <DialogFooter>
-              <Button loading={creatingRecord} type="submit">
-                Save Record
+              <Button loading={creatingPayment} type="submit">
+                Confirm
               </Button>
             </DialogFooter>
           </form>

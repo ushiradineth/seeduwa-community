@@ -43,7 +43,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   }
 
   const search = context.query.search ? (context.query.search as string).split(" ").join(" | ") : "";
-  const recordYear = YEARS.includes(Number(context.query.recordYear)) ? Number(context.query.recordYear) : new Date().getFullYear();
+  const paymentYear = YEARS.includes(Number(context.query.paymentYear)) ? Number(context.query.paymentYear) : new Date().getFullYear();
   const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
     ? Number(context.query.itemsPerPage)
     : ITEMS_PER_PAGE;
@@ -78,8 +78,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         where: {
           active: true,
           month: {
-            gte: moment().year(recordYear).startOf("year").utcOffset(0, true).format(),
-            lte: moment().year(recordYear).endOf("year").utcOffset(0, true).format(),
+            gte: moment().year(paymentYear).startOf("year").utcOffset(0, true).format(),
+            lte: moment().year(paymentYear).endOf("year").utcOffset(0, true).format(),
           },
         },
         select: {
@@ -107,7 +107,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         }),
       })),
       count,
-      year: recordYear,
+      year: paymentYear,
       itemsPerPage,
       search,
     },
@@ -128,7 +128,7 @@ export default function TableDashboard({
       </Head>
       <div className="flex flex-col gap-4">
         <Card className="flex flex-col justify-between gap-4 p-4 md:flex-row">
-          <Filter filterItems={YEARS} label="Year" paramKey="recordYear" value={year} />
+          <Filter filterItems={YEARS} label="Year" paramKey="paymentYear" value={year} />
           <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
         </Card>
         <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} search={search} />

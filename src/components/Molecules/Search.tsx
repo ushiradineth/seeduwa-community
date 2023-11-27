@@ -30,7 +30,7 @@ function Search({
         e.preventDefault();
         let query = params as Record<string, string | number>;
         if (internalSearch !== "") {
-          query.search = internalSearch;
+          query.search = internalSearch.trim();
           query = removeQueryParamsFromRouter(router, ["page"]) as Record<string, string | number>;
         } else {
           query = removeQueryParamsFromRouter(router, ["search", "page"]) as Record<string, string | number>;

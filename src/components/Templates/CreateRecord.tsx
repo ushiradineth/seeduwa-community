@@ -53,9 +53,25 @@ export default function CreateRecord() {
     form.clearErrors();
     form.resetField("Name");
     form.resetField("Amount");
-    form.setValue("Months", [new Date()]);
+    form.setValue("Months", [
+      new Date(
+        isNaN(
+          new Date(
+            Number(router.query.filterYear ?? new Date().getFullYear()),
+            MONTHS.findIndex((value) => value === router.query.filterMonth) || new Date().getMonth(),
+            1,
+          ).getTime(),
+        )
+          ? new Date()
+          : new Date(
+              Number(router.query.filterYear ?? new Date().getFullYear()),
+              MONTHS.findIndex((value) => value === router.query.filterMonth),
+              1,
+            ),
+      ),
+    ]);
     form.setValue("RecordDate", new Date());
-  }, [router.query.create, form]);
+  }, [router.query.create, form, router.query.filterMonth, router.query.filterYear]);
 
   return (
     <Dialog

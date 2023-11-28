@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../Molecules/Card";
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Records({ records: initialRecords, count, year, month, search, balance: initialBalance }: Props) {
+export default function Records({ records: initialRecords, count, year, month, search, balance: initialBalance, currentPayments }: Props) {
   const router = useRouter();
   const [records, setRecords] = useState<Record[]>(initialRecords);
   const [balance, setBalance] = useState<number[]>([]);
@@ -39,8 +39,8 @@ export default function Records({ records: initialRecords, count, year, month, s
   }, [initialRecords, records]);
 
   useEffect(() => {
-    const arr: number[] = [];
-    let innerBalance = initialBalance;
+    let innerBalance = initialBalance + currentPayments;
+    const arr: number[] = [innerBalance];
 
     records.forEach((record) => {
       if (record.type === "Income") {
@@ -53,7 +53,7 @@ export default function Records({ records: initialRecords, count, year, month, s
     });
 
     setBalance(arr);
-  }, [initialBalance, records]);
+  }, [initialBalance, records, currentPayments]);
 
   return (
     <Card>
@@ -87,90 +87,98 @@ export default function Records({ records: initialRecords, count, year, month, s
             </TableRow>
           </TableHeader>
           <TableBody>
-            <>
-              {records.length !== 0 ? (
-                <>
-                  <TableRow key={"header"} className="bg-slate-400 font-bold text-black hover:bg-slate-500">
-                    <TableCell className="border text-center">
-                      <p>{moment().month(month).year(year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      <p>Balance Brought Forward</p>
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      <p>-</p>
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      <p>-</p>
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      <p>{initialBalance}</p>
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      <p>-</p>
-                    </TableCell>
-                  </TableRow>
-                  {records.map((record, index) => {
-                    return (
-                      <TableRow key={record.id}>
-                        <TableCell className="border text-center">
-                          <p>{moment(record.recordAt).utcOffset(0, true).format("DD/MM/YYYY")}</p>
-                        </TableCell>
-                        <TableCell className="border text-center">
-                          <p className="max-w-24 flex items-center justify-center truncate">{record.name}</p>
-                        </TableCell>
-                        <TableCell className="border text-center">
-                          <p>{record.type === "Income" ? record.amount.toLocaleString() : "-"}</p>
-                        </TableCell>
-                        <TableCell className="border text-center">
-                          <p>{record.type === "Expense" ? record.amount.toLocaleString() : "-"}</p>
-                        </TableCell>
-                        <TableCell className="border text-center">
-                          <p>{balance[index]}</p>
-                        </TableCell>
-                        <TableCell className="flex items-center justify-center">
-                          <button
-                            onClick={() =>
-                              router.push({
-                                href: router.asPath,
-                                query: { ...router.query, record: record.id, mode: "edit" },
-                              })
-                            }>
-                            <Edit />
-                          </button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  <TableRow key={"footer"} className="bg-slate-400 font-bold text-black hover:bg-slate-500">
-                    <TableCell className="border text-center">
-                      <p>{moment().month(month).year(year).endOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      <p>Balance</p>
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      <p>-</p>
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      <p>-</p>
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      <p>{balance[balance.length - 1]}</p>
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      <p>-</p>
-                    </TableCell>
-                  </TableRow>
-                </>
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    No results.
+            <TableRow key={"header"} className="bg-slate-400 font-bold text-black hover:bg-slate-500">
+              <TableCell className="border text-center">
+                <p>{moment().month(month).year(year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>Balance Brought Forward</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>-</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>-</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>LKR {initialBalance.toLocaleString()}</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>-</p>
+              </TableCell>
+            </TableRow>
+            <TableRow key={"payments"}>
+              <TableCell className="border text-center">
+                <p>{moment().month(month).year(year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>Monthly Fee from Residents</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>LKR {currentPayments.toLocaleString()}</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>-</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>LKR {balance[0]?.toLocaleString()}</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>-</p>
+              </TableCell>
+            </TableRow>
+            {records.map((record, index) => {
+              return (
+                <TableRow key={record.id}>
+                  <TableCell className="border text-center">
+                    <p>{moment(record.recordAt).utcOffset(0, true).format("DD/MM/YYYY")}</p>
+                  </TableCell>
+                  <TableCell className="border text-center">
+                    <p className="max-w-24 flex items-center justify-center truncate">{record.name}</p>
+                  </TableCell>
+                  <TableCell className="border text-center">
+                    <p>{record.type === "Income" ? "LKR " + record.amount.toLocaleString() : "-"}</p>
+                  </TableCell>
+                  <TableCell className="border text-center">
+                    <p>{record.type === "Expense" ? "LKR " + record.amount.toLocaleString() : "-"}</p>
+                  </TableCell>
+                  <TableCell className="border text-center">
+                    <p>LKR {balance[index + 1]?.toLocaleString()}</p>
+                  </TableCell>
+                  <TableCell className="flex items-center justify-center">
+                    <button
+                      onClick={() =>
+                        router.push({
+                          href: router.asPath,
+                          query: { ...router.query, record: record.id, mode: "edit" },
+                        })
+                      }>
+                      <Edit />
+                    </button>
                   </TableCell>
                 </TableRow>
-              )}
-            </>
+              );
+            })}
+            <TableRow key={"footer"} className="bg-slate-400 font-bold text-black hover:bg-slate-500">
+              <TableCell className="border text-center">
+                <p>{moment().month(month).year(year).endOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>Balance</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>-</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>-</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>LKR {balance[balance.length - 1]?.toLocaleString()}</p>
+              </TableCell>
+              <TableCell className="border text-center">
+                <p>-</p>
+              </TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </CardContent>
@@ -221,6 +229,8 @@ function generatePDF(data: RouterOutput["record"]["getRecordsDocumentData"]) {
 
   const head = [["Date", "Description", "Income", "Expense", "Balance"]];
 
+  let balanceWithPayments = data.balance + data.currentPayments;
+
   autoTable(pdfDocument, {
     head,
     headStyles: {
@@ -243,9 +253,22 @@ function generatePDF(data: RouterOutput["record"]["getRecordsDocumentData"]) {
           content: "Balance Brought Forward",
           styles: { fontStyle: "bold" },
         },
-        "",
-        "",
+        "-",
+        "-",
         "LKR " + data.balance.toLocaleString(),
+      ],
+      [
+        {
+          content: moment().month(data.month).year(data.year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY"),
+          styles: { fillColor: green },
+        },
+        {
+          content: "Monthly Fee from Residents",
+          styles: { fontStyle: "bold" },
+        },
+        "LKR " + data.currentPayments.toLocaleString(),
+        "-",
+        "LKR " + (data.balance + data.currentPayments).toLocaleString(),
       ],
       ...data.records.map((record) => {
         const rowData = [
@@ -256,15 +279,15 @@ function generatePDF(data: RouterOutput["record"]["getRecordsDocumentData"]) {
           record.name,
         ];
         record.type === "Income"
-          ? rowData.push("LKR " + record.amount.toLocaleString(), "")
-          : rowData.push("", "LKR " + record.amount.toLocaleString());
+          ? rowData.push("LKR " + record.amount.toLocaleString(), "-")
+          : rowData.push("-", "LKR " + record.amount.toLocaleString());
 
         if (record.type === "Income") {
-          data.balance = Number(data.balance) + Number(record.amount);
-          rowData.push("LKR " + data.balance.toLocaleString());
+          balanceWithPayments = Number(balanceWithPayments) + Number(record.amount);
+          rowData.push("LKR " + balanceWithPayments.toLocaleString());
         } else {
-          data.balance = Number(data.balance) - Number(record.amount);
-          rowData.push("LKR " + data.balance.toLocaleString());
+          balanceWithPayments = Number(balanceWithPayments) - Number(record.amount);
+          rowData.push("LKR " + balanceWithPayments.toLocaleString());
         }
         return rowData;
       }),
@@ -280,7 +303,7 @@ function generatePDF(data: RouterOutput["record"]["getRecordsDocumentData"]) {
         "",
         "",
         {
-          content: "LKR " + data.balance.toLocaleString(),
+          content: "LKR " + balanceWithPayments.toLocaleString(),
           styles: { fillColor: yellow, fontStyle: "bold" },
         },
       ],
@@ -294,37 +317,46 @@ function generateXSLX(data: RouterOutput["record"]["getRecordsDocumentData"]) {
   const workbook = XLSX.utils.book_new();
   const header = ["Date", "Description", "Income", "Expense", "Balance"];
 
+  let balanceWithPayments = data.balance + data.currentPayments;
+
   const worksheetData = [
     ["", "", "", "", ""],
     header,
     [
       moment().month(data.month).year(data.year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY"),
       "Balance Brought Forward",
-      "",
-      "",
+      "-",
+      "-",
       "LKR " + data.balance.toLocaleString(),
+    ],
+    [
+      moment().month(data.month).year(data.year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY"),
+      "Monthly Fee from Residents",
+      "LKR " + data.currentPayments.toLocaleString(),
+      "-",
+      "LKR " + (data.balance + data.currentPayments).toLocaleString(),
     ],
     ...data.records.map((record) => {
       const rowData = [moment(record.recordAt).utcOffset(0, true).format("DD/MM/YYYY"), record.name];
       record.type === "Income"
-        ? rowData.push("LKR " + record.amount.toLocaleString(), "")
-        : rowData.push("", "LKR " + record.amount.toLocaleString());
+        ? rowData.push("LKR " + record.amount.toLocaleString(), "-")
+        : rowData.push("-", "LKR " + record.amount.toLocaleString());
 
       if (record.type === "Income") {
-        data.balance = Number(data.balance) + Number(record.amount);
-        rowData.push("LKR " + data.balance.toLocaleString());
+        balanceWithPayments = Number(balanceWithPayments) + Number(record.amount);
+        rowData.push("LKR " + balanceWithPayments.toLocaleString());
       } else {
-        data.balance = Number(data.balance) - Number(record.amount);
-        rowData.push("LKR " + data.balance.toLocaleString());
+        balanceWithPayments = Number(balanceWithPayments) - Number(record.amount);
+        rowData.push("LKR " + balanceWithPayments.toLocaleString());
       }
       return rowData;
     }),
     [
       moment().month(data.month).year(data.year).endOf("month").utcOffset(0, true).format("DD/MM/YYYY"),
       "Balance",
-      "",
-      "",
-      "LKR " + data.balance.toLocaleString(),
+      "-",
+      "-",
+      "LKR " + balanceWithPayments.toLocaleString(),
     ],
   ];
 

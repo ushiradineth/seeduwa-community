@@ -125,7 +125,7 @@ export const recordRouter = createTRPCRouter({
           },
           type: "Income",
           active: true,
-          OR: [{ name: { contains: input.search } }],
+          OR: [{ name: { contains: search } }],
         },
         _sum: {
           amount: true,
@@ -139,14 +139,38 @@ export const recordRouter = createTRPCRouter({
           },
           type: "Expense",
           active: true,
-          OR: [{ name: { contains: input.search } }],
+          OR: [{ name: { contains: search } }],
         },
         _sum: {
           amount: true,
         },
       });
 
-      const balance = (income._sum.amount ?? 0) - (expense._sum.amount ?? 0);
+      const previousPayments = await ctx.prisma.payment.aggregate({
+        where: {
+          month: {
+            lt: recordDate,
+          },
+          active: true,
+        },
+        _sum: {
+          amount: true,
+        },
+      });
+
+      const currentPayments = await ctx.prisma.payment.aggregate({
+        where: {
+          month: {
+            equals: recordDate,
+          },
+          active: true,
+        },
+        _sum: {
+          amount: true,
+        },
+      });
+
+      const balance = (income._sum.amount ?? 0) + (previousPayments._sum.amount ?? 0) - (expense._sum.amount ?? 0);
 
       return {
         records: records.map((record) => ({
@@ -156,6 +180,7 @@ export const recordRouter = createTRPCRouter({
         year,
         month,
         balance: Number(balance),
+        currentPayments: currentPayments._sum.amount ?? 0,
       };
     }),
 });

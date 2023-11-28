@@ -26,6 +26,7 @@ export type Props = {
   month: string;
   search: string;
   balance: number;
+  currentPayments: number;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -97,7 +98,31 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     },
   });
 
-  const balance = (income._sum.amount ?? 0) - (expense._sum.amount ?? 0);
+  const previousPayments = await prisma.payment.aggregate({
+    where: {
+      month: {
+        lt: recordDate,
+      },
+      active: true,
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  const currentPayments = await prisma.payment.aggregate({
+    where: {
+      month: {
+        equals: recordDate,
+      },
+      active: true,
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  const balance = (income._sum.amount ?? 0) + (previousPayments._sum.amount ?? 0) - (expense._sum.amount ?? 0);
 
   return {
     props: {
@@ -113,6 +138,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       month,
       search,
       balance,
+      currentPayments: currentPayments._sum.amount ?? 0,
     },
   };
 };
@@ -124,6 +150,7 @@ export default function RecordDashboard({
   year,
   month,
   balance,
+  currentPayments,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
@@ -137,7 +164,15 @@ export default function RecordDashboard({
             <Filter label="Year" filterItems={YEARS} paramKey="filterYear" value={String(year)} />
           </div>
         </Card>
-        <Records records={records} count={count} year={year} month={month} search={search} balance={balance} />
+        <Records
+          records={records}
+          count={count}
+          year={year}
+          month={month}
+          search={search}
+          balance={balance}
+          currentPayments={currentPayments}
+        />
       </div>
     </>
   );

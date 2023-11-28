@@ -18,6 +18,7 @@ import {
 import { LANE_FILTER, MONTHS } from "@/lib/consts";
 import { s2ab } from "@/lib/utils";
 import { type Member, type Props } from "@/pages";
+import Loader from "../Atoms/Loader";
 import PageNumbers from "../Atoms/PageNumbers";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../Molecules/Card";
 import Search from "../Molecules/Search";
@@ -27,7 +28,7 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
   const [members, setMembers] = useState<Member[]>(initialMembers);
-  const { mutate } = api.member.getDashboardDocumentData.useMutation({
+  const { mutate, isLoading: gettingDocumentData } = api.member.getDashboardDocumentData.useMutation({
     onSuccess: (data, variables) => {
       if (variables.type === "PDF") generatePDF(data);
       else if (variables.type === "XSLX") generateXSLX(data);
@@ -49,96 +50,99 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
   }, [initialMembers, members]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="gap-mb-2 flex w-full items-center justify-center">
-          <p>{`Seeduwa Village Security Association - ${year}`}</p>
-          <OptionMenu
-            onClickPDF={() => mutate({ year, search, type: "PDF", lane })}
-            onClickXSLX={() => mutate({ year, search, type: "XSLX", lane })}
+    <>
+      {gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
+      <Card>
+        <CardHeader>
+          <CardTitle className="gap-mb-2 flex w-full items-center justify-center">
+            <p>{`Seeduwa Village Security Association - ${year}`}</p>
+            <OptionMenu
+              onClickPDF={() => mutate({ year, search, type: "PDF", lane })}
+              onClickXSLX={() => mutate({ year, search, type: "XSLX", lane })}
+            />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Search
+            classname="pb-4"
+            search={router.query.search as string}
+            placeholder="Search for members"
+            path={router.asPath}
+            params={router.query}
+            count={count}
           />
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Search
-          classname="pb-4"
-          search={router.query.search as string}
-          placeholder="Search for members"
-          path={router.asPath}
-          params={router.query}
-          count={count}
-        />
-        <Table className="border">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-center">Member</TableHead>
-              {MONTHS.map((month) => (
-                <TableHead key={month} className="border-x-2 text-center font-extrabold">
-                  {month}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {members.length !== 0 ? (
-              members.map((member) => {
-                return (
-                  <TableRow key={member.id}>
-                    <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
-                      <Link href={`/member/${member.id}`}>{member.name}</Link>
-                    </TableCell>
-                    {MONTHS.map((month, index) => {
-                      const payment = paymentFilter(month, year, member);
-
-                      return (
-                        <TableCell
-                          key={`${month}-${year}`}
-                          onClick={() =>
-                            router.push(
-                              {
-                                query: {
-                                  ...router.query,
-                                  memberId: member.id,
-                                  mode: payment ? "edit" : "new",
-                                  payment: payment ? payment.id : null,
-                                  month: index,
-                                  year: year,
-                                },
-                              },
-                              undefined,
-                              {
-                                shallow: true,
-                              },
-                            )
-                          }
-                          className={`w-24 border text-center font-bold active:bg-accent ${
-                            payment ? "bg-green-500 text-xl text-black hover:bg-green-600" : "hover:bg-accent/90"
-                          }`}>
-                          {payment ? payment.amount : "-"}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                );
-              })
-            ) : (
+          <Table className="border">
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={13} className="h-24 text-center">
-                  No results.
-                </TableCell>
+                <TableHead className="text-center">Member</TableHead>
+                {MONTHS.map((month) => (
+                  <TableHead key={month} className="border-x-2 text-center font-extrabold">
+                    {month}
+                  </TableHead>
+                ))}
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-      {count !== 0 && count > itemsPerPage && (
-        <CardFooter className="flex justify-center">
-          <TableCaption>
-            <PageNumbers count={count} itemsPerPage={itemsPerPage} pageNumber={pageNumber} path={router.asPath} params={router.query} />
-          </TableCaption>
-        </CardFooter>
-      )}
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {members.length !== 0 ? (
+                members.map((member) => {
+                  return (
+                    <TableRow key={member.id}>
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
+                        <Link href={`/member/${member.id}`}>{member.name}</Link>
+                      </TableCell>
+                      {MONTHS.map((month, index) => {
+                        const payment = paymentFilter(month, year, member);
+
+                        return (
+                          <TableCell
+                            key={`${month}-${year}`}
+                            onClick={() =>
+                              router.push(
+                                {
+                                  query: {
+                                    ...router.query,
+                                    memberId: member.id,
+                                    mode: payment ? "edit" : "new",
+                                    payment: payment ? payment.id : null,
+                                    month: index,
+                                    year: year,
+                                  },
+                                },
+                                undefined,
+                                {
+                                  shallow: true,
+                                },
+                              )
+                            }
+                            className={`w-24 border text-center font-bold active:bg-accent ${
+                              payment ? "bg-green-500 text-xl text-black hover:bg-green-600" : "hover:bg-accent/90"
+                            }`}>
+                            {payment ? payment.amount : "-"}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={13} className="h-24 text-center">
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+        {count !== 0 && count > itemsPerPage && (
+          <CardFooter className="flex justify-center">
+            <TableCaption>
+              <PageNumbers count={count} itemsPerPage={itemsPerPage} pageNumber={pageNumber} path={router.asPath} params={router.query} />
+            </TableCaption>
+          </CardFooter>
+        )}
+      </Card>
+    </>
   );
 }
 

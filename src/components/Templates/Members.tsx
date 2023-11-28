@@ -22,6 +22,7 @@ import { ITEMS_PER_PAGE, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS } from "@/lib/const
 import { s2ab } from "@/lib/utils";
 import { type Member, type Props } from "@/pages/member";
 import { type AppRouter } from "@/server/api/root";
+import Loader from "../Atoms/Loader";
 import PageNumbers from "../Atoms/PageNumbers";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../Molecules/Card";
 import Search from "../Molecules/Search";
@@ -32,7 +33,7 @@ export default function Members({ members: initialMembers, count, total, year, m
   const pageNumber = Number(router.query.page ?? 1);
   const [members, setMembers] = useState<Member[]>(initialMembers);
   const filter = String(membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid ? "not paid" : "paid").toLowerCase();
-  const { mutate } = api.member.getMemberDocumentData.useMutation({
+  const { mutate, isLoading: gettingDocumentData } = api.member.getMemberDocumentData.useMutation({
     onSuccess: (data, variables) => {
       if (variables.type === "PDF") generatePDF(data);
       else if (variables.type === "XSLX") generateXSLX(data);
@@ -44,113 +45,116 @@ export default function Members({ members: initialMembers, count, total, year, m
   }, [initialMembers, members]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex w-full items-center justify-center gap-2">
-          <p>Members</p>
-          <OptionMenu
-            onClickPDF={() => mutate({ members: membersParam, month, year, search, type: "PDF" })}
-            onClickXSLX={() => mutate({ members: membersParam, month, year, search, type: "XSLX" })}
-            month={moment(
-              moment()
-                .year(year)
-                .month(MONTHS.findIndex((value) => value === month))
-                .startOf("month")
-                .utcOffset(0, true)
-                .format(),
-            ).toDate()}
-            filter={membersParam}
-          />
-        </CardTitle>
-        <CardDescription>
-          {typeof router.query.members !== "undefined" && router.query.members !== "All" ? (
-            <p className="text-lg font-bold">
-              {count} member(s) have {filter} for {month} {year} so far
-            </p>
-          ) : (
-            <p>A list of all members.</p>
-          )}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Search
-          classname="pb-4"
-          search={router.query.search as string}
-          placeholder="Search for members"
-          path={router.asPath}
-          params={router.query}
-          count={count}
-        />
-        <Table className="border">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-center">Name</TableHead>
-              <TableHead className="text-center">Phone number</TableHead>
-              <TableHead className="text-center">Address</TableHead>
-              <TableHead className="text-center">
-                Paid for {month} {year}
-              </TableHead>
-              <TableHead className="text-center">Edit</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {members.length !== 0 ? (
-              members.map((member) => {
-                return (
-                  <TableRow key={member.id}>
-                    <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
-                      <Link className="max-w-24 flex items-center justify-center truncate" href={`/member/${member.id}`}>
-                        {member.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
-                      <Link href={`/member/${member.id}`}>
-                        {member.phoneNumber !== "" ? formatPhoneNumberIntl(member.phoneNumber) : "-"}
-                      </Link>
-                    </TableCell>
-                    <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
-                      <Link href={`/member/${member.id}`}>
-                        No {member.houseId} - {member.lane}
-                      </Link>
-                    </TableCell>
-                    <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
-                      <Link className="max-w-24 flex items-center justify-center truncate" href={`/member/${member.id}`}>
-                        {member.payment ? <BadgeCheck color="green" /> : <BadgeXIcon color="red" />}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="flex items-center justify-center">
-                      <button
-                        onClick={() =>
-                          router.push({
-                            href: router.asPath,
-                            query: { ...router.query, member: member.id, action: "edit" },
-                          })
-                        }>
-                        <Edit />
-                      </button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+    <>
+      {gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex w-full items-center justify-center gap-2">
+            <p>Members</p>
+            <OptionMenu
+              onClickPDF={() => mutate({ members: membersParam, month, year, search, type: "PDF" })}
+              onClickXSLX={() => mutate({ members: membersParam, month, year, search, type: "XSLX" })}
+              month={moment(
+                moment()
+                  .year(year)
+                  .month(MONTHS.findIndex((value) => value === month))
+                  .startOf("month")
+                  .utcOffset(0, true)
+                  .format(),
+              ).toDate()}
+              filter={membersParam}
+            />
+          </CardTitle>
+          <CardDescription>
+            {typeof router.query.members !== "undefined" && router.query.members !== "All" ? (
+              <p className="text-lg font-bold">
+                {count} member(s) have {filter} for {month} {year} so far
+              </p>
             ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
+              <p>A list of all members.</p>
             )}
-          </TableBody>
-          <TableCaption>Currently, a total of {total} Members are on SVC</TableCaption>
-        </Table>
-      </CardContent>
-      {count !== 0 && count > ITEMS_PER_PAGE && (
-        <CardFooter className="flex justify-center">
-          <TableCaption>
-            <PageNumbers count={count} itemsPerPage={ITEMS_PER_PAGE} pageNumber={pageNumber} path={router.asPath} params={router.query} />
-          </TableCaption>
-        </CardFooter>
-      )}
-    </Card>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Search
+            classname="pb-4"
+            search={router.query.search as string}
+            placeholder="Search for members"
+            path={router.asPath}
+            params={router.query}
+            count={count}
+          />
+          <Table className="border">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-center">Name</TableHead>
+                <TableHead className="text-center">Phone number</TableHead>
+                <TableHead className="text-center">Address</TableHead>
+                <TableHead className="text-center">
+                  Paid for {month} {year}
+                </TableHead>
+                <TableHead className="text-center">Edit</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {members.length !== 0 ? (
+                members.map((member) => {
+                  return (
+                    <TableRow key={member.id}>
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
+                        <Link className="max-w-24 flex items-center justify-center truncate" href={`/member/${member.id}`}>
+                          {member.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
+                        <Link href={`/member/${member.id}`}>
+                          {member.phoneNumber !== "" ? formatPhoneNumberIntl(member.phoneNumber) : "-"}
+                        </Link>
+                      </TableCell>
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
+                        <Link href={`/member/${member.id}`}>
+                          No {member.houseId} - {member.lane}
+                        </Link>
+                      </TableCell>
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
+                        <Link className="max-w-24 flex items-center justify-center truncate" href={`/member/${member.id}`}>
+                          {member.payment ? <BadgeCheck color="green" /> : <BadgeXIcon color="red" />}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="flex items-center justify-center">
+                        <button
+                          onClick={() =>
+                            router.push({
+                              href: router.asPath,
+                              query: { ...router.query, member: member.id, action: "edit" },
+                            })
+                          }>
+                          <Edit />
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+            <TableCaption>Currently, a total of {total} Members are on SVC</TableCaption>
+          </Table>
+        </CardContent>
+        {count !== 0 && count > ITEMS_PER_PAGE && (
+          <CardFooter className="flex justify-center">
+            <TableCaption>
+              <PageNumbers count={count} itemsPerPage={ITEMS_PER_PAGE} pageNumber={pageNumber} path={router.asPath} params={router.query} />
+            </TableCaption>
+          </CardFooter>
+        )}
+      </Card>
+    </>
   );
 }
 

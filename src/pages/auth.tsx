@@ -103,7 +103,11 @@ function Login() {
                   setError("");
                 }}
               />
-              <button onClick={() => setIsEnabled(!isEnabled)} className="mr-2 cursor-pointer" color={isEnabled ? "gray" : "white"}>
+              <button
+                type="button"
+                onClick={() => setIsEnabled(!isEnabled)}
+                className="mr-2 cursor-pointer"
+                color={isEnabled ? "gray" : "white"}>
                 {isEnabled ? <EyeIcon /> : <EyeOffIcon />}
               </button>
             </div>

@@ -105,70 +105,69 @@ export const recordRouter = createTRPCRouter({
           ? { AND: [{ month: { equals: recordDate } }, { active: true }, { OR: [{ name: { search: search } }] }] }
           : { AND: [{ month: { equals: recordDate } }, { active: true }] };
 
-      const records = await ctx.prisma.record.findMany({
-        where,
-        select: {
-          id: true,
-          month: true,
-          name: true,
-          amount: true,
-          recordAt: true,
-          type: true,
-        },
-        orderBy: { recordAt: "asc" },
-      });
-
-      const income = await ctx.prisma.record.aggregate({
-        where: {
-          month: {
-            lt: recordDate,
+      const [records, income, expense, previousPayments, currentPayments] = await ctx.prisma.$transaction([
+        ctx.prisma.record.findMany({
+          where,
+          select: {
+            id: true,
+            createdAt: true,
+            recordAt: true,
+            month: true,
+            name: true,
+            amount: true,
+            type: true,
           },
-          type: "Income",
-          active: true,
-          OR: [{ name: { contains: search } }],
-        },
-        _sum: {
-          amount: true,
-        },
-      });
-
-      const expense = await ctx.prisma.record.aggregate({
-        where: {
-          month: {
-            lt: recordDate,
+          orderBy: { recordAt: "asc" },
+        }),
+        ctx.prisma.record.aggregate({
+          where: {
+            month: {
+              lt: recordDate,
+            },
+            type: "Income",
+            active: true,
+            OR: [{ name: { contains: search } }],
           },
-          type: "Expense",
-          active: true,
-          OR: [{ name: { contains: search } }],
-        },
-        _sum: {
-          amount: true,
-        },
-      });
-
-      const previousPayments = await ctx.prisma.payment.aggregate({
-        where: {
-          month: {
-            lt: recordDate,
+          _sum: {
+            amount: true,
           },
-          active: true,
-        },
-        _sum: {
-          amount: true,
-        },
-      });
-
-      const currentPayments = await ctx.prisma.payment.aggregate({
-        where: {
-          month: {
-            equals: recordDate,
+        }),
+        ctx.prisma.record.aggregate({
+          where: {
+            month: {
+              lt: recordDate,
+            },
+            type: "Expense",
+            active: true,
+            OR: [{ name: { contains: search } }],
           },
-          active: true,
-        },
-        _sum: {
-          amount: true,
-        },
-      });
+          _sum: {
+            amount: true,
+          },
+        }),
+        ctx.prisma.payment.aggregate({
+          where: {
+            month: {
+              lt: recordDate,
+            },
+            active: true,
+          },
+          _sum: {
+            amount: true,
+          },
+        }),
+        ctx.prisma.payment.aggregate({
+          where: {
+            month: {
+              equals: recordDate,
+            },
+            active: true,
+          },
+          _sum: {
+            amount: true,
+          },
+        }),
+      ]);
 
       const balance = (income._sum.amount ?? 0) + (previousPayments._sum.amount ?? 0) - (expense._sum.amount ?? 0);
 

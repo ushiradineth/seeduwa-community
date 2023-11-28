@@ -19,6 +19,7 @@ import {
 import { s2ab } from "@/lib/utils";
 import { type Props, type Record } from "@/pages/record";
 import { type AppRouter } from "@/server/api/root";
+import Loader from "../Atoms/Loader";
 import { Card, CardContent, CardHeader, CardTitle } from "../Molecules/Card";
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
@@ -27,7 +28,7 @@ export default function Records({ records: initialRecords, count, year, month, s
   const router = useRouter();
   const [records, setRecords] = useState<Record[]>(initialRecords);
   const [balance, setBalance] = useState<number[]>([]);
-  const { mutate } = api.record.getRecordsDocumentData.useMutation({
+  const { mutate, isLoading: gettingDocumentData } = api.record.getRecordsDocumentData.useMutation({
     onSuccess: (data, variables) => {
       if (variables.type === "PDF") generatePDF(data);
       else if (variables.type === "XSLX") generateXSLX(data);
@@ -56,133 +57,136 @@ export default function Records({ records: initialRecords, count, year, month, s
   }, [initialBalance, records, currentPayments]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex w-full items-center justify-center gap-2">
-          <p>Records</p>
-          <OptionMenu
-            onClickPDF={() => mutate({ month, year, search, type: "PDF" })}
-            onClickXSLX={() => mutate({ month, year, search, type: "XSLX" })}
+    <>
+      {gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex w-full items-center justify-center gap-2">
+            <p>Records</p>
+            <OptionMenu
+              onClickPDF={() => mutate({ month, year, search, type: "PDF" })}
+              onClickXSLX={() => mutate({ month, year, search, type: "XSLX" })}
+            />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Search
+            classname="pb-4"
+            search={router.query.search as string}
+            placeholder="Search for records"
+            path={router.asPath}
+            params={router.query}
+            count={count}
           />
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Search
-          classname="pb-4"
-          search={router.query.search as string}
-          placeholder="Search for records"
-          path={router.asPath}
-          params={router.query}
-          count={count}
-        />
-        <Table className="border">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-center">Date</TableHead>
-              <TableHead className="text-center">Description</TableHead>
-              <TableHead className="text-center">Income</TableHead>
-              <TableHead className="text-center">Expense</TableHead>
-              <TableHead className="text-center">Balance</TableHead>
-              <TableHead className="text-center">Edit</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow key={"header"} className="bg-slate-400 font-bold text-black hover:bg-slate-500">
-              <TableCell className="border text-center">
-                <p>{moment().month(month).year(year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>Balance Brought Forward</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>-</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>-</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>LKR {initialBalance.toLocaleString()}</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>-</p>
-              </TableCell>
-            </TableRow>
-            <TableRow key={"payments"}>
-              <TableCell className="border text-center">
-                <p>{moment().month(month).year(year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>Monthly Fee from Residents</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>LKR {currentPayments.toLocaleString()}</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>-</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>LKR {balance[0]?.toLocaleString()}</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>-</p>
-              </TableCell>
-            </TableRow>
-            {records.map((record, index) => {
-              return (
-                <TableRow key={record.id}>
-                  <TableCell className="border text-center">
-                    <p>{moment(record.recordAt).utcOffset(0, true).format("DD/MM/YYYY")}</p>
-                  </TableCell>
-                  <TableCell className="border text-center">
-                    <p className="max-w-24 flex items-center justify-center truncate">{record.name}</p>
-                  </TableCell>
-                  <TableCell className="border text-center">
-                    <p>{record.type === "Income" ? "LKR " + record.amount.toLocaleString() : "-"}</p>
-                  </TableCell>
-                  <TableCell className="border text-center">
-                    <p>{record.type === "Expense" ? "LKR " + record.amount.toLocaleString() : "-"}</p>
-                  </TableCell>
-                  <TableCell className="border text-center">
-                    <p>LKR {balance[index + 1]?.toLocaleString()}</p>
-                  </TableCell>
-                  <TableCell className="flex items-center justify-center">
-                    <button
-                      onClick={() =>
-                        router.push({
-                          href: router.asPath,
-                          query: { ...router.query, record: record.id, mode: "edit" },
-                        })
-                      }>
-                      <Edit />
-                    </button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            <TableRow key={"footer"} className="bg-slate-400 font-bold text-black hover:bg-slate-500">
-              <TableCell className="border text-center">
-                <p>{moment().month(month).year(year).endOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>Balance</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>-</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>-</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>LKR {balance[balance.length - 1]?.toLocaleString()}</p>
-              </TableCell>
-              <TableCell className="border text-center">
-                <p>-</p>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+          <Table className="border">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-center">Date</TableHead>
+                <TableHead className="text-center">Description</TableHead>
+                <TableHead className="text-center">Income</TableHead>
+                <TableHead className="text-center">Expense</TableHead>
+                <TableHead className="text-center">Balance</TableHead>
+                <TableHead className="text-center">Edit</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow key={"header"} className="bg-slate-400 font-bold text-black hover:bg-slate-500">
+                <TableCell className="border text-center">
+                  <p>{moment().month(month).year(year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>Balance Brought Forward</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>-</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>-</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>LKR {initialBalance.toLocaleString()}</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>-</p>
+                </TableCell>
+              </TableRow>
+              <TableRow key={"payments"}>
+                <TableCell className="border text-center">
+                  <p>{moment().month(month).year(year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>Monthly Fee from Residents</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>LKR {currentPayments.toLocaleString()}</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>-</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>LKR {balance[0]?.toLocaleString()}</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>-</p>
+                </TableCell>
+              </TableRow>
+              {records.map((record, index) => {
+                return (
+                  <TableRow key={record.id}>
+                    <TableCell className="border text-center">
+                      <p>{moment(record.recordAt).utcOffset(0, true).format("DD/MM/YYYY")}</p>
+                    </TableCell>
+                    <TableCell className="border text-center">
+                      <p className="max-w-24 flex items-center justify-center truncate">{record.name}</p>
+                    </TableCell>
+                    <TableCell className="border text-center">
+                      <p>{record.type === "Income" ? "LKR " + record.amount.toLocaleString() : "-"}</p>
+                    </TableCell>
+                    <TableCell className="border text-center">
+                      <p>{record.type === "Expense" ? "LKR " + record.amount.toLocaleString() : "-"}</p>
+                    </TableCell>
+                    <TableCell className="border text-center">
+                      <p>LKR {balance[index + 1]?.toLocaleString()}</p>
+                    </TableCell>
+                    <TableCell className="flex items-center justify-center">
+                      <button
+                        onClick={() =>
+                          router.push({
+                            href: router.asPath,
+                            query: { ...router.query, record: record.id, mode: "edit" },
+                          })
+                        }>
+                        <Edit />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              <TableRow key={"footer"} className="bg-slate-400 font-bold text-black hover:bg-slate-500">
+                <TableCell className="border text-center">
+                  <p>{moment().month(month).year(year).endOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>Balance</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>-</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>-</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>LKR {balance[balance.length - 1]?.toLocaleString()}</p>
+                </TableCell>
+                <TableCell className="border text-center">
+                  <p>-</p>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </>
   );
 }
 

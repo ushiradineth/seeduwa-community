@@ -185,10 +185,10 @@ export default function EditMember() {
                   type="button"
                   variant={"destructive"}
                   loading={deletingMember}>
-                  Delete member
+                  Delete
                 </Button>
                 <Button loading={editingMember} type="submit">
-                  Edit member
+                  Confirm
                 </Button>
               </DialogFooter>
             </form>

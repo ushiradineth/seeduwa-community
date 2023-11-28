@@ -146,9 +146,11 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
                           },
                         )
                       }
-                      className={`flex items-center justify-center border p-8 active:bg-accent ${index === 9 && "rounded-bl-2xl"} ${
-                        index === 11 && "rounded-br-2xl"
-                      } ${payment ? "bg-green-500 hover:bg-green-600" : "hover:bg-accent/90"}`}>
+                      className={`flex items-center justify-center border p-8 text-lg active:bg-accent md:text-xl ${
+                        index === 9 && "rounded-bl-2xl"
+                      } ${index === 11 && "rounded-br-2xl"} ${
+                        payment ? "bg-green-500 font-extrabold text-black hover:bg-green-600" : "hover:bg-accent/90"
+                      }`}>
                       {month}
                     </div>
                   );

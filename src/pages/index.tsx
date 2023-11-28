@@ -6,7 +6,7 @@ import Head from "next/head";
 import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import Dashboard from "@/components/Templates/Dashboard";
-import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, YEARS } from "@/lib/consts";
+import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, LANE_FILTER, YEARS } from "@/lib/consts";
 import { prisma } from "@/server/db";
 
 export type Member = {
@@ -27,6 +27,7 @@ export type Props = {
   year: number;
   itemsPerPage: number;
   search: string;
+  lane: string;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -47,6 +48,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
     ? Number(context.query.itemsPerPage)
     : ITEMS_PER_PAGE;
+  const lane = LANE_FILTER.includes(String(context.query.lane)) ? String(context.query.lane) : LANE_FILTER[0]!;
 
   const where =
     search !== ""
@@ -61,9 +63,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
                 { lane: { search: search } },
               ],
             },
+            { lane: lane !== LANE_FILTER[0] ? lane : undefined },
           ],
         }
-      : { active: true };
+      : {
+          AND: [{ active: true }, { lane: lane !== LANE_FILTER[0] ? lane : undefined }],
+        };
 
   const members = await prisma.member.findMany({
     take: itemsPerPage,
@@ -110,6 +115,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       year: paymentYear,
       itemsPerPage,
       search,
+      lane,
     },
   };
 };
@@ -120,6 +126,7 @@ export default function TableDashboard({
   year,
   itemsPerPage,
   search,
+  lane,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
@@ -130,8 +137,9 @@ export default function TableDashboard({
         <Card className="flex flex-col justify-between gap-4 p-4 md:flex-row">
           <Filter filterItems={YEARS} label="Year" paramKey="paymentYear" value={year} />
           <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
+          <Filter filterItems={LANE_FILTER} label="Lane" paramKey="lane" value={lane} />
         </Card>
-        <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} search={search} />
+        <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} search={search} lane={lane} />
       </div>
     </>
   );

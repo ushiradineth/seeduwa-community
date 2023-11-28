@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import moment from "moment";
 import { z } from "zod";
 
-import { MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
+import { LANE_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
 import { commonAttribute } from "@/lib/utils";
 import { CreateMemberSchema } from "@/lib/validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -189,12 +189,14 @@ export const memberRouter = createTRPCRouter({
       z.object({
         search: z.string(),
         year: z.number(),
+        lane: z.string(),
         type: z.union([z.literal("XSLX"), z.literal("PDF")]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const search = input.search ? input.search.split(" ").join(" | ") : "";
       const year = YEARS.includes(input.year) ? input.year : new Date().getFullYear();
+      const lane = LANE_FILTER.includes(String(input.lane)) ? String(input.lane) : LANE_FILTER[0]!;
 
       const where =
         search !== ""
@@ -209,9 +211,12 @@ export const memberRouter = createTRPCRouter({
                     { lane: { search: search } },
                   ],
                 },
+                { lane: lane !== LANE_FILTER[0] ? lane : undefined },
               ],
             }
-          : { active: true };
+          : {
+              AND: [{ active: true }, { lane: lane !== LANE_FILTER[0] ? lane : undefined }],
+            };
 
       const members = await ctx.prisma.member.findMany({
         where,
@@ -248,6 +253,7 @@ export const memberRouter = createTRPCRouter({
           }),
         })),
         year,
+        lane,
       };
     }),
 });

@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/Molecules/DropdownMenu";
-import { MONTHS } from "@/lib/consts";
+import { LANE_FILTER, MONTHS } from "@/lib/consts";
 import { s2ab } from "@/lib/utils";
 import { type Member, type Props } from "@/pages";
 import PageNumbers from "../Atoms/PageNumbers";
@@ -23,7 +23,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../Molecul
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Dashboard({ members: initialMembers, count, year, itemsPerPage, search }: Props) {
+export default function Dashboard({ members: initialMembers, count, year, itemsPerPage, search, lane }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
   const [members, setMembers] = useState<Member[]>(initialMembers);
@@ -53,7 +53,10 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
       <CardHeader>
         <CardTitle className="gap-mb-2 flex w-full items-center justify-center">
           <p>{`Seeduwa Village Security Association - ${year}`}</p>
-          <OptionMenu onClickPDF={() => mutate({ year, search, type: "PDF" })} onClickXSLX={() => mutate({ year, search, type: "XSLX" })} />
+          <OptionMenu
+            onClickPDF={() => mutate({ year, search, type: "PDF", lane })}
+            onClickXSLX={() => mutate({ year, search, type: "XSLX", lane })}
+          />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -109,7 +112,7 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
                             )
                           }
                           className={`w-24 border text-center font-bold active:bg-accent ${
-                            payment ? "bg-green-500 hover:bg-green-600 text-black text-xl" : "hover:bg-accent/90"
+                            payment ? "bg-green-500 text-xl text-black hover:bg-green-600" : "hover:bg-accent/90"
                           }`}>
                           {payment ? payment.amount : "-"}
                         </TableCell>
@@ -202,7 +205,7 @@ function generatePDF(data: RouterOutputs["member"]["getDashboardDocumentData"]) 
     ],
   });
 
-  pdfDocument.save(`SVSA - ${data.year}.pdf`);
+  pdfDocument.save(`SVSA - ${data.year}${data.lane !== LANE_FILTER[0] ? ` - ${data.lane}` : ""}.pdf`);
 }
 
 function generateXSLX(data: RouterOutputs["member"]["getDashboardDocumentData"]) {
@@ -233,7 +236,7 @@ function generateXSLX(data: RouterOutputs["member"]["getDashboardDocumentData"])
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `SVSA - ${data.year}.xlsx`;
+  a.download = `SVSA - ${data.year}${data.lane !== LANE_FILTER[0] ? ` - ${data.lane}` : ""}.xlsx`;
 
   a.click();
 

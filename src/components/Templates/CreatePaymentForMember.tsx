@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -73,12 +72,7 @@ export default function CreatePaymentForMember() {
     form.setValue("Member", String(router.query.memberId ?? ""));
     form.setValue("Amount", DEFAULT_AMOUNT);
     form.setValue("Months", [
-      moment()
-        .month(Number(router.query.month ?? new Date().getMonth()))
-        .year(Number(router.query.year ?? new Date().getFullYear()))
-        .startOf("month")
-        .utcOffset(0, true)
-        .toDate(),
+      new Date(Number(router.query.year ?? new Date().getFullYear()), Number(router.query.month ?? new Date().getMonth()), 1),
     ]);
     form.setValue("PaymentDate", new Date());
     form.setValue("Text", generateThankYouMessage(DEFAULT_AMOUNT, form.getValues("Months")));

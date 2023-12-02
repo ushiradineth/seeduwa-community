@@ -112,7 +112,7 @@ export default function EditPayment() {
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input placeholder="Amount" type="number" {...field} />
+                      <Input placeholder="Amount" type="number" step="0.01" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

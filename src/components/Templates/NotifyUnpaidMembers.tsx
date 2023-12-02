@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -56,12 +55,7 @@ export default function NotifyUnpaidMembers() {
     form.setValue("Amount", DEFAULT_AMOUNT);
     form.setValue(
       "Month",
-      moment()
-        .month(Number(router.query.month ?? new Date().getMonth()))
-        .year(Number(router.query.year ?? new Date().getFullYear()))
-        .startOf("month")
-        .utcOffset(0, true)
-        .toDate(),
+      new Date(Number(router.query.year ?? new Date().getFullYear()), Number(router.query.month ?? new Date().getMonth()), 1),
     );
     form.setValue("Text", generateUnpaidNotificationMessage(DEFAULT_AMOUNT, form.getValues("Month")));
   }, [form, router.query.month, router.query.year]);

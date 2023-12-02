@@ -1,5 +1,6 @@
 // import fs from "fs";
 // import moment from "moment";
+// import { isValidPhoneNumber } from "react-phone-number-input";
 // import * as XLSX from "xlsx/xlsx.mjs";
 // import { type NextApiRequest, type NextApiResponse } from "next";
 
@@ -35,6 +36,18 @@
 //       break;
 //     }
 
+//     const formattedNumber = number ? (number?.length === 9 ? "+94" + number : !number?.startsWith("+") ? "+" + number : number) : undefined;
+
+//     if (formattedNumber) {
+//       if (!isValidPhoneNumber(String(formattedNumber))) {
+//         console.log(`Invalid number: ${formattedNumber} by ${name}`);
+//         // break;
+//       }
+//     } else {
+//       console.log(formattedNumber);
+      
+//     }
+
 //     const rowData: {
 //       memberId: string;
 //       lane: string | null;
@@ -47,7 +60,7 @@
 //       lane,
 //       houseid,
 //       name,
-//       number: number ? (number?.length === 9 ? "+94" + number : !number?.startsWith("+") ? "+" + number : number) : undefined,
+//       number: formattedNumber,
 //       payments: [],
 //     };
 

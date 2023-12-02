@@ -1,5 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CalendarIcon, X } from "lucide-react";
+import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -54,11 +55,12 @@ export default function CreateRecord() {
     form.resetField("Name");
     form.resetField("Amount");
     form.setValue("Months", [
-      new Date(
-        Number(router.query.filterYear ?? new Date().getFullYear()),
-        router.query.filterMonth ? MONTHS.findIndex((value) => value === router.query.filterMonth) : new Date().getMonth(),
-        1,
-      ),
+      moment()
+        .month(Number(router.query.filterMonth ? MONTHS.findIndex((value) => value === router.query.filterMonth) : new Date().getMonth()))
+        .year(Number(router.query.filterYear ?? new Date().getFullYear()))
+        .startOf("month")
+        .utcOffset(0, true)
+        .toDate(),
     ]);
     form.setValue("RecordDate", new Date());
   }, [router.query.create, form, router.query.filterMonth, router.query.filterYear]);

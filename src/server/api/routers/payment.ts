@@ -1,8 +1,7 @@
-import moment from "moment";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { messageRouter } from "./message";
+import { sendMessage } from "./message";
 
 export const paymentRouter = createTRPCRouter({
   create: protectedProcedure
@@ -16,23 +15,23 @@ export const paymentRouter = createTRPCRouter({
         text: z.string(),
       }),
     )
-    .mutation(({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       let phoneNumber = "";
+      const createdPayments = [];
 
-      input.months.forEach((month, index) => {
-        void (async () => {
-          const paymentMonth = moment(month).startOf("month").utcOffset(0, true).toDate();
-          const exisitingPayment = await ctx.prisma.payment.findMany({
-            where: { memberId: input.memberId, month: paymentMonth, active: true },
+      for (const month of input.months) {
+        try {
+          const existingPayments = await ctx.prisma.payment.findMany({
+            where: { memberId: input.memberId, month, active: true },
           });
 
-          if (exisitingPayment.length === 0) {
-            const payment = await ctx.prisma.payment.create({
+          if (existingPayments.length === 0) {
+            const createdPayment = await ctx.prisma.payment.create({
               data: {
                 amount: input.amount,
                 memberId: input.memberId,
-                month: paymentMonth,
-                paymentAt: moment(input.paymentDate).startOf("day").utcOffset(0, true).toDate(),
+                month,
+                paymentAt: input.paymentDate,
               },
               select: {
                 member: {
@@ -43,20 +42,21 @@ export const paymentRouter = createTRPCRouter({
               },
             });
 
-            phoneNumber = payment.member.phoneNumber;
-          }
+            createdPayments.push(createdPayment);
 
-          if (index === input.months.length - 1) {
-            if (input.notify) {
-              const message = messageRouter.createCaller({ ...ctx });
-              await message.send({
-                recipient: phoneNumber,
-                text: input.text,
-              });
-            }
+            phoneNumber = createdPayment.member.phoneNumber;
           }
-        })();
-      });
+        } catch (error) {
+          console.error(`Error in database operation: ${error}`);
+          throw new Error("Failed to process payment.");
+        }
+      }
+
+      if (input.notify && phoneNumber) {
+        sendMessage(phoneNumber, input.text);
+      }
+
+      return createdPayments;
     }),
 
   delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
@@ -68,7 +68,7 @@ export const paymentRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return await ctx.prisma.payment.update({
         where: { id: input.id },
-        data: { amount: input.amount, paymentAt: moment(input.paymentDate).utcOffset(0, true).toDate() },
+        data: { amount: input.amount, paymentAt: input.paymentDate },
       });
     }),
 

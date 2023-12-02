@@ -1,4 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -61,7 +62,7 @@ export default function EditPayment() {
     editPayment({
       amount: data.Amount,
       id: payment?.id ?? "",
-      paymentDate: data.PaymentDate,
+      paymentDate: moment(data.PaymentDate).utcOffset(0, true).toDate(),
     });
   }
 

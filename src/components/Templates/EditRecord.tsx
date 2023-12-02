@@ -1,4 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -62,7 +63,7 @@ export default function EditRecord() {
     editRecord({
       amount: data.Amount,
       id: record?.id ?? "",
-      recordDate: data.RecordDate,
+      recordDate: moment(data.RecordDate).utcOffset(0, true).toDate(),
       name: data.Name,
       recordType: data.RecordType,
     });

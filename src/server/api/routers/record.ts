@@ -19,28 +19,32 @@ export const recordRouter = createTRPCRouter({
         })
         .required(),
     )
-    .mutation(({ ctx, input }) => {
-      input.months.forEach((month) => {
-        void (async () => {
-          await ctx.prisma.record.create({
-            data: {
-              name: input.name,
-              amount: input.amount,
-              month: moment(month).startOf("month").utcOffset(0, true).toDate(),
-              recordAt: moment(input.recordDate).startOf("day").utcOffset(0, true).toDate(),
-              type:
-                input.recordType === RecordType.Income.toString()
-                  ? RecordType.Income
-                  : input.recordType === RecordType.Expense.toString()
-                  ? RecordType.Expense
-                  : undefined,
-            },
-            select: {
-              recordAt: true,
-            },
-          });
-        })();
-      });
+    .mutation(async ({ ctx, input }) => {
+      const createdRecords = [];
+
+      for (const month of input.months) {
+        const record = await ctx.prisma.record.create({
+          data: {
+            name: input.name,
+            amount: input.amount,
+            month,
+            recordAt: input.recordDate,
+            type:
+              input.recordType === RecordType.Income.toString()
+                ? RecordType.Income
+                : input.recordType === RecordType.Expense.toString()
+                ? RecordType.Expense
+                : undefined,
+          },
+          select: {
+            recordAt: true,
+          },
+        });
+
+        createdRecords.push(record);
+      }
+
+      return createdRecords;
     }),
 
   delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
@@ -65,7 +69,7 @@ export const recordRouter = createTRPCRouter({
         data: {
           name: input.name,
           amount: input.amount,
-          recordAt: moment(input.recordDate).utcOffset(0, true).toDate(),
+          recordAt: input.recordDate,
           type:
             input.recordType === RecordType.Income.toString()
               ? RecordType.Income

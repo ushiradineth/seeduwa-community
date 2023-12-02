@@ -45,7 +45,6 @@
 //       }
 //     } else {
 //       console.log(formattedNumber);
-      
 //     }
 
 //     const rowData: {

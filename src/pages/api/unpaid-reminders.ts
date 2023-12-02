@@ -3,7 +3,7 @@ import { type NextApiRequest, type NextApiResponse } from "next";
 
 import { DEFAULT_AMOUNT } from "@/lib/consts";
 import { generateUnpaidNotificationMessage } from "@/lib/utils";
-import { messageRouter } from "@/server/api/routers/message";
+import { sendMessage } from "@/server/api/routers/message";
 import { prisma } from "@/server/db";
 
 export default async function handler(request: NextApiRequest, response: NextApiResponse) {
@@ -33,20 +33,16 @@ export default async function handler(request: NextApiRequest, response: NextApi
     },
   });
 
-  const message = messageRouter.createCaller({ prisma, session: null });
+  const messages = [];
 
-  members.forEach((member) => {
-    void (async () => {
-      await message.send({
-        recipient: member.phoneNumber,
-        text: generateUnpaidNotificationMessage(DEFAULT_AMOUNT, month),
-      });
-    })();
-  });
+  for (const member of members) {
+    messages.push(sendMessage(member.phoneNumber, generateUnpaidNotificationMessage(DEFAULT_AMOUNT, month)));
+  }
 
   response.status(200).json({
     body: {
       unpaidMembers: members,
+      messages,
     },
   });
 }

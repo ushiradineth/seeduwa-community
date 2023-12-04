@@ -2,7 +2,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { CalendarIcon, X } from "lucide-react";
 import moment from "moment";
 import Calendar from "react-calendar";
-import { useForm } from "react-hook-form";
+import { useForm, type ControllerRenderProps } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
@@ -27,6 +27,7 @@ export default function CreatePayment() {
   const [error, setError] = useState("");
   const [months, setMonths] = useState<Date[]>([]);
   const [monthPicker, setMonthPicker] = useState(false);
+  const [member, setMember] = useState("");
   const router = useRouter();
 
   const { mutate: createPayment, isLoading: creatingPayment } = api.payment.create.useMutation({
@@ -72,6 +73,30 @@ export default function CreatePayment() {
     setMonths(paidMonths);
   }, [form, members]);
 
+  const updateMember = useCallback(
+    (
+      memberId: string,
+      field: ControllerRenderProps<
+        {
+          PaymentDate: Date;
+          Months: Date[];
+          Amount: number;
+          Member: string;
+          Notify: boolean;
+          Text: string;
+        },
+        "Member"
+      >,
+    ) => {
+      field.onChange(memberId);
+      setMember(memberId);
+      form.setValue("Months", []);
+      setMonths([]);
+      calculateMemberMonths();
+    },
+    [calculateMemberMonths, form],
+  );
+
   useEffect(() => {
     form.clearErrors();
     form.setValue("Member", "");
@@ -100,7 +125,11 @@ export default function CreatePayment() {
                 <FormItem>
                   <FormLabel>Lane</FormLabel>
                   <FormControl>
-                    <Select onValueChange={(value) => getMembers({ lane: value })}>
+                    <Select
+                      onValueChange={(value) => {
+                        getMembers({ lane: value });
+                        setMember("");
+                      }}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a lane" />
                       </SelectTrigger>
@@ -128,20 +157,22 @@ export default function CreatePayment() {
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Select
-                      onValueChange={(e) => {
-                        field.onChange(e);
-                        form.setValue("Months", []);
-                        setMonths([]);
-                        calculateMemberMonths();
-                      }}
-                      disabled={!Array.isArray(members) || members?.length === 0}>
+                      onValueChange={(e) => updateMember(e, field)}
+                      disabled={!Array.isArray(members) || members?.length === 0}
+                      value={member}>
                       <SelectTrigger>
                         {gettingMembers ? (
                           <div className="flex w-full items-center justify-center">
                             <Loader />
                           </div>
                         ) : (
-                          <SelectValue placeholder={(members?.length ?? 0) === 0 ? "No members found in this lane" : "Select a member"} />
+                          <SelectValue placeholder={(members?.length ?? 0) === 0 ? "No members found in this lane" : "Select a member"}>
+                            {member === ""
+                              ? (members?.length ?? 0) !== 0
+                                ? "Select a member"
+                                : "No members found in this lane"
+                              : members?.find((member) => member.id === field.value)?.name}
+                          </SelectValue>
                         )}
                       </SelectTrigger>
                       <SelectContent className="dark z-[250] w-max">
@@ -150,6 +181,49 @@ export default function CreatePayment() {
                             return (
                               <SelectItem key={member.id} value={member.id}>
                                 {member.name}
+                              </SelectItem>
+                            );
+                          })}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="Member"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>House ID</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={(e) => updateMember(e, field)}
+                      disabled={!Array.isArray(members) || members?.length === 0}
+                      value={member}>
+                      <SelectTrigger>
+                        {gettingMembers ? (
+                          <div className="flex w-full items-center justify-center">
+                            <Loader />
+                          </div>
+                        ) : (
+                          <SelectValue placeholder={(members?.length ?? 0) === 0 ? "No members found in this lane" : "Select a member"}>
+                            {member === ""
+                              ? (members?.length ?? 0) !== 0
+                                ? "Select a member"
+                                : "No members found in this lane"
+                              : members?.find((member) => member.id === field.value)?.houseId}
+                          </SelectValue>
+                        )}
+                      </SelectTrigger>
+                      <SelectContent className="dark z-[250] w-max">
+                        {Array.isArray(members) &&
+                          members.map((member) => {
+                            return (
+                              <SelectItem key={member.id} value={member.id}>
+                                {member.houseId}
                               </SelectItem>
                             );
                           })}

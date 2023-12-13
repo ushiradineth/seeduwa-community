@@ -1,8 +1,11 @@
+import { Coins, User } from "lucide-react";
 import moment from "moment";
 import { getSession } from "next-auth/react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
+import { useRouter } from "next/router";
 
+import { Button } from "@/components/Atoms/Button";
 import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import Dashboard from "@/components/Templates/Dashboard";
@@ -128,16 +131,34 @@ export default function TableDashboard({
   search,
   lane,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const router = useRouter();
+
   return (
     <>
       <Head>
         <title>Dashboard - Seeduwa Village Security Association</title>
       </Head>
       <div className="flex flex-col gap-4">
-        <Card className="flex flex-col justify-between gap-4 p-4 md:flex-row">
-          <Filter filterItems={YEARS} label="Year" paramKey="paymentYear" value={year} />
-          <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
-          <Filter filterItems={LANE_FILTER} label="Lane" paramKey="lane" value={lane} />
+        <Card className="flex flex-col justify-between gap-4 p-4">
+          <div className="flex w-full flex-col gap-4 md:flex-row">
+            <Button
+              variant={"outline"}
+              className="flex w-full gap-2"
+              onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
+              <User /> Add new member
+            </Button>
+            <Button
+              variant={"outline"}
+              className="flex w-full gap-2"
+              onClick={() => router.push({ query: { ...router.query, create: "payment" } }, undefined, { shallow: true })}>
+              <Coins /> Add new payment
+            </Button>
+          </div>
+          <div className="flex w-full flex-col gap-4 md:flex-row">
+            <Filter filterItems={YEARS} label="Year" paramKey="paymentYear" value={year} />
+            <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
+            <Filter filterItems={LANE_FILTER} label="Lane" paramKey="lane" value={lane} />
+          </div>
         </Card>
         <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} search={search} lane={lane} />
       </div>

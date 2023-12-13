@@ -133,7 +133,7 @@ export default function CreatePayment() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select a lane" />
                       </SelectTrigger>
-                      <SelectContent className="dark z-[250] w-max">
+                      <SelectContent className="dark z-[250] w-max max-h-72">
                         {LANE.map((lane) => {
                           return (
                             <SelectItem key={lane} value={lane}>
@@ -175,7 +175,7 @@ export default function CreatePayment() {
                           </SelectValue>
                         )}
                       </SelectTrigger>
-                      <SelectContent className="dark z-[250] w-max">
+                      <SelectContent className="dark z-[250] w-max max-h-72">
                         {Array.isArray(members) &&
                           members.map((member) => {
                             return (
@@ -218,7 +218,7 @@ export default function CreatePayment() {
                           </SelectValue>
                         )}
                       </SelectTrigger>
-                      <SelectContent className="dark z-[250] w-max">
+                      <SelectContent className="dark z-[250] w-max max-h-72">
                         {Array.isArray(members) &&
                           members.map((member) => {
                             return (

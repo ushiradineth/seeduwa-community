@@ -31,7 +31,7 @@ export default function Filter({
         <SelectTrigger className="w-full">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="dark z-[250] w-max">
+        <SelectContent className="dark z-[250] w-max max-h-72">
           {filterItems.map((year) => {
             return (
               <SelectItem key={year} value={String(year)}>

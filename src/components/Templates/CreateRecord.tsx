@@ -115,7 +115,7 @@ export default function CreateRecord() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select record type" />
                       </SelectTrigger>
-                      <SelectContent className="dark z-[250] w-max">
+                      <SelectContent className="dark z-[250] w-max max-h-72">
                         {RECORD_TYPE.map((type) => {
                           return (
                             <SelectItem key={type} value={type}>

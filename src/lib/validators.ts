@@ -40,11 +40,24 @@ export const CreatePaymentSchema = yup.object().shape({
   Months: yup.array(yup.date().required()).required().min(1, "Atleast one month should be picked"),
   Amount: yup.number().required(),
   Member: yup.string().required(),
+  HouseID: yup.string().required(),
+  Lane: yup.string().required(),
   Notify: yup.boolean().default(false),
   Text: yup.string().default(""),
 });
 
 export type CreatePaymentFormData = yup.InferType<typeof CreatePaymentSchema>;
+
+export const CreatePaymentForMemberSchema = yup.object().shape({
+  PaymentDate: yup.date().required("Payment Date is required"),
+  Months: yup.array(yup.date().required()).required().min(1, "Atleast one month should be picked"),
+  Amount: yup.number().required(),
+  Member: yup.string().required(),
+  Notify: yup.boolean().default(false),
+  Text: yup.string().default(""),
+});
+
+export type CreatePaymentForMemberFormData = yup.InferType<typeof CreatePaymentForMemberSchema>;
 
 export const EditPaymentSchema = yup.object().shape({
   PaymentDate: yup.date().required("Payment Date is required"),

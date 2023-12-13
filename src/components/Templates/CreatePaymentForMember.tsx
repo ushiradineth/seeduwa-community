@@ -9,7 +9,7 @@ import { useRouter } from "next/router";
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
 import { generateThankYouMessage, removeQueryParamsFromRouter } from "@/lib/utils";
-import { CreatePaymentSchema, type CreatePaymentFormData } from "@/lib/validators";
+import { CreatePaymentForMemberSchema, type CreatePaymentForMemberFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
 import FormFieldError from "../Atoms/FormFieldError";
@@ -35,11 +35,11 @@ export default function CreatePaymentForMember() {
     onMutate: () => setError(""),
   });
 
-  const form = useForm<CreatePaymentFormData>({
-    resolver: yupResolver(CreatePaymentSchema),
+  const form = useForm<CreatePaymentForMemberFormData>({
+    resolver: yupResolver(CreatePaymentForMemberSchema),
   });
 
-  function onSubmit(data: CreatePaymentFormData) {
+  function onSubmit(data: CreatePaymentForMemberFormData) {
     createPayment({
       amount: data.Amount,
       memberId: data.Member,

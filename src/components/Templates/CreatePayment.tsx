@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import { api } from "@/utils/api";
+import { api, type RouterOutputs } from "@/utils/api";
 import { DEFAULT_AMOUNT, LANE, MONTHS, YEARS } from "@/lib/consts";
 import { generateThankYouMessage, removeQueryParamsFromRouter } from "@/lib/utils";
 import { CreatePaymentSchema, type CreatePaymentFormData } from "@/lib/validators";
@@ -49,9 +49,7 @@ export default function CreatePayment() {
   } = api.member.getByHouseID.useMutation({
     onSuccess: (data, variables) => {
       if (data) {
-        form.setValue("Member", data.id);
-        form.setValue("HouseID", data.houseId);
-        form.setValue("Lane", data.lane);
+        updateMember(data.id, undefined, data);
       } else {
         form.setError("HouseID", { message: `Member with House ID "${variables.id}" not found` });
       }
@@ -73,25 +71,22 @@ export default function CreatePayment() {
     });
   }
 
-  const calculateMemberMonths = useCallback(() => {
+  const calculateMemberMonths = useCallback((member: RouterOutputs["member"]["getByHouseID"]) => {
     const paidMonths: Date[] = [];
 
     YEARS?.forEach((year) => {
-      const a = members
-        ?.find((member) => form.watch("Member") === member.id)
-        ?.payments.filter((payment) => payment.month.getFullYear() === year)
-        .map((payment) => payment.month);
+      const a = member?.payments.filter((payment) => payment.month.getFullYear() === year).map((payment) => payment.month);
 
       if (a) paidMonths.push(...a);
     });
 
     setMonths(paidMonths);
-  }, [form, members]);
+  }, []);
 
   const updateMember = useCallback(
     (
       memberId: string,
-      field: ControllerRenderProps<
+      field?: ControllerRenderProps<
         {
           PaymentDate: Date;
           Months: Date[];
@@ -104,16 +99,17 @@ export default function CreatePayment() {
         },
         "Member"
       >,
+      member?: RouterOutputs["member"]["getByHouseID"],
     ) => {
-      const internalMember = members?.find((member) => member.id === memberId);
+      const internalMember = member ?? members?.find((member) => member.id === memberId);
 
       if (internalMember) {
-        field.onChange(internalMember.id);
+        field ? field.onChange(internalMember.id) : form.setValue("Member", internalMember.id);
         form.setValue("HouseID", internalMember.houseId);
         form.setValue("Lane", internalMember.lane);
         form.setValue("Months", []);
         setMonths([]);
-        calculateMemberMonths();
+        calculateMemberMonths(internalMember);
       }
     },
     [calculateMemberMonths, form, members],
@@ -514,7 +510,7 @@ export default function CreatePayment() {
                       <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        disabled={form.getValues("Member") === undefined ?? form.getValues("Member") === ""}
+                        disabled={form.getValues("Member") === "" ?? form.getValues("Member") === undefined}
                       />
                     </FormControl>
                   </div>

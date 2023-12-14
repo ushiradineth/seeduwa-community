@@ -110,7 +110,15 @@ export const memberRouter = createTRPCRouter({
   }),
 
   getByHouseID: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    return await ctx.prisma.member.findFirst({ where: { houseId: input.id, active: true } });
+    return await ctx.prisma.member.findFirst({
+      where: { houseId: input.id, active: true },
+      include: {
+        payments: {
+          select: { month: true },
+          where: { active: true },
+        },
+      },
+    });
   }),
 
   getMemberDocumentData: protectedProcedure

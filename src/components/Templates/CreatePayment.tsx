@@ -86,19 +86,7 @@ export default function CreatePayment() {
   const updateMember = useCallback(
     (
       memberId: string,
-      field?: ControllerRenderProps<
-        {
-          PaymentDate: Date;
-          Months: Date[];
-          Amount: number;
-          Member: string;
-          Notify: boolean;
-          Text: string;
-          Lane: string;
-          HouseID: string;
-        },
-        "Member"
-      >,
+      field?: ControllerRenderProps<CreatePaymentFormData, "Member">,
       member?: RouterOutputs["member"]["getByHouseID"],
     ) => {
       const internalMember = member ?? members?.find((member) => member.id === memberId);
@@ -116,22 +104,7 @@ export default function CreatePayment() {
   );
 
   const resetHouseID = useCallback(
-    (
-      value: string | undefined,
-      field: ControllerRenderProps<
-        {
-          PaymentDate: Date;
-          Months: Date[];
-          Amount: number;
-          Member: string;
-          Notify: boolean;
-          Text: string;
-          Lane: string;
-          HouseID: string;
-        },
-        "HouseID"
-      >,
-    ) => {
+    (value: string | undefined, field: ControllerRenderProps<CreatePaymentFormData, "HouseID">) => {
       field.onChange(value);
       resetMemberByHouseID();
       form.resetField("Lane");

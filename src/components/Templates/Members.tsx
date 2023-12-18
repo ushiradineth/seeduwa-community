@@ -28,7 +28,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Members({ members: initialMembers, count, total, year, month, membersParam, search }: Props) {
+export default function Members({ members: initialMembers, count, total, year, month, membersParam, search, itemsPerPage }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
   const [members, setMembers] = useState<Member[]>(initialMembers);
@@ -149,7 +149,7 @@ export default function Members({ members: initialMembers, count, total, year, m
         {count !== 0 && count > ITEMS_PER_PAGE && (
           <CardFooter className="flex justify-center">
             <TableCaption>
-              <PageNumbers count={count} itemsPerPage={ITEMS_PER_PAGE} pageNumber={pageNumber} path={router.asPath} params={router.query} />
+              <PageNumbers count={count} itemsPerPage={itemsPerPage} pageNumber={pageNumber} path={router.asPath} params={router.query} />
             </TableCaption>
           </CardFooter>
         )}

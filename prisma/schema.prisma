@@ -10,6 +10,11 @@ datasource db {
   relationMode = "prisma"
 }
 
+enum RecordType {
+  Income
+  Expense
+}
+
 model Admin {
   id       String @id @default(cuid())
   username String @unique
@@ -17,25 +22,28 @@ model Admin {
 }
 
 model Member {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  active    Boolean   @default(true)
 
-  houseId     String
   name        String
-  phoneNumber String  @default("")
+  phoneNumber String @default("")
+  houseId     String
   lane        String
-  active      Boolean @default(true)
 
   payments Payment[]
 }
 
 model Payment {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now()) // when the payment was created
-  paymentAt DateTime @default(now()) // when the payment was made
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now()) // when the payment was created
+  deletedAt DateTime?
+  active    Boolean   @default(true)
+
   month     DateTime @default(now()) // which month the payment is for
   amount    Float
-  active    Boolean  @default(true)
+  paymentAt DateTime @default(now()) // when the payment was made
 
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberId String
@@ -43,18 +51,15 @@ model Payment {
   @@index([memberId])
 }
 
-enum RecordType {
-  Income
-  Expense
-}
-
 model Record {
-  id        String     @id @default(cuid())
-  name      String
-  createdAt DateTime   @default(now()) // when the record was created
-  recordAt  DateTime   @default(now()) // when the record was made
-  month     DateTime   @default(now()) // which month the record is for
-  amount    Float
-  type      RecordType @default(Income)
-  active    Boolean    @default(true)
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now()) // when the record was created
+  deletedAt DateTime?
+  active    Boolean   @default(true)
+
+  name     String
+  amount   Float
+  type     RecordType @default(Income)
+  month    DateTime   @default(now()) // which month the record is for
+  recordAt DateTime   @default(now()) // when the record was made
 }

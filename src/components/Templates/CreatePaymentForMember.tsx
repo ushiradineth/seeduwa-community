@@ -79,6 +79,10 @@ export default function CreatePaymentForMember() {
     form.setValue("Text", generateThankYouMessage(DEFAULT_AMOUNT, form.getValues("Months")));
   }, [router.query.create, form, router.query.month, router.query.year, creatingPayment, router.query.memberId]);
 
+  useEffect(() => {
+    setError("");
+  }, [router]);
+
   return (
     <Dialog open={router.query.mode === "new"} onOpenChange={() => exitPopup(true)}>
       <DialogContent className="dark max-h-[90%] text-white sm:max-w-[425px]">

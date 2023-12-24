@@ -1,5 +1,7 @@
-import moment from "moment";
+import { createServerSideHelpers } from "@trpc/react-query/server";
 import { getSession } from "next-auth/react";
+import { log } from "next-axiom";
+import SuperJSON from "superjson";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 
@@ -7,6 +9,7 @@ import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import Members from "@/components/Templates/Members";
 import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, MEMBERS_PAYMENT_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
+import { appRouter } from "@/server/api/root";
 import { prisma } from "@/server/db";
 
 export type Member = {
@@ -19,9 +22,6 @@ export type Member = {
 };
 
 export type Props = {
-  members: Member[];
-  count: number;
-  total: number;
   membersParam: MEMBERS_PAYMENT_FILTER_ENUM;
   year: number;
   month: string;
@@ -49,80 +49,23 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
     ? Number(context.query.itemsPerPage)
     : ITEMS_PER_PAGE;
-  let membersFilter = {};
-  const monthIndex = MONTHS.findIndex((value) => value === month);
-  const paymentMonth = moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).format();
+  const page = Number(context.query.page ?? 1);
 
-  if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
-    membersFilter = {
-      some: {
-        active: true,
-        month: { equals: paymentMonth },
-      },
-    };
-  } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
-    membersFilter = {
-      none: {
-        active: true,
-        month: { equals: paymentMonth },
-      },
-    };
-  }
-
-  const where =
-    search !== ""
-      ? {
-          AND: [
-            { active: true },
-            {
-              OR: [
-                { name: { search: search } },
-                { phoneNumber: { search: search } },
-                { houseId: { search: search } },
-                { lane: { search: search } },
-              ],
-            },
-            { payments: { ...membersFilter } },
-          ],
-        }
-      : {
-          active: true,
-          payments: { ...membersFilter },
-        };
-
-  const members = await prisma.member.findMany({
-    take: itemsPerPage,
-    skip: context.query.page ? (Number(context.query.page) - 1) * itemsPerPage : 0,
-    where,
-    select: {
-      id: true,
-      phoneNumber: true,
-      houseId: true,
-      name: true,
-      lane: true,
-      payments: {
-        where: { active: true, month: { equals: paymentMonth } },
-        select: { id: true, month: true },
-      },
+  const trpc = createServerSideHelpers({
+    router: appRouter,
+    ctx: {
+      session,
+      prisma,
+      log,
     },
-    orderBy: { lane: "asc" },
+    transformer: SuperJSON,
   });
 
-  const count = await prisma.member.count({
-    where,
-  });
-
-  const total = await prisma.member.count({ where: { active: true } });
+  await trpc.member.getMembers.prefetch({ itemsPerPage, members: membersParam, month, year, page, search });
 
   return {
     props: {
-      members: members.map((member) => ({
-        ...member,
-        payments: {},
-        payment: member.payments.length > 0,
-      })),
-      count,
-      total,
+      trpcState: trpc.dehydrate(),
       membersParam,
       month,
       year,
@@ -133,9 +76,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 };
 
 export default function AllMembers({
-  members,
-  count,
-  total,
   membersParam,
   year,
   month,
@@ -159,9 +99,6 @@ export default function AllMembers({
           <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
         </Card>
         <Members
-          members={members}
-          count={count}
-          total={total}
           year={year}
           month={month}
           membersParam={membersParam}

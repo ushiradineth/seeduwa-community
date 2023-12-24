@@ -5,7 +5,7 @@ import { BadgeCheck, BadgeXIcon, Edit, FileText, MessagesSquare, MoreVertical, P
 import moment from "moment";
 import { formatPhoneNumberIntl } from "react-phone-number-input";
 import * as XLSX from "xlsx";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -20,7 +20,7 @@ import {
 } from "@/components/Molecules/DropdownMenu";
 import { ITEMS_PER_PAGE, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS } from "@/lib/consts";
 import { s2ab } from "@/lib/utils";
-import { type Member, type Props } from "@/pages/member";
+import { type Props } from "@/pages/member";
 import { type AppRouter } from "@/server/api/root";
 import Loader from "../Atoms/Loader";
 import PageNumbers from "../Atoms/PageNumbers";
@@ -28,32 +28,69 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Members({ members: initialMembers, count, total, year, month, membersParam, search, itemsPerPage }: Props) {
+export default function Members({ year, month, membersParam, search, itemsPerPage }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
-  const [members, setMembers] = useState<Member[]>(initialMembers);
   const filter = String(membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid ? "not paid" : "paid").toLowerCase();
-  const { mutate, isLoading: gettingDocumentData } = api.member.getMemberDocumentData.useMutation({
-    onSuccess: (data, variables) => {
-      if (variables.type === "PDF") generatePDF(data);
-      else if (variables.type === "XSLX") generateXSLX(data);
+  const [type, setType] = useState("");
+
+  const { data } = api.member.getMembers.useQuery(
+    { itemsPerPage, members: membersParam, month, year, page: pageNumber, search },
+    { refetchOnWindowFocus: false, refetchOnReconnect: false },
+  );
+
+  const {
+    data: documentData,
+    isLoading: gettingDocumentData,
+    isPaused: documentDataEnabled,
+    isSuccess: gettingDocumentDataSuccess,
+  } = api.member.getMembers.useQuery(
+    { members: membersParam, month, year, search },
+    {
+      enabled: type === "PDF" || type === "XSLX",
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
-  });
+  );
+
+  const generateDocument = useCallback(() => {
+    if (documentData) {
+      if (type === "PDF") {
+        generatePDF(documentData);
+      } else if (type === "XSLX") {
+        generateXSLX(documentData);
+      }
+    }
+  }, [documentData, type]);
 
   useEffect(() => {
-    initialMembers !== members && setMembers(initialMembers);
-  }, [initialMembers, members]);
+    if (documentData) {
+      generateDocument();
+      setType("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type]);
+
+  useEffect(() => {
+    if (documentData && gettingDocumentDataSuccess) {
+      generateDocument();
+      setType("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gettingDocumentDataSuccess]);
+
+  if (!data) return <Loader background />;
 
   return (
     <>
-      {gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
+      {documentDataEnabled && gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
       <Card>
         <CardHeader>
           <CardTitle className="flex w-full items-center justify-center gap-2">
             <p>Members</p>
             <OptionMenu
-              onClickPDF={() => mutate({ members: membersParam, month, year, search, type: "PDF" })}
-              onClickXSLX={() => mutate({ members: membersParam, month, year, search, type: "XSLX" })}
+              onClickPDF={() => setType("PDF")}
+              onClickXSLX={() => setType("XSLX")}
               month={moment(
                 moment()
                   .year(year)
@@ -68,7 +105,7 @@ export default function Members({ members: initialMembers, count, total, year, m
           <CardDescription>
             {typeof router.query.members !== "undefined" && router.query.members !== "All" ? (
               <p className="text-lg font-bold">
-                {count} member(s) have {filter} for {month} {year} so far
+                {data.count} member(s) have {filter} for {month} {year} so far
               </p>
             ) : (
               <p>A list of all members.</p>
@@ -82,7 +119,7 @@ export default function Members({ members: initialMembers, count, total, year, m
             placeholder="Search for members"
             path={router.asPath}
             params={router.query}
-            count={count}
+            count={data.count}
           />
           <Table className="border">
             <TableHeader>
@@ -97,8 +134,8 @@ export default function Members({ members: initialMembers, count, total, year, m
               </TableRow>
             </TableHeader>
             <TableBody>
-              {members.length !== 0 ? (
-                members.map((member) => {
+              {data.members.length !== 0 ? (
+                data.members.map((member) => {
                   return (
                     <TableRow key={member.id}>
                       <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
@@ -143,13 +180,19 @@ export default function Members({ members: initialMembers, count, total, year, m
                 </TableRow>
               )}
             </TableBody>
-            <TableCaption>Currently, a total of {total} Members are on SVC</TableCaption>
+            <TableCaption>Currently, a total of {data.total} Members are on SVC</TableCaption>
           </Table>
         </CardContent>
-        {count !== 0 && count > ITEMS_PER_PAGE && (
+        {data.count !== 0 && data.count > ITEMS_PER_PAGE && (
           <CardFooter className="flex justify-center">
             <TableCaption>
-              <PageNumbers count={count} itemsPerPage={itemsPerPage} pageNumber={pageNumber} path={router.asPath} params={router.query} />
+              <PageNumbers
+                count={data.count}
+                itemsPerPage={itemsPerPage}
+                pageNumber={pageNumber}
+                path={router.asPath}
+                params={router.query}
+              />
             </TableCaption>
           </CardFooter>
         )}
@@ -212,7 +255,7 @@ function OptionMenu({
 
 type RouterOutput = inferRouterOutputs<AppRouter>;
 
-function generatePDF(data: RouterOutput["member"]["getMemberDocumentData"]) {
+function generatePDF(data: RouterOutput["member"]["getMembers"]) {
   const pdfDocument = new jsPDF();
   const pageWidth = pdfDocument.internal.pageSize.width || pdfDocument.internal.pageSize.getWidth();
 
@@ -243,7 +286,7 @@ function generatePDF(data: RouterOutput["member"]["getMemberDocumentData"]) {
   pdfDocument.save(`SVSA - ${data.membersParam} members for ${data.month} ${data.year}.pdf`);
 }
 
-function generateXSLX(data: RouterOutput["member"]["getMemberDocumentData"]) {
+function generateXSLX(data: RouterOutput["member"]["getMembers"]) {
   const workbook = XLSX.utils.book_new();
   const header = ["Lane", "House Number", "Name", "Phone Number", "Paid?"];
 
@@ -260,9 +303,7 @@ function generateXSLX(data: RouterOutput["member"]["getMemberDocumentData"]) {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `SVSA - ${data.membersParam} ${
-    data.membersParam !== MEMBERS_PAYMENT_FILTER_ENUM.All ? `members for ${data.month} ${data.year}` : ""
-  }.xlsx`;
+  a.download = `SVSA - ${data.membersParam} members for ${data.month} ${data.year}.xlsx`;
 
   a.click();
 

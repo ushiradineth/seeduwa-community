@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import moment from "moment";
 import { z } from "zod";
 
-import { LANE_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
+import { ITEMS_PER_PAGE, LANE_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
 import { commonAttribute, now } from "@/lib/utils";
 import { CreateMemberSchema } from "@/lib/validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -161,17 +161,19 @@ export const memberRouter = createTRPCRouter({
     });
   }),
 
-  getMemberDocumentData: protectedProcedure
+  getMembers: protectedProcedure
     .input(
       z.object({
         search: z.string(),
         members: z.string(),
         year: z.number(),
         month: z.string(),
-        type: z.union([z.literal("XSLX"), z.literal("PDF")]),
+        type: z.union([z.literal("XSLX"), z.literal("PDF")]).optional(),
+        itemsPerPage: z.number().optional(),
+        page: z.number().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .query(async ({ ctx, input }) => {
       const search = input.search ? input.search.split(" ").join(" <-> ") : "";
       const membersParam = String(input.members ?? MEMBERS_PAYMENT_FILTER_ENUM.All) as MEMBERS_PAYMENT_FILTER_ENUM;
       const year = Number(input.year ?? new Date().getFullYear());
@@ -205,6 +207,8 @@ export const memberRouter = createTRPCRouter({
           : { active: true, payments: { ...membersFilter } };
 
       const members = await ctx.prisma.member.findMany({
+        take: input.itemsPerPage ?? undefined,
+        skip: input.page ? (Number(input.page) - 1) * (input.itemsPerPage ?? ITEMS_PER_PAGE) : undefined,
         where,
         select: {
           id: true,
@@ -224,6 +228,12 @@ export const memberRouter = createTRPCRouter({
         orderBy: { lane: "asc" },
       });
 
+      const count = await ctx.prisma.member.count({
+        where,
+      });
+
+      const total = await ctx.prisma.member.count({ where: { active: true } });
+
       return {
         members: members.map((member) => ({
           ...member,
@@ -233,6 +243,8 @@ export const memberRouter = createTRPCRouter({
         membersParam,
         month,
         year,
+        count,
+        total,
       };
     }),
 

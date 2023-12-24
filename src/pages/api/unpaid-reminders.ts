@@ -1,8 +1,8 @@
-import moment from "moment";
+import { log } from "next-axiom";
 import { type NextApiRequest, type NextApiResponse } from "next";
 
 import { DEFAULT_AMOUNT } from "@/lib/consts";
-import { generateUnpaidNotificationMessage } from "@/lib/utils";
+import { generateUnpaidNotificationMessage, now } from "@/lib/utils";
 import { sendMessage } from "@/server/api/routers/message";
 import { prisma } from "@/server/db";
 
@@ -17,9 +17,7 @@ export default async function handler(request: NextApiRequest, response: NextApi
     return false;
   }
 
-  const month = moment(
-    moment().year(new Date().getFullYear()).month(new Date().getMonth()).startOf("month").utcOffset(0, true).format(),
-  ).toDate();
+  const month = now();
 
   const members = await prisma.member.findMany({
     where: {
@@ -36,7 +34,7 @@ export default async function handler(request: NextApiRequest, response: NextApi
   const messages = [];
 
   for (const member of members) {
-    messages.push(sendMessage(member.phoneNumber, generateUnpaidNotificationMessage(DEFAULT_AMOUNT, month)));
+    messages.push(sendMessage(member.phoneNumber, generateUnpaidNotificationMessage(DEFAULT_AMOUNT, month), log));
   }
 
   response.status(200).json({

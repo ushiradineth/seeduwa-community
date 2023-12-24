@@ -1,6 +1,7 @@
 {
   "name": "seeduwa-community",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "build": "next build",
@@ -73,6 +74,7 @@
     "autoprefixer": "^10.4.14",
     "eslint": "^8.47.0",
     "eslint-config-next": "^13.4.13",
+    "next-axiom": "^1.1.1",
     "postcss": "^8.4.27",
     "prettier": "3.0.3",
     "prettier-plugin-tailwindcss": "0.5.4",

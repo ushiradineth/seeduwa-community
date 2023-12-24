@@ -13,7 +13,11 @@ export const env = createEnv({
     SMS_SENDER_ID: z.string(),
   },
 
-  client: {},
+  client: {
+    NEXT_PUBLIC_AXIOM_TOKEN: z.string(),
+    NEXT_PUBLIC_AXIOM_DATASET: z.string(),
+  },
+
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_DATABASE_URL: process.env.DATABASE_URL,
@@ -23,6 +27,8 @@ export const env = createEnv({
     SMS_USER_ID: process.env.SMS_USER_ID,
     SMS_API_KEY: process.env.SMS_API_KEY,
     SMS_SENDER_ID: process.env.SMS_SENDER_ID,
+    NEXT_PUBLIC_AXIOM_TOKEN: process.env.NEXT_PUBLIC_AXIOM_TOKEN,
+    NEXT_PUBLIC_AXIOM_DATASET: process.env.NEXT_PUBLIC_AXIOM_DATASET,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });

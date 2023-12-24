@@ -6,13 +6,14 @@ import { api } from "@/utils/api";
 
 import "@/styles/globals.css";
 
-import { DM_Sans, Libre_Baskerville } from "next/font/google";
 import NextNProgress from "nextjs-progressbar";
 import { ToastContainer } from "react-toastify";
+import { DM_Sans, Libre_Baskerville } from "next/font/google";
 
 import "react-toastify/dist/ReactToastify.css";
 
 import { XIcon } from "lucide-react";
+import { AxiomWebVitals } from "next-axiom";
 
 import Layout from "@/components/Organism/Layout";
 
@@ -39,6 +40,7 @@ const MyApp: AppType<{ session: Session | null }> = ({ Component, pageProps: { s
           showOnShallow={false}
           options={{ showSpinner: false }}
         />
+        <AxiomWebVitals />
         <style jsx global>
           {`
             :root {

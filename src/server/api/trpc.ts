@@ -1,6 +1,7 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { type Session } from "next-auth";
+import { Logger } from "next-axiom";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
@@ -12,9 +13,13 @@ interface CreateContextOptions {
 }
 
 const createInnerTRPCContext = (opts: CreateContextOptions) => {
+  const logger = new Logger();
+  const log = logger.with({ admin: opts.session?.user });
+
   return {
     session: opts.session,
     prisma,
+    log,
   };
 };
 

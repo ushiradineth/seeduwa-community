@@ -1,5 +1,4 @@
 import { TRPCError } from "@trpc/server";
-import { log } from "next-axiom";
 import { z } from "zod";
 
 import { MONTHS } from "@/lib/consts";
@@ -25,7 +24,7 @@ export const paymentRouter = createTRPCRouter({
       });
 
       if (existingPayments[0]) {
-        log.info("Payment already exists", { input, id: existingPayments[0].id, month: existingPayments[0].month });
+        ctx.log.info("Payment already exists", { input, id: existingPayments[0].id, month: existingPayments[0].month });
 
         throw new TRPCError({
           code: "CONFLICT",
@@ -48,16 +47,16 @@ export const paymentRouter = createTRPCRouter({
           skipDuplicates: true,
         });
 
-        log.info("Payment created", { input });
+        ctx.log.info("Payment created", { input });
 
         if (input.notify) {
           const member = await ctx.prisma.member.findUnique({ where: { id: input.memberId } });
-          member?.phoneNumber && sendMessage(member.phoneNumber, input.text);
+          member?.phoneNumber && sendMessage(member.phoneNumber, input.text, ctx.log);
         }
 
         return payments;
       } catch (error) {
-        log.error("Payment not created", { input, error });
+        ctx.log.error("Payment not created", { input, error });
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create payment" });
       }
     }),
@@ -69,11 +68,11 @@ export const paymentRouter = createTRPCRouter({
         data: { active: false, deletedAt: now() },
       });
 
-      log.info("Payment deleted", { payment });
+      ctx.log.info("Payment deleted", { payment });
 
       return payment;
     } catch (error) {
-      log.error("Payment not deleted", { input, error });
+      ctx.log.error("Payment not deleted", { input, error });
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete payment" });
     }
   }),
@@ -87,11 +86,11 @@ export const paymentRouter = createTRPCRouter({
           data: { amount: input.amount, paymentAt: input.paymentDate },
         });
 
-        log.info("Payment edited", { payment });
+        ctx.log.info("Payment edited", { payment });
 
         return payment;
       } catch (error) {
-        log.error("Payment not edited", { input, error });
+        ctx.log.error("Payment not edited", { input, error });
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to edit payment" });
       }
     }),

@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server";
 import moment from "moment";
-import { log } from "next-axiom";
 import { z } from "zod";
 
 import { LANE_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
@@ -32,7 +31,7 @@ export const memberRouter = createTRPCRouter({
         },
       );
 
-      log.info("Member already exists", { input, id: exisitingMember[0].id, commonAttribute: commonAttributeType });
+      ctx.log.info("Member already exists", { input, id: exisitingMember[0].id, commonAttribute: commonAttributeType });
 
       throw new TRPCError({
         message: `Member with this ${commonAttributeType} already exists`,
@@ -50,11 +49,11 @@ export const memberRouter = createTRPCRouter({
         },
       });
 
-      log.info("Member created", { member });
+      ctx.log.info("Member created", { member });
 
       return member;
     } catch (error) {
-      log.error("Member not created", { input, error });
+      ctx.log.error("Member not created", { input, error });
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create member" });
     }
   }),
@@ -70,11 +69,11 @@ export const memberRouter = createTRPCRouter({
         },
       });
 
-      log.info("Member deleted", { member });
+      ctx.log.info("Member deleted", { member });
 
       return member;
     } catch (error) {
-      log.error("Member not deleted", { input, error });
+      ctx.log.error("Member not deleted", { input, error });
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete member" });
     }
   }),
@@ -108,7 +107,7 @@ export const memberRouter = createTRPCRouter({
           },
         );
 
-        log.info("Member already exists", { input, id: exisitingMember[0].id, commonAttribute: commonAttributeType });
+        ctx.log.info("Member already exists", { input, id: exisitingMember[0].id, commonAttribute: commonAttributeType });
 
         throw new TRPCError({
           message: `Member with this ${commonAttributeType} already exists`,
@@ -122,11 +121,11 @@ export const memberRouter = createTRPCRouter({
           data: { name: input.name, houseId: input.houseId, lane: input.lane, phoneNumber: input.number },
         });
 
-        log.info("Member edited", { member });
+        ctx.log.info("Member edited", { member });
 
         return member;
       } catch (error) {
-        log.error("Member not edited", { input, error });
+        ctx.log.error("Member not edited", { input, error });
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to edit member" });
       }
     }),

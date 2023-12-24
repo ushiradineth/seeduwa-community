@@ -1,10 +1,10 @@
-import { log } from "next-axiom";
+import { type Logger } from "next-axiom";
 import { z } from "zod";
 
 import { env } from "@/env.mjs";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
-export function sendMessage(recipient: string, text: string) {
+export function sendMessage(recipient: string, text: string, log: Logger) {
   const formData = new URLSearchParams();
   formData.append("user_id", env.SMS_USER_ID);
   formData.append("api_key", env.SMS_API_KEY);
@@ -56,7 +56,7 @@ export const messageRouter = createTRPCRouter({
       const messages = [];
 
       for (const member of members) {
-        messages.push(sendMessage(member.phoneNumber, input.text));
+        messages.push(sendMessage(member.phoneNumber, input.text, ctx.log));
       }
 
       return messages;
@@ -72,7 +72,7 @@ export const messageRouter = createTRPCRouter({
     const messages = [];
 
     for (const member of members) {
-      messages.push(sendMessage(member.phoneNumber, input.text));
+      messages.push(sendMessage(member.phoneNumber, input.text, ctx.log));
     }
 
     return messages;

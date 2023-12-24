@@ -1,7 +1,6 @@
 import { RecordType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import moment from "moment";
-import { log } from "next-axiom";
 import * as yup from "yup";
 import { z } from "zod";
 
@@ -38,11 +37,11 @@ export const recordRouter = createTRPCRouter({
           ],
         });
 
-        log.info("Record created", { input });
+        ctx.log.info("Record created", { input });
 
         return records;
       } catch (error) {
-        log.error("Record not created", { input, error });
+        ctx.log.error("Record not created", { input, error });
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create record" });
       }
     }),
@@ -54,11 +53,11 @@ export const recordRouter = createTRPCRouter({
         data: { active: false, deletedAt: now() },
       });
 
-      log.info("Record deleted", { record });
+      ctx.log.info("Record deleted", { record });
 
       return record;
     } catch (error) {
-      log.error("Record not deleted", { input, error });
+      ctx.log.error("Record not deleted", { input, error });
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete record" });
     }
   }),
@@ -87,11 +86,11 @@ export const recordRouter = createTRPCRouter({
           },
         });
 
-        log.info("Record edited", { record });
+        ctx.log.info("Record edited", { record });
 
         return record;
       } catch (error) {
-        log.error("Record not edited", { input, error });
+        ctx.log.error("Record not edited", { input, error });
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to edit record" });
       }
     }),

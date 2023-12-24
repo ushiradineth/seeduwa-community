@@ -28,14 +28,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Members({ year, month, membersParam, search, itemsPerPage }: Props) {
+export default function Members({ year, month, membersParam, search, itemsPerPage, page }: Props) {
   const router = useRouter();
-  const pageNumber = Number(router.query.page ?? 1);
   const filter = String(membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid ? "not paid" : "paid").toLowerCase();
   const [type, setType] = useState("");
 
   const { data } = api.member.getMembers.useQuery(
-    { itemsPerPage, members: membersParam, month, year, page: pageNumber, search },
+    { itemsPerPage, members: membersParam, month, year, page, search },
     { refetchOnWindowFocus: false, refetchOnReconnect: false },
   );
 
@@ -189,7 +188,7 @@ export default function Members({ year, month, membersParam, search, itemsPerPag
               <PageNumbers
                 count={data.count}
                 itemsPerPage={itemsPerPage}
-                pageNumber={pageNumber}
+                pageNumber={page}
                 path={router.asPath}
                 params={router.query}
               />

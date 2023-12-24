@@ -27,6 +27,7 @@ export type Props = {
   month: string;
   itemsPerPage: number;
   search: string;
+  page: number;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -71,6 +72,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       year,
       itemsPerPage,
       search,
+      page,
     },
   };
 };
@@ -81,6 +83,7 @@ export default function AllMembers({
   month,
   itemsPerPage,
   search,
+  page,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
@@ -98,13 +101,7 @@ export default function AllMembers({
           )}
           <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
         </Card>
-        <Members
-          year={year}
-          month={month}
-          membersParam={membersParam}
-          itemsPerPage={itemsPerPage}
-          search={search}
-        />
+        <Members year={year} month={month} membersParam={membersParam} itemsPerPage={itemsPerPage} search={search} page={page} />
       </div>
     </>
   );

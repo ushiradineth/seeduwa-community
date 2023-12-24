@@ -1,5 +1,9 @@
+import { TRPCError } from "@trpc/server";
+import { log } from "next-axiom";
 import { z } from "zod";
 
+import { MONTHS } from "@/lib/consts";
+import { now } from "@/lib/utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { sendMessage } from "./message";
 
@@ -16,60 +20,80 @@ export const paymentRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      let phoneNumber = "";
-      const createdPayments = [];
+      const existingPayments = await ctx.prisma.payment.findMany({
+        where: { memberId: input.memberId, member: { active: true }, month: { in: input.months }, active: true },
+      });
 
-      for (const month of input.months) {
-        try {
-          const existingPayments = await ctx.prisma.payment.findMany({
-            where: { memberId: input.memberId, month, active: true },
-          });
+      if (existingPayments[0]) {
+        log.info("Payment already exists", { input, id: existingPayments[0].id, month: existingPayments[0].month });
 
-          if (existingPayments.length === 0) {
-            const createdPayment = await ctx.prisma.payment.create({
-              data: {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `Payment for ${MONTHS[existingPayments[0].month.getMonth()]} ${existingPayments[0].month.getFullYear()} Already Exists`,
+        });
+      }
+
+      try {
+        const payments = await ctx.prisma.payment.createMany({
+          data: [
+            ...input.months.map((month) => {
+              return {
                 amount: input.amount,
                 memberId: input.memberId,
                 month,
                 paymentAt: input.paymentDate,
-              },
-              select: {
-                member: {
-                  select: {
-                    phoneNumber: true,
-                  },
-                },
-              },
-            });
+              };
+            }),
+          ],
+          skipDuplicates: true,
+        });
 
-            createdPayments.push(createdPayment);
+        log.info("Payment created", { input });
 
-            phoneNumber = createdPayment.member.phoneNumber;
-          }
-        } catch (error) {
-          console.error(`Error in database operation: ${error}`);
-          throw new Error("Failed to process payment.");
+        if (input.notify) {
+          const member = await ctx.prisma.member.findUnique({ where: { id: input.memberId } });
+          member?.phoneNumber && sendMessage(member.phoneNumber, input.text);
         }
-      }
 
-      if (input.notify && phoneNumber) {
-        sendMessage(phoneNumber, input.text);
+        return payments;
+      } catch (error) {
+        log.error("Payment not created", { input, error });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create payment" });
       }
-
-      return createdPayments;
     }),
 
   delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    return await ctx.prisma.payment.update({ where: { id: input.id }, data: { active: false } });
+    try {
+      const payment = await ctx.prisma.payment.update({
+        where: { id: input.id, active: true },
+        data: { active: false, deletedAt: now() },
+      });
+
+      log.info("Payment deleted", { payment });
+
+      return payment;
+    } catch (error) {
+      log.error("Payment not deleted", { input, error });
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete payment" });
+    }
   }),
 
   edit: protectedProcedure
     .input(z.object({ id: z.string(), amount: z.number(), paymentDate: z.date() }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.prisma.payment.update({
-        where: { id: input.id },
-        data: { amount: input.amount, paymentAt: input.paymentDate },
-      });
+      try {
+        const payment = await ctx.prisma.payment.update({
+          where: { id: input.id, active: true },
+          data: { amount: input.amount, paymentAt: input.paymentDate },
+        });
+
+        log.info("Payment edited", { payment });
+
+        return payment;
+      } catch (error) {
+        log.error("Payment not edited", { input, error });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to edit payment" });
+      }
     }),
 
   get: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {

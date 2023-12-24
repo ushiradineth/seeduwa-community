@@ -1,9 +1,10 @@
 import { TRPCError } from "@trpc/server";
 import moment from "moment";
+import { log } from "next-axiom";
 import { z } from "zod";
 
 import { LANE_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
-import { commonAttribute } from "@/lib/utils";
+import { commonAttribute, now } from "@/lib/utils";
 import { CreateMemberSchema } from "@/lib/validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -16,39 +17,66 @@ export const memberRouter = createTRPCRouter({
     });
 
     if (exisitingMember[0]) {
+      const commonAttributeType = commonAttribute(
+        {
+          name: exisitingMember[0].name,
+          houseId: exisitingMember[0].houseId,
+          lane: exisitingMember[0].lane,
+          phoneNumber: exisitingMember[0].phoneNumber,
+        },
+        {
+          name: input.Name,
+          houseId: input.House,
+          lane: input.Lane,
+          phoneNumber: input.Number,
+        },
+      );
+
+      log.info("Member already exists", { input, id: exisitingMember[0].id, commonAttribute: commonAttributeType });
+
       throw new TRPCError({
-        message: `Member with this ${commonAttribute(
-          {
-            name: exisitingMember[0]?.name,
-            houseId: exisitingMember[0]?.houseId,
-            lane: exisitingMember[0]?.lane,
-            phoneNumber: exisitingMember[0]?.phoneNumber,
-          },
-          {
-            name: input.Name,
-            houseId: input.House,
-            lane: input.Lane,
-            phoneNumber: input.Number,
-          },
-        )}
-         already exists`,
+        message: `Member with this ${commonAttributeType} already exists`,
         code: "CONFLICT",
       });
     }
 
-    return await ctx.prisma.member.create({
-      data: {
-        houseId: input.House,
-        lane: input.Lane,
-        name: input.Name,
-        phoneNumber: input.Number,
-      },
-    });
+    try {
+      const member = await ctx.prisma.member.create({
+        data: {
+          houseId: input.House,
+          lane: input.Lane,
+          name: input.Name,
+          phoneNumber: input.Number,
+        },
+      });
+
+      log.info("Member created", { member });
+
+      return member;
+    } catch (error) {
+      log.error("Member not created", { input, error });
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create member" });
+    }
   }),
 
   delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    await ctx.prisma.payment.updateMany({ where: { memberId: input.id }, data: { active: false } });
-    return await ctx.prisma.member.update({ where: { id: input.id }, data: { active: false } });
+    try {
+      const member = await ctx.prisma.member.update({
+        where: { id: input.id, active: true },
+        data: {
+          active: false,
+          deletedAt: now(),
+          payments: { updateMany: { where: { active: true }, data: { active: false, deletedAt: now() } } },
+        },
+      });
+
+      log.info("Member deleted", { member });
+
+      return member;
+    } catch (error) {
+      log.error("Member not deleted", { input, error });
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete member" });
+    }
   }),
 
   edit: protectedProcedure
@@ -65,30 +93,47 @@ export const memberRouter = createTRPCRouter({
       });
 
       if (exisitingMember[0]) {
+        const commonAttributeType = commonAttribute(
+          {
+            name: exisitingMember[0].name,
+            houseId: exisitingMember[0].houseId,
+            lane: exisitingMember[0].lane,
+            phoneNumber: exisitingMember[0].phoneNumber,
+          },
+          {
+            name: input.name,
+            houseId: input.houseId,
+            lane: input.lane,
+            phoneNumber: input.number,
+          },
+        );
+
+        log.info("Member already exists", { input, id: exisitingMember[0].id, commonAttribute: commonAttributeType });
+
         throw new TRPCError({
-          message: `Member with this ${commonAttribute(
-            {
-              name: exisitingMember[0]?.name,
-              houseId: exisitingMember[0]?.houseId,
-              lane: exisitingMember[0]?.lane,
-              phoneNumber: exisitingMember[0]?.phoneNumber,
-            },
-            {
-              name: input.name,
-              houseId: input.houseId,
-              lane: input.lane,
-              phoneNumber: input.number,
-            },
-          )} already exists`,
+          message: `Member with this ${commonAttributeType} already exists`,
           code: "CONFLICT",
         });
       }
 
-      return await ctx.prisma.member.update({
-        where: { id: input.id },
-        data: { name: input.name, houseId: input.houseId, lane: input.lane, phoneNumber: input.number },
-      });
+      try {
+        const member = await ctx.prisma.member.update({
+          where: { id: input.id, active: true },
+          data: { name: input.name, houseId: input.houseId, lane: input.lane, phoneNumber: input.number },
+        });
+
+        log.info("Member edited", { member });
+
+        return member;
+      } catch (error) {
+        log.error("Member not edited", { input, error });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to edit member" });
+      }
     }),
+
+  get: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    return await ctx.prisma.member.findFirst({ where: { id: input.id, active: true } });
+  }),
 
   getAllByLane: protectedProcedure.input(z.object({ lane: z.string() })).mutation(async ({ ctx, input }) => {
     return await ctx.prisma.member.findMany({
@@ -103,10 +148,6 @@ export const memberRouter = createTRPCRouter({
         },
       },
     });
-  }),
-
-  get: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    return await ctx.prisma.member.findFirst({ where: { id: input.id, active: true } });
   }),
 
   getByHouseID: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {

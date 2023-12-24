@@ -1,9 +1,12 @@
 import { RecordType } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import moment from "moment";
+import { log } from "next-axiom";
 import * as yup from "yup";
 import { z } from "zod";
 
 import { MONTHS, RECORD_TYPE } from "@/lib/consts";
+import { now } from "@/lib/utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const recordRouter = createTRPCRouter({
@@ -20,35 +23,44 @@ export const recordRouter = createTRPCRouter({
         .required(),
     )
     .mutation(async ({ ctx, input }) => {
-      const createdRecords = [];
-
-      for (const month of input.months) {
-        const record = await ctx.prisma.record.create({
-          data: {
-            name: input.name,
-            amount: input.amount,
-            month,
-            recordAt: input.recordDate,
-            type:
-              input.recordType === RecordType.Income.toString()
-                ? RecordType.Income
-                : input.recordType === RecordType.Expense.toString()
-                ? RecordType.Expense
-                : undefined,
-          },
-          select: {
-            recordAt: true,
-          },
+      try {
+        const records = await ctx.prisma.record.createMany({
+          data: [
+            ...input.months.map((month) => {
+              return {
+                name: input.name,
+                amount: input.amount,
+                month,
+                recordAt: input.recordDate,
+                type: input.recordType === RecordType.Income.toString() ? RecordType.Income : RecordType.Expense,
+              };
+            }),
+          ],
         });
 
-        createdRecords.push(record);
-      }
+        log.info("Record created", { input });
 
-      return createdRecords;
+        return records;
+      } catch (error) {
+        log.error("Record not created", { input, error });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create record" });
+      }
     }),
 
   delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    return await ctx.prisma.record.update({ where: { id: input.id }, data: { active: false } });
+    try {
+      const record = await ctx.prisma.record.update({
+        where: { id: input.id, active: true },
+        data: { active: false, deletedAt: now() },
+      });
+
+      log.info("Record deleted", { record });
+
+      return record;
+    } catch (error) {
+      log.error("Record not deleted", { input, error });
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete record" });
+    }
   }),
 
   edit: protectedProcedure
@@ -64,20 +76,24 @@ export const recordRouter = createTRPCRouter({
         .required(),
     )
     .mutation(async ({ ctx, input }) => {
-      return await ctx.prisma.record.update({
-        where: { id: input.id },
-        data: {
-          name: input.name,
-          amount: input.amount,
-          recordAt: input.recordDate,
-          type:
-            input.recordType === RecordType.Income.toString()
-              ? RecordType.Income
-              : input.recordType === RecordType.Expense.toString()
-              ? RecordType.Expense
-              : undefined,
-        },
-      });
+      try {
+        const record = await ctx.prisma.record.update({
+          where: { id: input.id, active: true },
+          data: {
+            name: input.name,
+            amount: input.amount,
+            recordAt: input.recordDate,
+            type: input.recordType === RecordType.Income.toString() ? RecordType.Income : RecordType.Expense,
+          },
+        });
+
+        log.info("Record edited", { record });
+
+        return record;
+      } catch (error) {
+        log.error("Record not edited", { input, error });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to edit record" });
+      }
     }),
 
   get: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {

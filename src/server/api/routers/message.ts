@@ -1,3 +1,4 @@
+import { log } from "next-axiom";
 import { z } from "zod";
 
 import { env } from "@/env.mjs";
@@ -18,17 +19,20 @@ export function sendMessage(recipient: string, text: string) {
     .then((response) => {
       // @ts-expect-error SMS Gateway does not responde with an error code
       if (!response.ok || response.status === "unsuccess") {
+        log.error("Message not sent", { message: text, reciever: recipient });
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       return response.json(); // or response.text() if the response is not JSON
     })
     .then((data) => {
-      console.log("Request successful:", data);
-      // user can preview the response
+      log.info("Message sent", { message: text, reciever: recipient, response: data });
     })
     .catch((error) => {
-      console.error("Request failed:", error);
+      log.error("Message not sent", { message: text, reciever: recipient, response: error });
+      return false;
     });
+
+  return recipient;
 }
 
 export const messageRouter = createTRPCRouter({

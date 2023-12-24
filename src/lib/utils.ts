@@ -94,3 +94,7 @@ export function generateUnpaidNotificationMessage(amount: number, months: Date) 
     MONTHS[months.getMonth()]
   }. Your prompt attention is appreciated. - Seeduwa Village Security Association`;
 }
+
+export function now() {
+  return moment(new Date()).startOf("day").utcOffset(0, true).toDate();
+}

@@ -1,6 +1,8 @@
+import { createServerSideHelpers } from "@trpc/react-query/server";
 import { Coins, User } from "lucide-react";
-import moment from "moment";
 import { getSession } from "next-auth/react";
+import { log } from "next-axiom";
+import SuperJSON from "superjson";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -10,6 +12,7 @@ import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import Dashboard from "@/components/Templates/Dashboard";
 import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, LANE_FILTER, YEARS } from "@/lib/consts";
+import { appRouter } from "@/server/api/root";
 import { prisma } from "@/server/db";
 
 export type Member = {
@@ -25,12 +28,11 @@ export type Member = {
 };
 
 export type Props = {
-  members: Member[];
-  count: number;
   year: number;
   itemsPerPage: number;
   search: string;
   lane: string;
+  page: number;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -52,85 +54,33 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     ? Number(context.query.itemsPerPage)
     : ITEMS_PER_PAGE;
   const lane = LANE_FILTER.includes(String(context.query.lane)) ? String(context.query.lane) : LANE_FILTER[0]!;
+  const page = Number(context.query.page ?? 1);
 
-  const where =
-    search !== ""
-      ? {
-          AND: [
-            { active: true },
-            {
-              OR: [
-                { name: { search: search } },
-                { phoneNumber: { search: search } },
-                { houseId: { search: search } },
-                { lane: { search: search } },
-              ],
-            },
-            { lane: lane !== LANE_FILTER[0] ? lane : undefined },
-          ],
-        }
-      : {
-          AND: [{ active: true }, { lane: lane !== LANE_FILTER[0] ? lane : undefined }],
-        };
-
-  const members = await prisma.member.findMany({
-    take: itemsPerPage,
-    skip: context.query.page ? (Number(context.query.page) - 1) * itemsPerPage : 0,
-    where,
-    select: {
-      id: true,
-      houseId: true,
-      name: true,
-      lane: true,
-      payments: {
-        where: {
-          active: true,
-          month: {
-            gte: moment().year(paymentYear).startOf("year").utcOffset(0, true).format(),
-            lte: moment().year(paymentYear).endOf("year").utcOffset(0, true).format(),
-          },
-        },
-        select: {
-          id: true,
-          month: true,
-          amount: true,
-        },
-      },
+  const trpc = createServerSideHelpers({
+    router: appRouter,
+    ctx: {
+      session,
+      prisma,
+      log,
     },
-    orderBy: {
-      createdAt: "asc",
-    },
+    transformer: SuperJSON,
   });
 
-  const count = await prisma.member.count({
-    where,
-  });
+  await trpc.member.getDashboard.prefetch({ search, year: paymentYear, lane, page, itemsPerPage });
 
   return {
     props: {
-      members: members.map((member) => ({
-        ...member,
-        payments: member.payments.map((payment) => {
-          return { ...payment, month: payment.month.toISOString() };
-        }),
-      })),
-      count,
+      trpcState: trpc.dehydrate(),
       year: paymentYear,
       itemsPerPage,
       search,
       lane,
+      page
     },
   };
 };
 
-export default function TableDashboard({
-  members,
-  count,
-  year,
-  itemsPerPage,
-  search,
-  lane,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function TableDashboard({ year, itemsPerPage, search, lane, page }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const router = useRouter();
 
   return (
@@ -160,7 +110,7 @@ export default function TableDashboard({
             <Filter filterItems={LANE_FILTER} label="Lane" paramKey="lane" value={lane} />
           </div>
         </Card>
-        <Dashboard members={members} count={count} year={year} itemsPerPage={itemsPerPage} search={search} lane={lane} />
+        <Dashboard year={year} itemsPerPage={itemsPerPage} search={search} lane={lane} page={page} />
       </div>
     </>
   );

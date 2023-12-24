@@ -24,16 +24,38 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../Molecul
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Dashboard({ members: initialMembers, count, year, itemsPerPage, search, lane }: Props) {
+export default function Dashboard({ year, itemsPerPage, search, lane, page }: Props) {
   const router = useRouter();
-  const pageNumber = Number(router.query.page ?? 1);
-  const [members, setMembers] = useState<Member[]>(initialMembers);
-  const { mutate, isLoading: gettingDocumentData } = api.member.getDashboardDocumentData.useMutation({
-    onSuccess: (data, variables) => {
-      if (variables.type === "PDF") generatePDF(data);
-      else if (variables.type === "XSLX") generateXSLX(data);
+  const [type, setType] = useState("");
+
+  const { data } = api.member.getDashboard.useQuery(
+    { year, page, search, lane, itemsPerPage },
+    { refetchOnWindowFocus: false, refetchOnReconnect: false },
+  );
+
+  const {
+    data: documentData,
+    isLoading: gettingDocumentData,
+    isPaused: documentDataEnabled,
+    isSuccess: gettingDocumentDataSuccess,
+  } = api.member.getDashboard.useQuery(
+    { year, search, lane },
+    {
+      enabled: type === "PDF" || type === "XSLX",
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
-  });
+  );
+
+  const generateDocument = useCallback(() => {
+    if (documentData) {
+      if (type === "PDF") {
+        generatePDF(documentData);
+      } else if (type === "XSLX") {
+        generateXSLX(documentData);
+      }
+    }
+  }, [documentData, type]);
 
   const paymentFilter = useCallback((month: string, year: number, member: Member) => {
     return member.payments.find((payment) => {
@@ -46,20 +68,31 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
   }, []);
 
   useEffect(() => {
-    initialMembers !== members && setMembers(initialMembers);
-  }, [initialMembers, members]);
+    if (documentData) {
+      generateDocument();
+      setType("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type]);
+
+  useEffect(() => {
+    if (documentData && gettingDocumentDataSuccess) {
+      generateDocument();
+      setType("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gettingDocumentDataSuccess]);
+
+  if (!data) return <Loader background />;
 
   return (
     <>
-      {gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
+      {documentDataEnabled && gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
       <Card>
         <CardHeader>
           <CardTitle className="gap-mb-2 flex w-full items-center justify-center">
             <p>{`Seeduwa Village Security Association - ${year}`}</p>
-            <OptionMenu
-              onClickPDF={() => mutate({ year, search, type: "PDF", lane })}
-              onClickXSLX={() => mutate({ year, search, type: "XSLX", lane })}
-            />
+            <OptionMenu onClickPDF={() => setType("PDF")} onClickXSLX={() => setType("XSLX")} />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -69,7 +102,7 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
             placeholder="Search for members"
             path={router.asPath}
             params={router.query}
-            count={count}
+            count={data.count}
           />
           <Table className="border">
             <TableHeader>
@@ -83,8 +116,8 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
               </TableRow>
             </TableHeader>
             <TableBody>
-              {members.length !== 0 ? (
-                members.map((member) => {
+              {data.members.length !== 0 ? (
+                data.members.map((member) => {
                   return (
                     <TableRow key={member.id}>
                       <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
@@ -134,10 +167,10 @@ export default function Dashboard({ members: initialMembers, count, year, itemsP
             </TableBody>
           </Table>
         </CardContent>
-        {count !== 0 && count > itemsPerPage && (
+        {data.count !== 0 && data.count > itemsPerPage && (
           <CardFooter className="flex justify-center">
             <TableCaption>
-              <PageNumbers count={count} itemsPerPage={itemsPerPage} pageNumber={pageNumber} path={router.asPath} params={router.query} />
+              <PageNumbers count={data.count} itemsPerPage={itemsPerPage} pageNumber={page} path={router.asPath} params={router.query} />
             </TableCaption>
           </CardFooter>
         )}
@@ -178,7 +211,7 @@ function OptionMenu({ onClickPDF, onClickXSLX }: { readonly onClickPDF: () => vo
   );
 }
 
-function generatePDF(data: RouterOutputs["member"]["getDashboardDocumentData"]) {
+function generatePDF(data: RouterOutputs["member"]["getDashboard"]) {
   const pdfDocument = new jsPDF("landscape");
   const pageWidth = pdfDocument.internal.pageSize.width || pdfDocument.internal.pageSize.getWidth();
 
@@ -212,7 +245,7 @@ function generatePDF(data: RouterOutputs["member"]["getDashboardDocumentData"]) 
   pdfDocument.save(`SVSA - ${data.year}${data.lane !== LANE_FILTER[0] ? ` - ${data.lane}` : ""}.pdf`);
 }
 
-function generateXSLX(data: RouterOutputs["member"]["getDashboardDocumentData"]) {
+function generateXSLX(data: RouterOutputs["member"]["getDashboard"]) {
   const workbook = XLSX.utils.book_new();
   const header = ["Member Name", ...MONTHS];
 

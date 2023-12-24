@@ -168,7 +168,6 @@ export const memberRouter = createTRPCRouter({
         members: z.string(),
         year: z.number(),
         month: z.string(),
-        type: z.union([z.literal("XSLX"), z.literal("PDF")]).optional(),
         itemsPerPage: z.number().optional(),
         page: z.number().optional(),
       }),
@@ -248,16 +247,17 @@ export const memberRouter = createTRPCRouter({
       };
     }),
 
-  getDashboardDocumentData: protectedProcedure
+  getDashboard: protectedProcedure
     .input(
       z.object({
         search: z.string(),
         year: z.number(),
         lane: z.string(),
-        type: z.union([z.literal("XSLX"), z.literal("PDF")]),
+        itemsPerPage: z.number().optional(),
+        page: z.number().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .query(async ({ ctx, input }) => {
       const search = input.search ? input.search.split(" ").join(" | ") : "";
       const year = YEARS.includes(input.year) ? input.year : new Date().getFullYear();
       const lane = LANE_FILTER.includes(String(input.lane)) ? String(input.lane) : LANE_FILTER[0]!;
@@ -309,6 +309,10 @@ export const memberRouter = createTRPCRouter({
         },
       });
 
+      const count = await ctx.prisma.member.count({
+        where,
+      });
+
       return {
         members: members.map((member) => ({
           ...member,
@@ -318,6 +322,7 @@ export const memberRouter = createTRPCRouter({
         })),
         year,
         lane,
+        count,
       };
     }),
 });

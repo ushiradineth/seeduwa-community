@@ -13,6 +13,13 @@ declare module "next-auth" {
       username: string;
     };
   }
+
+  interface JWT {
+    user: {
+      id: string;
+      username: string;
+    };
+  }
 }
 
 export const authOptions: NextAuthOptions = {
@@ -20,21 +27,16 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    jwt: async ({ token, user }) => {
-      if (user) {
-        token.user = user;
-      }
-      return Promise.resolve(token);
-    },
     session({ session, token }) {
       if (token.user) {
         const t = token.user as {
           id: string;
+          username: string;
         };
 
         session.user = {
           id: t.id,
-          username: token.username as string,
+          username: t.username,
         };
       }
       return Promise.resolve(session);

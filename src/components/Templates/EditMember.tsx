@@ -49,7 +49,6 @@ export default function EditMember() {
     onSuccess: async () => {
       await exitPopup(false);
       toast.success("Member deleted successfully");
-      void router.push("/");
     },
     onError: (error) => {
       setError(error.message);

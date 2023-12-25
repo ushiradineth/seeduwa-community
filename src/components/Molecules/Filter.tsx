@@ -1,6 +1,7 @@
 import { Label } from "@radix-ui/react-label";
 import { useRouter } from "next/router";
 
+import { removeQueryParamsFromRouter } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";
 
 export default function Filter({
@@ -26,12 +27,12 @@ export default function Filter({
         onValueChange={(value) => {
           const obj: Record<string, string | number | boolean> = {};
           obj[paramKey] = value;
-          void router.push({ query: { ...router.query, ...obj, page: 1 } });
+          void router.push({ query: { ...removeQueryParamsFromRouter(router, ["page"]), ...obj } });
         }}>
         <SelectTrigger className="w-full">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="dark z-[250] w-max max-h-72">
+        <SelectContent className="dark z-[250] max-h-72 w-max">
           {filterItems.map((year) => {
             return (
               <SelectItem key={year} value={String(year)}>

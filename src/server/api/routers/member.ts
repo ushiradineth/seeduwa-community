@@ -283,6 +283,8 @@ export const memberRouter = createTRPCRouter({
             };
 
       const members = await ctx.prisma.member.findMany({
+        take: input.itemsPerPage ?? undefined,
+        skip: input.page ? (Number(input.page) - 1) * (input.itemsPerPage ?? ITEMS_PER_PAGE) : undefined,
         where,
         select: {
           id: true,

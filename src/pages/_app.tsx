@@ -6,12 +6,14 @@ import { api } from "@/utils/api";
 
 import "@/styles/globals.css";
 
+import { Analytics } from "@vercel/analytics/react";
 import NextNProgress from "nextjs-progressbar";
 import { ToastContainer } from "react-toastify";
 import { DM_Sans, Libre_Baskerville } from "next/font/google";
 
 import "react-toastify/dist/ReactToastify.css";
 
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { XIcon } from "lucide-react";
 import { AxiomWebVitals } from "next-axiom";
 
@@ -41,6 +43,8 @@ const MyApp: AppType<{ session: Session | null }> = ({ Component, pageProps: { s
           options={{ showSpinner: false }}
         />
         <AxiomWebVitals />
+        <SpeedInsights />
+        <Analytics />
         <style jsx global>
           {`
             :root {

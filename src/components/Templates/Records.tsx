@@ -1,4 +1,3 @@
-import { type inferRouterOutputs } from "@trpc/server";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Edit, FileText, MoreVertical, Plus, Sheet } from "lucide-react";
@@ -7,7 +6,6 @@ import * as XLSX from "xlsx";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import { api } from "@/utils/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,8 +16,6 @@ import {
 } from "@/components/Molecules/DropdownMenu";
 import { s2ab } from "@/lib/utils";
 import { type Props, type Record } from "@/pages/record";
-import { type AppRouter } from "@/server/api/root";
-import Loader from "../Atoms/Loader";
 import { Card, CardContent, CardHeader, CardTitle } from "../Molecules/Card";
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
@@ -28,12 +24,6 @@ export default function Records({ records: initialRecords, count, year, month, s
   const router = useRouter();
   const [records, setRecords] = useState<Record[]>(initialRecords);
   const [balance, setBalance] = useState<number[]>([]);
-  const { mutate, isLoading: gettingDocumentData } = api.record.getRecordsDocumentData.useMutation({
-    onSuccess: (data, variables) => {
-      if (variables.type === "PDF") generatePDF(data);
-      else if (variables.type === "XSLX") generateXSLX(data);
-    },
-  });
 
   useEffect(() => {
     initialRecords !== records && setRecords(initialRecords);
@@ -58,14 +48,17 @@ export default function Records({ records: initialRecords, count, year, month, s
 
   return (
     <>
-      {gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
       <Card>
         <CardHeader>
           <CardTitle className="flex w-full items-center justify-center gap-2">
             <p>Records</p>
             <OptionMenu
-              onClickPDF={() => mutate({ month, year, search, type: "PDF" })}
-              onClickXSLX={() => mutate({ month, year, search, type: "XSLX" })}
+              onClickPDF={() =>
+                generatePDF({ records: initialRecords, count, year, month, search, balance: initialBalance, currentPayments })
+              }
+              onClickXSLX={() =>
+                generateXSLX({ records: initialRecords, count, year, month, search, balance: initialBalance, currentPayments })
+              }
             />
           </CardTitle>
         </CardHeader>
@@ -218,12 +211,10 @@ function OptionMenu({ onClickPDF, onClickXSLX }: { readonly onClickPDF: () => vo
   );
 }
 
-type RouterOutput = inferRouterOutputs<AppRouter>;
-
 const green = [253, 243, 208] as [number, number, number];
 const yellow = [202, 222, 185] as [number, number, number];
 
-function generatePDF(data: RouterOutput["record"]["getRecordsDocumentData"]) {
+function generatePDF(data: Props) {
   const pdfDocument = new jsPDF();
   const pageWidth = pdfDocument.internal.pageSize.width || pdfDocument.internal.pageSize.getWidth();
 
@@ -317,7 +308,7 @@ function generatePDF(data: RouterOutput["record"]["getRecordsDocumentData"]) {
   pdfDocument.save(`SVSA - Records for ${data.month} ${data.year}.pdf`);
 }
 
-function generateXSLX(data: RouterOutput["record"]["getRecordsDocumentData"]) {
+function generateXSLX(data: Props) {
   const workbook = XLSX.utils.book_new();
   const header = ["Date", "Description", "Income", "Expense", "Balance"];
 

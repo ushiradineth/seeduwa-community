@@ -35,8 +35,7 @@ export default function Dashboard({ year, itemsPerPage, search, lane, page }: Pr
 
   const {
     data: documentData,
-    isLoading: gettingDocumentData,
-    isPaused: documentDataEnabled,
+    isFetching: gettingDocumentData,
     isSuccess: gettingDocumentDataSuccess,
   } = api.member.getDashboard.useQuery(
     { year, search, lane },
@@ -87,7 +86,7 @@ export default function Dashboard({ year, itemsPerPage, search, lane, page }: Pr
 
   return (
     <>
-      {documentDataEnabled && gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
+      {gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
       <Card>
         <CardHeader>
           <CardTitle className="gap-mb-2 flex w-full items-center justify-center">

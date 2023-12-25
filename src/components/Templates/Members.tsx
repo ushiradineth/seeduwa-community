@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/Molecules/DropdownMenu";
-import { ITEMS_PER_PAGE, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS } from "@/lib/consts";
+import { MEMBERS_PAYMENT_FILTER_ENUM, MONTHS } from "@/lib/consts";
 import { s2ab } from "@/lib/utils";
 import { type Props } from "@/pages/member";
 import { type AppRouter } from "@/server/api/root";
@@ -40,8 +40,7 @@ export default function Members({ year, month, membersParam, search, itemsPerPag
 
   const {
     data: documentData,
-    isLoading: gettingDocumentData,
-    isPaused: documentDataEnabled,
+    isFetching: gettingDocumentData,
     isSuccess: gettingDocumentDataSuccess,
   } = api.member.getMembers.useQuery(
     { members: membersParam, month, year, search },
@@ -82,7 +81,7 @@ export default function Members({ year, month, membersParam, search, itemsPerPag
 
   return (
     <>
-      {documentDataEnabled && gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
+      {gettingDocumentData && <Loader blurBackground height="100%" background className="absolute w-full" />}
       <Card>
         <CardHeader>
           <CardTitle className="flex w-full items-center justify-center gap-2">
@@ -182,16 +181,10 @@ export default function Members({ year, month, membersParam, search, itemsPerPag
             <TableCaption>Currently, a total of {data.total} Members are on SVC</TableCaption>
           </Table>
         </CardContent>
-        {data.count !== 0 && data.count > ITEMS_PER_PAGE && (
+        {data.count !== 0 && data.count > itemsPerPage && (
           <CardFooter className="flex justify-center">
             <TableCaption>
-              <PageNumbers
-                count={data.count}
-                itemsPerPage={itemsPerPage}
-                pageNumber={page}
-                path={router.asPath}
-                params={router.query}
-              />
+              <PageNumbers count={data.count} itemsPerPage={itemsPerPage} pageNumber={page} path={router.asPath} params={router.query} />
             </TableCaption>
           </CardFooter>
         )}

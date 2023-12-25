@@ -49,12 +49,16 @@ export const paymentRouter = createTRPCRouter({
 
         ctx.log.info("Payment created", { input });
 
+        let response;
+
         if (input.notify) {
           const member = await ctx.prisma.member.findUnique({ where: { id: input.memberId } });
-          member?.phoneNumber && sendMessage(member.phoneNumber, input.text, ctx.log);
+          if (member?.phoneNumber) {
+            response = await sendMessage(member.phoneNumber, input.text, ctx.log);
+          }
         }
 
-        return payments;
+        return { payments, response };
       } catch (error) {
         ctx.log.error("Payment not created", { input, error });
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create payment" });

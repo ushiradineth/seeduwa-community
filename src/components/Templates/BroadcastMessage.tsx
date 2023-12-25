@@ -1,4 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import { BadgeCheck, BadgeXIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useCallback } from "react";
@@ -15,9 +16,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 export default function BroadcastMessage() {
   const router = useRouter();
 
-  const { mutate: broadcast, isLoading: broadcasting } = api.message.broadcast.useMutation({
-    onSuccess: async () => {
-      await exitPopup(false);
+  const {
+    data,
+    mutate: broadcast,
+    isLoading: broadcasting,
+  } = api.message.broadcast.useMutation({
+    onSuccess: () => {
       toast.success("Notifications sent successfully");
     },
   });
@@ -47,35 +51,54 @@ export default function BroadcastMessage() {
   return (
     <Dialog open={router.query.mode === "broadcast"} onOpenChange={() => exitPopup(true)}>
       <DialogContent className="dark max-h-[90%] text-white sm:max-w-[425px]">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
+        {data ? (
+          <>
             <DialogHeader>
               <DialogTitle className="flex w-fit items-center justify-center gap-2">
                 <p>Broadcast Message to All Members</p>
               </DialogTitle>
             </DialogHeader>
+            <div className="flex flex-col gap-2">
+              {data.map((member) => (
+                <div key={member.name} className="flex items-center justify-start gap-2">
+                  <p className="w-52 truncate">{member.name}</p>
+                  <p>{member.number}</p>
+                  {member.status ? <BadgeCheck color="green" className="ml-auto" /> : <BadgeXIcon color="red" className="ml-auto" />}
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
+              <DialogHeader>
+                <DialogTitle className="flex w-fit items-center justify-center gap-2">
+                  <p>Broadcast Message to All Members</p>
+                </DialogTitle>
+              </DialogHeader>
 
-            <FormField
-              control={form.control}
-              name="Text"
-              render={({ field: innerField }) => (
-                <FormItem>
-                  <FormLabel>Message</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Broadcast Message" {...innerField} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="Text"
+                render={({ field: innerField }) => (
+                  <FormItem>
+                    <FormLabel>Message</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Broadcast Message" {...innerField} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <DialogFooter className="gap-2 md:gap-0">
-              <Button loading={broadcasting} type="submit">
-                Broadcast to All Members
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              <DialogFooter className="gap-2 md:gap-0">
+                <Button loading={broadcasting} type="submit">
+                  Broadcast to All Members
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -25,7 +25,8 @@ export default function CreatePaymentForMember() {
   const router = useRouter();
 
   const { mutate: createPayment, isLoading: creatingPayment } = api.payment.create.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (data, variables) => {
+      variables.notify && !data.response && toast.error("Failed to notify user");
       await exitPopup(false);
       toast.success("Payment added successfully");
     },

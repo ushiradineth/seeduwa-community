@@ -31,10 +31,10 @@ export default async function handler(request: NextApiRequest, response: NextApi
     },
   });
 
-  const messages = [];
+  const messages: { name: string; number: string; status: boolean }[] = [];
 
   for (const member of members) {
-    messages.push(sendMessage(member.phoneNumber, generateUnpaidNotificationMessage(DEFAULT_AMOUNT, month), log));
+    await sendMessage(member.phoneNumber, generateUnpaidNotificationMessage(DEFAULT_AMOUNT, month), log);
   }
 
   response.status(200).json({

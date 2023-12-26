@@ -37,11 +37,11 @@ export default function Payments({ payments: initialPayments, count }: Props) {
         <Table className="border">
           <TableHeader>
             <TableRow>
-              <TableHead className="text-center">Member</TableHead>
-              <TableHead className="text-center">Amount</TableHead>
-              <TableHead className="text-center">Period</TableHead>
-              <TableHead className="text-center">Paid on</TableHead>
-              <TableHead className="text-center">Edit</TableHead>
+              <TableHead className="border text-center">Member</TableHead>
+              <TableHead className="border text-center">Amount</TableHead>
+              <TableHead className="border text-center">Period</TableHead>
+              <TableHead className="border text-center">Paid on</TableHead>
+              <TableHead className="border text-center">Edit</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -49,20 +49,20 @@ export default function Payments({ payments: initialPayments, count }: Props) {
               payments.map((payment) => {
                 return (
                   <TableRow key={payment.id}>
-                    <TableCell onClick={() => router.push(`/member/${payment.member.id}`)} className="cursor-pointer text-center">
+                    <TableCell onClick={() => router.push(`/member/${payment.member.id}`)} className="cursor-pointer border text-center">
                       <Link href={`/member/${payment.member.id}`} className="max-w-24 flex items-center justify-center truncate">
                         {payment.member.name}
                       </Link>
                     </TableCell>
-                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer text-center">
+                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer border text-center">
                       <Link href={`/payment/${payment.id}`}>LKR {payment.amount.toLocaleString()}</Link>
                     </TableCell>
-                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer text-center">
+                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer border text-center">
                       <Link href={`/payment/${payment.id}`}>
                         {MONTHS[new Date(payment.month).getMonth()]} {new Date(payment.month).getFullYear()}
                       </Link>
                     </TableCell>
-                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer text-center">
+                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer border text-center">
                       <Link href={`/payment/${payment.id}`}>{payment.paymentAt}</Link>
                     </TableCell>
                     <TableCell>

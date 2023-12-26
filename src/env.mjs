@@ -14,8 +14,7 @@ export const env = createEnv({
   },
 
   client: {
-    NEXT_PUBLIC_AXIOM_TOKEN: z.string(),
-    NEXT_PUBLIC_AXIOM_DATASET: z.string(),
+    NEXT_PUBLIC_AXIOM_INGEST_ENDPOINT: z.string(),
   },
 
   runtimeEnv: {
@@ -27,8 +26,7 @@ export const env = createEnv({
     SMS_USER_ID: process.env.SMS_USER_ID,
     SMS_API_KEY: process.env.SMS_API_KEY,
     SMS_SENDER_ID: process.env.SMS_SENDER_ID,
-    NEXT_PUBLIC_AXIOM_TOKEN: process.env.NEXT_PUBLIC_AXIOM_TOKEN,
-    NEXT_PUBLIC_AXIOM_DATASET: process.env.NEXT_PUBLIC_AXIOM_DATASET,
+    NEXT_PUBLIC_AXIOM_INGEST_ENDPOINT: process.env.NEXT_PUBLIC_AXIOM_INGEST_ENDPOINT,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });

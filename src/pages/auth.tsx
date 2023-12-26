@@ -1,6 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { getSession, signIn, useSession } from "next-auth/react";
+import { log } from "next-axiom";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useState } from "react";
@@ -70,7 +71,7 @@ function Login() {
     const auth = await signIn("credentials", { username: data.Username, password: data.Password, redirect: false, callbackUrl: "/" });
     auth?.status === 401 && setError("Incorrect Credentials");
     if (auth?.status !== 401 && auth?.error) {
-      console.error(auth.error);
+      log.error("Authencation failed", { error: auth.error });
       toast.error("An unknown error has occured");
     }
     setLoading(false);

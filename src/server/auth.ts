@@ -2,6 +2,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcrypt";
 import { getServerSession, type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { log } from "next-axiom";
 import { type GetServerSidePropsContext } from "next";
 
 import { prisma } from "@/server/db";
@@ -57,13 +58,18 @@ export const authOptions: NextAuthOptions = {
           const isValid = bcrypt.compareSync(credentials?.password ?? "", admin.password);
 
           if (isValid) {
+            log.info("Admin authorized", { id: admin.id, username: admin.username });
+
             return {
               id: admin.id,
               username: admin.username,
             };
           }
+
+          log.warn("Admin failed to authorize", { id: admin.id, username: admin.username });
         }
 
+        log.warn("Admin not found", { username: credentials?.username });
         return null;
       },
     }),

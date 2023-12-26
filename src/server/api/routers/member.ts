@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import moment from "moment";
 import { z } from "zod";
 
-import { ITEMS_PER_PAGE, LANE_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS, YEARS } from "@/lib/consts";
+import { ITEMS_PER_PAGE, LANE_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, YEARS } from "@/lib/consts";
 import { commonAttribute, now } from "@/lib/utils";
 import { CreateMemberSchema } from "@/lib/validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -166,8 +166,7 @@ export const memberRouter = createTRPCRouter({
       z.object({
         search: z.string(),
         members: z.string(),
-        year: z.number(),
-        month: z.string(),
+        months: z.string().array(),
         itemsPerPage: z.number().optional(),
         page: z.number().optional(),
       }),
@@ -175,18 +174,51 @@ export const memberRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const search = input.search ? input.search.split(" ").join(" <-> ") : "";
       const membersParam = String(input.members ?? MEMBERS_PAYMENT_FILTER_ENUM.All) as MEMBERS_PAYMENT_FILTER_ENUM;
-      const year = Number(input.year ?? new Date().getFullYear());
-      const month = String(input.month ?? MONTHS[new Date().getMonth()]);
-      let membersFilter = {};
-      const monthIndex = MONTHS.findIndex((value) => value === month);
-      const paymentMonth = moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).toDate();
 
-      if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
-        membersFilter = { some: { active: true, month: { equals: paymentMonth }, partial: false } };
-      } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
-        membersFilter = { none: { active: true, month: { equals: paymentMonth } } };
+      const months = [...input.months.map((month) => moment(month).startOf("month").utcOffset(0, true).toDate())];
+
+      let paymentsFilter = {};
+
+      const takePartial =
+        membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial ? true : membersParam === MEMBERS_PAYMENT_FILTER_ENUM.All ? undefined : false;
+
+      if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid || membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
+        paymentsFilter = {
+          OR: [
+            {
+              payments: {
+                some: {
+                  active: true,
+                  month: { in: months },
+                  partial: false,
+                },
+              },
+            },
+            {
+              payments: {
+                none: {
+                  active: true,
+                  month: { in: months },
+                  partial: false,
+                },
+              },
+            },
+          ],
+        };
       } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial) {
-        membersFilter = { some: { active: true, month: { equals: paymentMonth }, partial: true } };
+        paymentsFilter = {
+          AND: [
+            {
+              payments: {
+                some: {
+                  active: true,
+                  month: { in: months },
+                  partial: true,
+                },
+              },
+            },
+          ],
+        };
       }
 
       const where =
@@ -202,12 +234,12 @@ export const memberRouter = createTRPCRouter({
                     { lane: { search: search } },
                   ],
                 },
-                { payments: { ...membersFilter } },
+                { ...paymentsFilter },
               ],
             }
-          : { active: true, payments: { ...membersFilter } };
+          : { active: true, ...paymentsFilter };
 
-      const members = await ctx.prisma.member.findMany({
+      let members = await ctx.prisma.member.findMany({
         take: input.itemsPerPage ?? undefined,
         skip: input.page ? (Number(input.page) - 1) * (input.itemsPerPage ?? ITEMS_PER_PAGE) : undefined,
         where,
@@ -220,7 +252,8 @@ export const memberRouter = createTRPCRouter({
           payments: {
             where: {
               active: true,
-              month: { equals: paymentMonth },
+              month: { in: months },
+              partial: takePartial,
             },
             select: { id: true, month: true, partial: true },
           },
@@ -229,22 +262,43 @@ export const memberRouter = createTRPCRouter({
         orderBy: { lane: "asc" },
       });
 
-      const count = await ctx.prisma.member.count({
+      let count = await ctx.prisma.member.findMany({
         where,
+        select: {
+          payments: {
+            where: {
+              active: true,
+              month: { in: months },
+              partial: takePartial,
+            },
+            select: { id: true, month: true, partial: true },
+          },
+        },
       });
+
+      if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
+        members = members.filter((member) => member.payments.length < months.length);
+        count = count.filter((member) => member.payments.length < months.length);
+      }
+
+      if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid || membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial) {
+        members = members.filter((member) => member.payments.length === months.length);
+        count = count.filter((member) => member.payments.length === months.length);
+      }
 
       const total = await ctx.prisma.member.count({ where: { active: true } });
 
       return {
         members: members.map((member) => ({
           ...member,
-          payments: {},
-          payment: { paid: member.payments.length > 0, partial: member.payments[0]?.partial },
+          payment: {
+            paid: member.payments.length === months.length,
+            partial: member.payments.length === months.length ? member.payments.some((payment) => payment.partial === true) : false,
+          },
         })),
         membersParam,
-        month,
-        year,
-        count,
+        months: input.months,
+        count: count.length,
         total,
       };
     }),

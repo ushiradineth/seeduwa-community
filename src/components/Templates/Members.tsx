@@ -2,7 +2,6 @@ import { type inferRouterOutputs } from "@trpc/server";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { BadgeCheck, BadgeMinus, BadgeXIcon, Edit, FileText, MessagesSquare, MoreVertical, Plus, Sheet } from "lucide-react";
-import moment from "moment";
 import { formatPhoneNumberIntl } from "react-phone-number-input";
 import * as XLSX from "xlsx";
 import { useCallback, useEffect, useState } from "react";
@@ -22,19 +21,29 @@ import { MEMBERS_PAYMENT_FILTER_ENUM, MONTHS } from "@/lib/consts";
 import { s2ab } from "@/lib/utils";
 import { type Props } from "@/pages/member";
 import { type AppRouter } from "@/server/api/root";
+import { Label } from "../Atoms/Label";
 import Loader from "../Atoms/Loader";
 import PageNumbers from "../Atoms/PageNumbers";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../Molecules/Card";
+import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Members({ year, month, membersParam, search, itemsPerPage, page }: Props) {
+export default function Members({ months, membersParam, search, itemsPerPage, page }: Props) {
   const router = useRouter();
-  const filter = String(membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid ? "not paid" : "paid").toLowerCase();
+  const filter = String(
+    membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid
+      ? "not paid"
+      : membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid
+      ? "paid"
+      : membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial
+      ? "partially paid"
+      : "",
+  ).toLowerCase();
   const [type, setType] = useState("");
 
   const { data } = api.member.getMembers.useQuery(
-    { itemsPerPage, members: membersParam, month, year, page, search },
+    { itemsPerPage, members: membersParam, months, page, search },
     { refetchOnWindowFocus: false, refetchOnReconnect: false },
   );
 
@@ -43,7 +52,7 @@ export default function Members({ year, month, membersParam, search, itemsPerPag
     isFetching: gettingDocumentData,
     isSuccess: gettingDocumentDataSuccess,
   } = api.member.getMembers.useQuery(
-    { members: membersParam, month, year, search },
+    { members: membersParam, months, search },
     {
       enabled: type === "PDF" || type === "XSLX",
       refetchOnWindowFocus: false,
@@ -53,10 +62,25 @@ export default function Members({ year, month, membersParam, search, itemsPerPag
 
   const generateDocument = useCallback(() => {
     if (documentData) {
+      const monthsText = documentData.months
+        .map((month, index) => {
+          const monthName = MONTHS[new Date(month).getMonth()];
+          const year = new Date(month).getFullYear();
+
+          if (index === 0) {
+            return `${monthName} ${year}`;
+          } else if (index === documentData.months.length - 1) {
+            return ` and ${monthName} ${year}`;
+          } else {
+            return `, ${monthName} ${year}`;
+          }
+        })
+        .join("");
+
       if (type === "PDF") {
-        generatePDF(documentData);
+        generatePDF(documentData, monthsText);
       } else if (type === "XSLX") {
-        generateXSLX(documentData);
+        generateXSLX(documentData, monthsText);
       }
     }
   }, [documentData, type]);
@@ -89,21 +113,17 @@ export default function Members({ year, month, membersParam, search, itemsPerPag
             <OptionMenu
               onClickPDF={() => setType("PDF")}
               onClickXSLX={() => setType("XSLX")}
-              month={moment(
-                moment()
-                  .year(year)
-                  .month(MONTHS.findIndex((value) => value === month))
-                  .startOf("month")
-                  .utcOffset(0, true)
-                  .format(),
-              ).toDate()}
+              month={new Date(months[0] ?? "")}
               filter={membersParam}
+              enabledUnpaidNotification={months.length === 1}
             />
           </CardTitle>
           <CardDescription>
             {typeof router.query.members !== "undefined" && router.query.members !== "All" ? (
               <p className="text-lg font-bold">
-                {data.count} member(s) have {filter} for {month} {year} so far
+                {data.count} member{data.count > 1 || data.count === 0 ? "s" : ""} {data.count > 1 || data.count === 0 ? "have" : "has"}{" "}
+                {filter} for the selected month
+                {months.length > 1 ? "s" : ""} so far
               </p>
             ) : (
               <p>A list of all members.</p>
@@ -125,9 +145,7 @@ export default function Members({ year, month, membersParam, search, itemsPerPag
                 <TableHead className="text-center">Name</TableHead>
                 <TableHead className="text-center">Phone number</TableHead>
                 <TableHead className="text-center">Address</TableHead>
-                <TableHead className="text-center">
-                  Paid for {month} {year}
-                </TableHead>
+                <TableHead className="text-center">Paid</TableHead>
                 <TableHead className="text-center">Edit</TableHead>
               </TableRow>
             </TableHeader>
@@ -151,18 +169,43 @@ export default function Members({ year, month, membersParam, search, itemsPerPag
                           No {member.houseId} - {member.lane}
                         </Link>
                       </TableCell>
-                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
-                        <Link className="max-w-24 flex items-center justify-center truncate" href={`/member/${member.id}`}>
-                          {member.payment.paid ? (
-                            member.payment.partial ? (
+                      <TableCell>
+                        <Popover>
+                          <PopoverTrigger className="flex w-full items-center justify-center">
+                            {member.payment.partial ? (
                               <BadgeMinus color="orange" />
-                            ) : (
+                            ) : member.payment.paid ? (
                               <BadgeCheck color="green" />
-                            )
-                          ) : (
-                            <BadgeXIcon color="red" />
-                          )}
-                        </Link>
+                            ) : (
+                              <BadgeXIcon color="red" />
+                            )}
+                          </PopoverTrigger>
+                          <PopoverContent className="flex flex-col items-center justify-center gap-2">
+                            <Label className="mb-2 w-full text-left text-lg font-semibold">Payments</Label>
+                            {months.map((month) => {
+                              const monthDate = new Date(month);
+                              const monthString = `${MONTHS[monthDate.getMonth()]} ${monthDate.getFullYear()}`;
+                              const payment = member.payments.find(
+                                (payment) => payment.month.toDateString() === new Date(month).toDateString(),
+                              );
+
+                              return (
+                                <div key={member.id + month} className="flex w-full gap-2">
+                                  <p>{monthString}</p>
+                                  {payment ? (
+                                    payment.partial ? (
+                                      <BadgeMinus className="ml-auto" color="orange" />
+                                    ) : (
+                                      <BadgeCheck className="ml-auto" color="green" />
+                                    )
+                                  ) : (
+                                    <BadgeXIcon className="ml-auto" color="red" />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </PopoverContent>
+                        </Popover>
                       </TableCell>
                       <TableCell className="flex items-center justify-center">
                         <button
@@ -206,11 +249,13 @@ function OptionMenu({
   onClickXSLX,
   month,
   filter,
+  enabledUnpaidNotification,
 }: {
-  readonly onClickPDF: () => void;
-  readonly onClickXSLX: () => void;
-  readonly month: Date;
-  readonly filter: MEMBERS_PAYMENT_FILTER_ENUM;
+  onClickPDF: () => void;
+  onClickXSLX: () => void;
+  month: Date;
+  filter: MEMBERS_PAYMENT_FILTER_ENUM;
+  enabledUnpaidNotification: boolean;
 }) {
   const router = useRouter();
 
@@ -227,7 +272,7 @@ function OptionMenu({
           onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
           Add new member <Plus className="ml-auto" size={20} />
         </DropdownMenuItem>
-        {filter === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid && (
+        {enabledUnpaidNotification && filter === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -255,15 +300,15 @@ function OptionMenu({
 
 type RouterOutput = inferRouterOutputs<AppRouter>;
 
-function generatePDF(data: RouterOutput["member"]["getMembers"]) {
+function generatePDF(data: RouterOutput["member"]["getMembers"], monthsText: string) {
   const pdfDocument = new jsPDF();
   const pageWidth = pdfDocument.internal.pageSize.width || pdfDocument.internal.pageSize.getWidth();
 
-  pdfDocument.text(`${data.membersParam} members for ${data.month} ${data.year}`, pageWidth / 2, 10, { align: "center" });
+  pdfDocument.text(`${data.membersParam} members for  ${monthsText}`, pageWidth / 2, 10, { align: "center" });
 
   const head = [["Lane", "House Number", "Name", "Phone Number"]];
 
-  if (data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.All) head[0]?.push(`Paid for ${data.month} ${data.year}`);
+  if (data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.All) head[0]?.push(`Paid`);
 
   autoTable(pdfDocument, {
     head,
@@ -276,22 +321,25 @@ function generatePDF(data: RouterOutput["member"]["getMembers"]) {
     theme: "grid",
     body: [
       ...data.members.map((member) => {
-        const memberData = [member.lane, member.houseId, member.name, member.phoneNumber === "" ? "-" : member.phoneNumber];
+        const memberData = [
+          member.lane,
+          member.houseId,
+          member.name,
+          member.phoneNumber === "" ? "-" : formatPhoneNumberIntl(member.phoneNumber),
+        ];
         if (data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.All)
-          memberData.push(member.payment.paid ? (member.payment.partial ? "PARTIAL" : "YES") : "NO");
+          memberData.push(member.payment.partial ? "PARTIAL" : member.payment.paid ? "YES" : "NO");
         return memberData;
       }),
     ],
   });
 
   pdfDocument.save(
-    `SVSA - ${data.membersParam}${data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial ? " Paid" : ""} members for ${data.month} ${
-      data.year
-    }.pdf`,
+    `SVSA - ${data.membersParam}${data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial ? " Paid" : ""} members for ${monthsText}.pdf`,
   );
 }
 
-function generateXSLX(data: RouterOutput["member"]["getMembers"]) {
+function generateXSLX(data: RouterOutput["member"]["getMembers"], monthsText: string) {
   const workbook = XLSX.utils.book_new();
   const header = ["Lane", "House Number", "Name", "Phone Number", "Paid?"];
 
@@ -301,8 +349,8 @@ function generateXSLX(data: RouterOutput["member"]["getMembers"]) {
       member.lane,
       member.houseId,
       member.name,
-      member.phoneNumber ?? "-",
-      member.payment.paid ? (member.payment.partial ? "PARTIAL" : "YES") : "NO",
+      member.phoneNumber === "" ? "-" : formatPhoneNumberIntl(member.phoneNumber),
+      member.payment.partial ? "PARTIAL" : member.payment.paid ? "YES" : "NO",
     ]),
   ];
 
@@ -314,9 +362,9 @@ function generateXSLX(data: RouterOutput["member"]["getMembers"]) {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `SVSA - ${data.membersParam}${data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial ? " Paid" : ""} members for ${
-    data.month
-  } ${data.year}.xlsx`;
+  a.download = `SVSA - ${data.membersParam}${
+    data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial ? " Paid" : ""
+  } members for ${monthsText}.xlsx`;
 
   a.click();
 

@@ -86,6 +86,7 @@ export default function CreateMember() {
                     <PhoneInput
                       // @ts-expect-error Type is not clear for this component
                       ref={inputRef}
+                      defaultCountry="LK"
                       onCountryChange={(e) => {
                         if (inputRef.current && e) {
                           inputRef.current.value = "+" + getCountryCallingCode(e);

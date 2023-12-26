@@ -3,6 +3,7 @@ import { BadgeCheck, BadgeXIcon } from "lucide-react";
 import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
+import { formatPhoneNumberIntl } from "react-phone-number-input";
 import { toast } from "react-toastify";
 import { useCallback, useEffect } from "react";
 import { useRouter } from "next/router";
@@ -78,8 +79,8 @@ export default function NotifyUnpaidMembers() {
             <div className="flex flex-col gap-2">
               {data.map((member) => (
                 <div key={member.name} className="flex items-center justify-start gap-2">
-                  <p className="w-52 truncate">{member.name}</p>
-                  <p>{member.number}</p>
+                  <p className="w-36 truncate">{member.name}</p>
+                  <p>{member.number === "" ? "-" : formatPhoneNumberIntl(member.number)}</p>
                   {member.status ? <BadgeCheck color="green" className="ml-auto" /> : <BadgeXIcon color="red" className="ml-auto" />}
                 </div>
               ))}

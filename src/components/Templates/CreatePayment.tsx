@@ -3,6 +3,7 @@ import { CalendarIcon, SearchIcon, X, XIcon } from "lucide-react";
 import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm, type ControllerRenderProps } from "react-hook-form";
+import { formatPhoneNumberIntl } from "react-phone-number-input";
 import { toast } from "react-toastify";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
@@ -524,8 +525,11 @@ export default function CreatePayment() {
                             Message
                             <Badge className="ml-auto">
                               To{" "}
-                              {memberByHouseID?.phoneNumber ??
-                                members?.find((member) => member.id === form.getValues("Member"))?.phoneNumber}
+                              {formatPhoneNumberIntl(
+                                memberByHouseID?.phoneNumber ??
+                                  members?.find((member) => member.id === form.getValues("Member"))?.phoneNumber ??
+                                  "",
+                              )}
                             </Badge>
                           </FormLabel>
                           <FormControl>

@@ -147,7 +147,11 @@ export default function Dashboard({ year, itemsPerPage, search, lane, page }: Pr
                               )
                             }
                             className={`w-24 border text-center font-bold active:bg-accent ${
-                              payment ? "bg-green-500 text-xl text-black hover:bg-green-600" : "hover:bg-accent/90"
+                              payment
+                                ? payment.partial
+                                  ? "bg-yellow-500 text-xl text-black hover:bg-yellow-600"
+                                  : "bg-green-500 text-xl text-black hover:bg-green-600"
+                                : "hover:bg-accent/90"
                             }`}>
                             {payment ? payment.amount : "-"}
                           </TableCell>

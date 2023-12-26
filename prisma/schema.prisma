@@ -44,6 +44,7 @@ model Payment {
   month     DateTime @default(now()) // which month the payment is for
   amount    Float
   paymentAt DateTime @default(now()) // when the payment was made
+  partial   Boolean @default(false)
 
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberId String

@@ -1,7 +1,7 @@
 import { type inferRouterOutputs } from "@trpc/server";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { BadgeCheck, BadgeXIcon, Edit, FileText, MessagesSquare, MoreVertical, Plus, Sheet } from "lucide-react";
+import { BadgeCheck, BadgeMinus, BadgeXIcon, Edit, FileText, MessagesSquare, MoreVertical, Plus, Sheet } from "lucide-react";
 import moment from "moment";
 import { formatPhoneNumberIntl } from "react-phone-number-input";
 import * as XLSX from "xlsx";
@@ -153,7 +153,15 @@ export default function Members({ year, month, membersParam, search, itemsPerPag
                       </TableCell>
                       <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
                         <Link className="max-w-24 flex items-center justify-center truncate" href={`/member/${member.id}`}>
-                          {member.payment ? <BadgeCheck color="green" /> : <BadgeXIcon color="red" />}
+                          {member.payment.paid ? (
+                            member.payment.partial ? (
+                              <BadgeMinus color="orange" />
+                            ) : (
+                              <BadgeCheck color="green" />
+                            )
+                          ) : (
+                            <BadgeXIcon color="red" />
+                          )}
                         </Link>
                       </TableCell>
                       <TableCell className="flex items-center justify-center">
@@ -269,13 +277,18 @@ function generatePDF(data: RouterOutput["member"]["getMembers"]) {
     body: [
       ...data.members.map((member) => {
         const memberData = [member.lane, member.houseId, member.name, member.phoneNumber === "" ? "-" : member.phoneNumber];
-        if (data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.All) memberData.push(member.payment ? "YES" : "NO");
+        if (data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.All)
+          memberData.push(member.payment.paid ? (member.payment.partial ? "PARTIAL" : "YES") : "NO");
         return memberData;
       }),
     ],
   });
 
-  pdfDocument.save(`SVSA - ${data.membersParam} members for ${data.month} ${data.year}.pdf`);
+  pdfDocument.save(
+    `SVSA - ${data.membersParam}${data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial ? " Paid" : ""} members for ${data.month} ${
+      data.year
+    }.pdf`,
+  );
 }
 
 function generateXSLX(data: RouterOutput["member"]["getMembers"]) {
@@ -284,7 +297,13 @@ function generateXSLX(data: RouterOutput["member"]["getMembers"]) {
 
   const worksheetData = [
     header,
-    ...data.members.map((member) => [member.lane, member.houseId, member.name, member.phoneNumber ?? "-", member.payment ? "YES" : "NO"]),
+    ...data.members.map((member) => [
+      member.lane,
+      member.houseId,
+      member.name,
+      member.phoneNumber ?? "-",
+      member.payment.paid ? (member.payment.partial ? "PARTIAL" : "YES") : "NO",
+    ]),
   ];
 
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
@@ -295,7 +314,9 @@ function generateXSLX(data: RouterOutput["member"]["getMembers"]) {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `SVSA - ${data.membersParam} members for ${data.month} ${data.year}.xlsx`;
+  a.download = `SVSA - ${data.membersParam}${data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial ? " Paid" : ""} members for ${
+    data.month
+  } ${data.year}.xlsx`;
 
   a.click();
 

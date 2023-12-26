@@ -12,8 +12,10 @@ import { generateThankYouMessage, removeQueryParamsFromRouter } from "@/lib/util
 import { CreatePaymentForMemberSchema, type CreatePaymentForMemberFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
+import { Checkbox } from "../Atoms/Checkbox";
 import FormFieldError from "../Atoms/FormFieldError";
 import { Input } from "../Atoms/Input";
+import { Label } from "../Atoms/Label";
 import { Switch } from "../Atoms/Switch";
 import { Textarea } from "../Atoms/Textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
@@ -48,6 +50,7 @@ export default function CreatePaymentForMember() {
       paymentDate: moment(data.PaymentDate).startOf("day").utcOffset(0, true).toDate(),
       notify: data.Notify,
       text: data.Text,
+      partial: data.Partial,
     });
   }
 
@@ -73,6 +76,8 @@ export default function CreatePaymentForMember() {
     form.clearErrors();
     form.setValue("Member", String(router.query.memberId ?? ""));
     form.setValue("Amount", DEFAULT_AMOUNT);
+    form.setValue("Partial", false);
+    form.setValue("Notify", false);
     form.setValue("Months", [
       new Date(Number(router.query.year ?? new Date().getFullYear()), Number(router.query.month ?? new Date().getMonth()), 1),
     ]);
@@ -114,6 +119,22 @@ export default function CreatePaymentForMember() {
                         field.onChange(e);
                       }}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="Partial"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="partial" checked={field.value} onCheckedChange={field.onChange} />
+                      <Label htmlFor="partial">Partial Payment</Label>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

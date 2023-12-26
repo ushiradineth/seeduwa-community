@@ -13,8 +13,10 @@ import { generateThankYouMessage, removeQueryParamsFromRouter } from "@/lib/util
 import { CreatePaymentSchema, type CreatePaymentFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
+import { Checkbox } from "../Atoms/Checkbox";
 import FormFieldError from "../Atoms/FormFieldError";
 import { Input } from "../Atoms/Input";
+import { Label } from "../Atoms/Label";
 import Loader from "../Atoms/Loader";
 import { Switch } from "../Atoms/Switch";
 import { Textarea } from "../Atoms/Textarea";
@@ -69,6 +71,7 @@ export default function CreatePayment() {
       paymentDate: moment(data.PaymentDate).startOf("day").utcOffset(0, true).toDate(),
       notify: data.Notify,
       text: data.Text,
+      partial: data.Partial,
     });
   }
 
@@ -120,6 +123,7 @@ export default function CreatePayment() {
     form.setValue("Amount", DEFAULT_AMOUNT);
     form.setValue("Months", []);
     form.setValue("PaymentDate", new Date());
+    form.setValue("Partial", false);
     form.setValue("Notify", false);
     form.setValue("Text", generateThankYouMessage(DEFAULT_AMOUNT, []));
   }, [router.query.create, form]);
@@ -172,6 +176,12 @@ export default function CreatePayment() {
                               onChange={(e: React.ChangeEvent<HTMLInputElement>) => resetHouseID(e.currentTarget.value, field)}
                               value={field.value ?? ""}
                               disabled={Boolean(members?.find((member) => member.id === form.getValues("Member"))?.houseId)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                  event.preventDefault();
+                                  field.value !== "" && getMemberByHouseID({ id: field.value });
+                                }
+                              }}
                             />
                           )}
                           {typeof field.value !== "undefined" && field.value !== "" && field.value !== undefined && (
@@ -317,6 +327,22 @@ export default function CreatePayment() {
                         field.onChange(e);
                       }}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="Partial"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="partial" checked={field.value} onCheckedChange={field.onChange} />
+                      <Label htmlFor="partial">Partial Payment</Label>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

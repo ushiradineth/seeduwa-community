@@ -182,9 +182,11 @@ export const memberRouter = createTRPCRouter({
       const paymentMonth = moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).toDate();
 
       if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
-        membersFilter = { some: { active: true, month: { equals: paymentMonth } } };
+        membersFilter = { some: { active: true, month: { equals: paymentMonth }, partial: false } };
       } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
         membersFilter = { none: { active: true, month: { equals: paymentMonth } } };
+      } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial) {
+        membersFilter = { some: { active: true, month: { equals: paymentMonth }, partial: true } };
       }
 
       const where =
@@ -220,7 +222,7 @@ export const memberRouter = createTRPCRouter({
               active: true,
               month: { equals: paymentMonth },
             },
-            select: { id: true, month: true },
+            select: { id: true, month: true, partial: true },
           },
         },
 
@@ -237,7 +239,7 @@ export const memberRouter = createTRPCRouter({
         members: members.map((member) => ({
           ...member,
           payments: {},
-          payment: member.payments.length > 0,
+          payment: { paid: member.payments.length > 0, partial: member.payments[0]?.partial },
         })),
         membersParam,
         month,
@@ -303,6 +305,7 @@ export const memberRouter = createTRPCRouter({
               id: true,
               month: true,
               amount: true,
+              partial: true,
             },
           },
         },

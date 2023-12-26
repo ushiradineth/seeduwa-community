@@ -24,6 +24,7 @@ export type Member = {
     id: string;
     month: string;
     amount: number;
+    partial: boolean;
   }[];
 };
 
@@ -75,7 +76,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       itemsPerPage,
       search,
       lane,
-      page
+      page,
     },
   };
 };

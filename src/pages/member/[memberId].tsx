@@ -30,6 +30,7 @@ export type Props = {
       active: boolean;
       month: string;
       memberId: string;
+      partial: boolean;
     }[];
   };
 };
@@ -127,7 +128,8 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
                 {MONTHS.map((month, index) => {
                   const payment = paymentFilter(month, year);
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={`${month}-${year}`}
                       onClick={() =>
                         router.push(
@@ -149,10 +151,14 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
                       className={`flex items-center justify-center border p-8 text-lg active:bg-accent md:text-xl ${
                         index === 9 && "rounded-bl-2xl"
                       } ${index === 11 && "rounded-br-2xl"} ${
-                        payment ? "bg-green-500 font-extrabold text-black hover:bg-green-600" : "hover:bg-accent/90"
+                        payment
+                          ? payment.partial
+                            ? "bg-yellow-500 font-extrabold text-black hover:bg-yellow-600"
+                            : "bg-green-500 font-extrabold text-black hover:bg-green-600"
+                          : "hover:bg-accent/90"
                       }`}>
                       {month}
-                    </div>
+                    </button>
                   );
                 })}
               </div>

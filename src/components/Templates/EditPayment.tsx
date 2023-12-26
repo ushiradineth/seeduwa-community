@@ -12,8 +12,10 @@ import { removeQueryParamsFromRouter } from "@/lib/utils";
 import { EditPaymentSchema, type EditPaymentFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
+import { Checkbox } from "../Atoms/Checkbox";
 import FormFieldError from "../Atoms/FormFieldError";
 import { Input } from "../Atoms/Input";
+import { Label } from "../Atoms/Label";
 import Loader from "../Atoms/Loader";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
@@ -63,6 +65,7 @@ export default function EditPayment() {
       amount: data.Amount,
       id: payment?.id ?? "",
       paymentDate: moment(data.PaymentDate).utcOffset(0, true).toDate(),
+      partial: data.Partial,
     });
   }
 
@@ -88,6 +91,7 @@ export default function EditPayment() {
     form.clearErrors();
     form.setValue("Amount", payment?.amount ?? DEFAULT_AMOUNT);
     form.setValue("PaymentDate", payment?.paymentAt ?? new Date());
+    form.setValue("Partial", payment?.partial ?? false);
   }, [form, payment]);
 
   return (
@@ -106,6 +110,7 @@ export default function EditPayment() {
                   </Badge>
                 </DialogTitle>
               </DialogHeader>
+
               <FormField
                 control={form.control}
                 name="Amount"
@@ -114,6 +119,22 @@ export default function EditPayment() {
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
                       <Input placeholder="Amount" type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="Partial"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="partial" checked={field.value} onCheckedChange={field.onChange} />
+                        <Label htmlFor="partial">Partial Payment</Label>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

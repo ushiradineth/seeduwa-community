@@ -12,6 +12,7 @@ export const paymentRouter = createTRPCRouter({
       z.object({
         memberId: z.string(),
         amount: z.number(),
+        partial: z.boolean(),
         months: z.array(z.date()),
         paymentDate: z.date(),
         notify: z.boolean(),
@@ -41,6 +42,7 @@ export const paymentRouter = createTRPCRouter({
                 memberId: input.memberId,
                 month,
                 paymentAt: input.paymentDate,
+                partial: input.partial,
               };
             }),
           ],
@@ -82,12 +84,12 @@ export const paymentRouter = createTRPCRouter({
   }),
 
   edit: protectedProcedure
-    .input(z.object({ id: z.string(), amount: z.number(), paymentDate: z.date() }))
+    .input(z.object({ id: z.string(), amount: z.number(), paymentDate: z.date(), partial: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       try {
         const payment = await ctx.prisma.payment.update({
           where: { id: input.id, active: true },
-          data: { amount: input.amount, paymentAt: input.paymentDate },
+          data: { amount: input.amount, paymentAt: input.paymentDate, partial: input.partial },
         });
 
         ctx.log.info("Payment edited", { payment });

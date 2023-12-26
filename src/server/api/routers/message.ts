@@ -34,9 +34,14 @@ export async function sendMessage(recipient: string, text: string, log: Logger):
       return false;
     }
 
-    const data = await response.json(); // or response.text() if the response is not JSON
-    log.info("Message sent", { message: text, receiver: recipient, response: data });
+    const data = await response.json();
 
+    if (data.msg_id === "no") {
+      log.error("Message not sent", { message: text, receiver: recipient, response: data });
+      return false;
+    }
+
+    log.info("Message sent", { message: text, receiver: recipient, response: data });
     return true;
   } catch (error) {
     log.error("Message not sent", { message: text, receiver: recipient, response: error });

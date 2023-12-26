@@ -50,7 +50,12 @@ function Search({
             value={internalSearch}
           />
           {typeof internalSearch !== "undefined" && internalSearch !== "" && (
-            <div onClick={() => setInternalSearch("")} className="mr-2 cursor-pointer">
+            <div
+              onClick={() => {
+                setInternalSearch("");
+                void router.push({ href: path, query: removeQueryParamsFromRouter(router, ["search", "page"]) });
+              }}
+              className="mr-2 cursor-pointer">
               {<XIcon />}
             </div>
           )}

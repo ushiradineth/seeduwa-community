@@ -22,7 +22,7 @@ function Search({
   placeholder: string;
 }) {
   const router = useRouter();
-  const [internalSearch, setInternalSearch] = useState<string>(search === "undefined" ? "" : search);
+  const [internalSearch, setInternalSearch] = useState<string>(search === "undefined" ? "" : typeof search === "undefined" ? "" : search);
 
   return (
     <form

@@ -1,4 +1,5 @@
 import { type Logger } from "next-axiom";
+import { parsePhoneNumber } from "react-phone-number-input";
 import { z } from "zod";
 
 import { env } from "@/env.mjs";
@@ -11,6 +12,15 @@ export async function sendMessage(recipient: string, text: string, log: Logger):
   formData.append("sender_id", env.SMS_SENDER_ID);
   formData.append("to", recipient);
   formData.append("message", text);
+
+  if (recipient === "") {
+    return false;
+  }
+
+  const phoneNumber = parsePhoneNumber(recipient);
+  if (phoneNumber && phoneNumber.country !== "LK") {
+    return false;
+  }
 
   try {
     const response = await fetch("http://send.srilankandiver.com/api/v2/send.php", {

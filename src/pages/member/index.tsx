@@ -16,7 +16,7 @@ import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/Molecules/Popover";
 import Members from "@/components/Templates/Members";
-import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, MEMBERS_PAYMENT_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS } from "@/lib/consts";
+import { MEMBERS_PAYMENT_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS } from "@/lib/consts";
 import { appRouter } from "@/server/api/root";
 import { prisma } from "@/server/db";
 
@@ -32,9 +32,7 @@ export type Member = {
 export type Props = {
   membersParam: MEMBERS_PAYMENT_FILTER_ENUM;
   months: string[];
-  itemsPerPage: number;
   search: string;
-  page: number;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -56,10 +54,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     typeof context.query.months === "string"
       ? [...context.query.months.split(",").map((month) => moment(month).startOf("month").utcOffset(0, true).toISOString())]
       : [moment().startOf("month").utcOffset(0, true).toISOString()];
-  const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
-    ? Number(context.query.itemsPerPage)
-    : ITEMS_PER_PAGE;
-  const page = Number(context.query.page ?? 1);
 
   const trpc = createServerSideHelpers({
     router: appRouter,
@@ -71,41 +65,32 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     transformer: SuperJSON,
   });
 
-  await trpc.member.getMembers.prefetch({ itemsPerPage, members: membersParam, months, page, search });
+  await trpc.member.getMembers.prefetch({ members: membersParam, months, search });
 
   return {
     props: {
       trpcState: trpc.dehydrate(),
       membersParam,
       months,
-      itemsPerPage,
       search,
-      page,
     },
   };
 };
 
-export default function AllMembers({
-  membersParam,
-  months,
-  itemsPerPage,
-  search,
-  page,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function AllMembers({ membersParam, months, search }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
       <Head>
         <title>Members - Seeduwa Village Security Association</title>
       </Head>
-      <div className="flex max-w-[700px] flex-col gap-4">
+      <div className="flex max-w-[1024px] flex-col gap-4">
         <Card className="flex flex-col justify-between gap-4 p-4">
           <div className="flex items-center justify-between gap-4">
             <Filter label="Members" filterItems={MEMBERS_PAYMENT_FILTER} paramKey="members" value={membersParam} />
-            <Filter filterItems={ITEMS_PER_PAGE_FILTER} label="Items per page" paramKey="itemsPerPage" value={itemsPerPage} />
           </div>
           <MonthPicker months={months} />
         </Card>
-        <Members months={months} membersParam={membersParam} itemsPerPage={itemsPerPage} search={search} page={page} />
+        <Members months={months} membersParam={membersParam} search={search} />
       </div>
     </>
   );

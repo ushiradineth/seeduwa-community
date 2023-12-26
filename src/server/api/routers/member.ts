@@ -167,8 +167,6 @@ export const memberRouter = createTRPCRouter({
         search: z.string(),
         members: z.string(),
         months: z.string().array(),
-        itemsPerPage: z.number().optional(),
-        page: z.number().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -240,8 +238,6 @@ export const memberRouter = createTRPCRouter({
           : { active: true, ...paymentsFilter };
 
       let members = await ctx.prisma.member.findMany({
-        take: input.itemsPerPage ?? undefined,
-        skip: input.page ? (Number(input.page) - 1) * (input.itemsPerPage ?? ITEMS_PER_PAGE) : undefined,
         where,
         select: {
           id: true,
@@ -262,28 +258,12 @@ export const memberRouter = createTRPCRouter({
         orderBy: { lane: "asc" },
       });
 
-      let count = await ctx.prisma.member.findMany({
-        where,
-        select: {
-          payments: {
-            where: {
-              active: true,
-              month: { in: months },
-              partial: takePartial,
-            },
-            select: { id: true, month: true, partial: true },
-          },
-        },
-      });
-
       if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
         members = members.filter((member) => member.payments.length < months.length);
-        count = count.filter((member) => member.payments.length < months.length);
       }
 
       if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid || membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial) {
         members = members.filter((member) => member.payments.length === months.length);
-        count = count.filter((member) => member.payments.length === months.length);
       }
 
       const total = await ctx.prisma.member.count({ where: { active: true } });
@@ -298,7 +278,6 @@ export const memberRouter = createTRPCRouter({
         })),
         membersParam,
         months: input.months,
-        count: count.length,
         total,
       };
     }),

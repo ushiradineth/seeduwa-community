@@ -23,13 +23,12 @@ import { type Props } from "@/pages/member";
 import { type AppRouter } from "@/server/api/root";
 import { Label } from "../Atoms/Label";
 import Loader from "../Atoms/Loader";
-import PageNumbers from "../Atoms/PageNumbers";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../Molecules/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../Molecules/Card";
 import { Popover, PopoverContent, PopoverTrigger } from "../Molecules/Popover";
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Members({ months, membersParam, search, itemsPerPage, page }: Props) {
+export default function Members({ months, membersParam, search }: Props) {
   const router = useRouter();
   const filter = String(
     membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid
@@ -43,7 +42,7 @@ export default function Members({ months, membersParam, search, itemsPerPage, pa
   const [type, setType] = useState("");
 
   const { data } = api.member.getMembers.useQuery(
-    { itemsPerPage, members: membersParam, months, page, search },
+    { members: membersParam, months, search },
     { refetchOnWindowFocus: false, refetchOnReconnect: false },
   );
 
@@ -121,12 +120,12 @@ export default function Members({ months, membersParam, search, itemsPerPage, pa
           <CardDescription>
             {typeof router.query.members !== "undefined" && router.query.members !== "All" ? (
               <p className="text-lg font-bold">
-                {data.count} member{data.count > 1 || data.count === 0 ? "s" : ""} {data.count > 1 || data.count === 0 ? "have" : "has"}{" "}
-                {filter} for the selected month
+                {data.members.length} member{data.members.length > 1 || data.members.length === 0 ? "s" : ""}{" "}
+                {data.members.length > 1 || data.members.length === 0 ? "have" : "has"} {filter} for the selected month
                 {months.length > 1 ? "s" : ""} so far
               </p>
             ) : (
-              <p>A list of all members.</p>
+              <p className="text-lg font-bold">A list of all members.</p>
             )}
           </CardDescription>
         </CardHeader>
@@ -137,39 +136,45 @@ export default function Members({ months, membersParam, search, itemsPerPage, pa
             placeholder="Search for members"
             path={router.asPath}
             params={router.query}
-            count={data.count}
+            count={data.members.length}
           />
           <Table className="border">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center">Name</TableHead>
-                <TableHead className="text-center">Phone number</TableHead>
-                <TableHead className="text-center">Address</TableHead>
-                <TableHead className="text-center">Paid</TableHead>
-                <TableHead className="text-center">Edit</TableHead>
+                <TableHead className="border text-center">#</TableHead>
+                <TableHead className="border text-center">Name</TableHead>
+                <TableHead className="border text-center">Phone number</TableHead>
+                <TableHead className="border text-center">Address</TableHead>
+                <TableHead className="border text-center">Paid</TableHead>
+                <TableHead className="border text-center">Edit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.members.length !== 0 ? (
-                data.members.map((member) => {
+                data.members.map((member, index) => {
                   return (
                     <TableRow key={member.id}>
-                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
-                        <Link className="max-w-24 flex items-center justify-center truncate" href={`/member/${member.id}`}>
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer border text-center">
+                        <Link className="flex items-center justify-center" href={`/member/${member.id}`}>
+                          {index + 1}
+                        </Link>
+                      </TableCell>
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer border text-center">
+                        <Link className="flex items-center justify-center" href={`/member/${member.id}`}>
                           {member.name}
                         </Link>
                       </TableCell>
-                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer border text-center">
                         <Link href={`/member/${member.id}`}>
                           {member.phoneNumber !== "" ? formatPhoneNumberIntl(member.phoneNumber) : "-"}
                         </Link>
                       </TableCell>
-                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer border text-center">
                         <Link href={`/member/${member.id}`}>
                           No {member.houseId} - {member.lane}
                         </Link>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="border">
                         <Popover>
                           <PopoverTrigger className="flex w-full items-center justify-center">
                             {member.payment.partial ? (
@@ -223,22 +228,15 @@ export default function Members({ months, membersParam, search, itemsPerPage, pa
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     No results.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-            <TableCaption>Currently, a total of {data.total} Members are on SVC</TableCaption>
+            <TableCaption>Currently, a total of {data.total} Members are on SVSA</TableCaption>
           </Table>
         </CardContent>
-        {data.count !== 0 && data.count > itemsPerPage && (
-          <CardFooter className="flex justify-center">
-            <TableCaption>
-              <PageNumbers count={data.count} itemsPerPage={itemsPerPage} pageNumber={page} path={router.asPath} params={router.query} />
-            </TableCaption>
-          </CardFooter>
-        )}
       </Card>
     </>
   );

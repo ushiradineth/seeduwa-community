@@ -17,6 +17,7 @@ import Filter from "@/components/Molecules/Filter";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/Molecules/Popover";
 import Members from "@/components/Templates/Members";
 import { MEMBERS_PAYMENT_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, MONTHS } from "@/lib/consts";
+import { removeTimezone } from "@/lib/utils";
 import { appRouter } from "@/server/api/root";
 import { prisma } from "@/server/db";
 
@@ -99,7 +100,7 @@ export default function AllMembers({ membersParam, months, search }: InferGetSer
 function MonthPicker({ months: initialMonths }: { months: string[] }) {
   const router = useRouter();
   const [monthPicker, setMonthPicker] = useState(false);
-  const [months, setMonths] = useState<Date[]>([...initialMonths.map((month) => new Date(month))]);
+  const [months, setMonths] = useState<Date[]>([...initialMonths.map((month) => removeTimezone(month))]);
 
   return (
     <Popover open={monthPicker} onOpenChange={(open) => setMonthPicker(open)}>
@@ -128,7 +129,7 @@ function MonthPicker({ months: initialMonths }: { months: string[] }) {
               {months.map((month) => {
                 return (
                   <Badge key={month.toDateString()} className="h-5 w-fit">
-                    {MONTHS[new Date(month).getMonth()]} {month.getFullYear()}
+                    {MONTHS[removeTimezone(month).getMonth()]} {month.getFullYear()}
                     <X
                       className="h-5 w-5 cursor-pointer"
                       onClick={() => setMonths(months.filter((deletedMonth) => deletedMonth !== month))}
@@ -139,7 +140,7 @@ function MonthPicker({ months: initialMonths }: { months: string[] }) {
             </div>
             {!arrayCompare(
               [...months.map((month) => month.toDateString())],
-              [...initialMonths.map((month) => new Date(String(month)).toDateString())],
+              [...initialMonths.map((month) => removeTimezone(month).toDateString())],
             ) ? (
               <Button
                 type="button"

@@ -1,3 +1,5 @@
+import { now } from "./utils";
+
 export const ITEMS_PER_PAGE = 10;
 export const ITEMS_PER_PAGE_FILTER = [100, 50, 25, 10];
 
@@ -31,7 +33,7 @@ export const MONTHS = [
   "December",
 ];
 
-export const YEARS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
+export const YEARS = Array.from({ length: 5 }, (_, i) => now().getFullYear() - 2 + i);
 
 export const MEMBERS_PAYMENT_FILTER = ["All", "Paid", "Unpaid", "Partial"];
 

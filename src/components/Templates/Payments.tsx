@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { ITEMS_PER_PAGE, MONTHS } from "@/lib/consts";
+import { removeTimezone } from "@/lib/utils";
 import { type Payment, type Props } from "@/pages/payment";
 import PageNumbers from "../Atoms/PageNumbers";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../Molecules/Card";
@@ -59,7 +60,7 @@ export default function Payments({ payments: initialPayments, count }: Props) {
                     </TableCell>
                     <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer border text-center">
                       <Link href={`/payment/${payment.id}`}>
-                        {MONTHS[new Date(payment.month).getMonth()]} {new Date(payment.month).getFullYear()}
+                        {MONTHS[removeTimezone(payment.month).getMonth()]} {removeTimezone(payment.month).getFullYear()}
                       </Link>
                     </TableCell>
                     <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer border text-center">
@@ -75,8 +76,8 @@ export default function Payments({ payments: initialPayments, count }: Props) {
                                 ...router.query,
                                 mode: "edit",
                                 payment: payment.id,
-                                month: new Date(payment.month).getMonth(),
-                                year: new Date(payment.month).getFullYear(),
+                                month: removeTimezone(payment.month).getMonth(),
+                                year: removeTimezone(payment.month).getFullYear(),
                               },
                             },
                             undefined,

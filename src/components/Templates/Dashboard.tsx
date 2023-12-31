@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/Molecules/DropdownMenu";
 import { LANE_FILTER, MONTHS } from "@/lib/consts";
-import { s2ab } from "@/lib/utils";
+import { removeTimezone, s2ab } from "@/lib/utils";
 import { type Member, type Props } from "@/pages";
 import Loader from "../Atoms/Loader";
 import PageNumbers from "../Atoms/PageNumbers";
@@ -58,7 +58,7 @@ export default function Dashboard({ year, itemsPerPage, search, lane, page }: Pr
 
   const paymentFilter = useCallback((month: string, year: number, member: Member) => {
     return member.payments.find((payment) => {
-      const paymentDate = new Date(payment.month);
+      const paymentDate = removeTimezone(payment.month);
       const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
       const paymentYear = paymentDate.getFullYear().toString();
 
@@ -233,7 +233,7 @@ function generatePDF(data: RouterOutputs["member"]["getDashboard"]) {
       ...data.members.map((member) => {
         const paymentsByMonth = MONTHS.map((month) => {
           const payment = member.payments.find((p) => {
-            const paymentDate = new Date(p.month);
+            const paymentDate = removeTimezone(p.month);
             const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
             return paymentMonth === month;
           });
@@ -257,7 +257,7 @@ function generateXSLX(data: RouterOutputs["member"]["getDashboard"]) {
     ...data.members.map((member) => {
       const paymentsByMonth = MONTHS.map((month) => {
         const payment = member.payments.find((p) => {
-          const paymentDate = new Date(p.month);
+          const paymentDate = removeTimezone(p.month);
           const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
           return paymentMonth === month;
         });

@@ -96,5 +96,9 @@ export function generateUnpaidNotificationMessage(amount: number, months: Date) 
 }
 
 export function now() {
-  return moment(new Date()).startOf("day").utcOffset(0, true).toDate();
+  return moment().startOf("day").utcOffset(0, true).toDate();
+}
+
+export function removeTimezone(date: Date | string) {
+  return moment(date).startOf("day").utcOffset(0, true).toDate();
 }

@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/Molecules/DropdownMenu";
 import { MEMBERS_PAYMENT_FILTER_ENUM, MONTHS } from "@/lib/consts";
-import { s2ab } from "@/lib/utils";
+import { removeTimezone, s2ab } from "@/lib/utils";
 import { type Props } from "@/pages/member";
 import { type AppRouter } from "@/server/api/root";
 import { Label } from "../Atoms/Label";
@@ -63,8 +63,8 @@ export default function Members({ months, membersParam, search }: Props) {
     if (documentData) {
       const monthsText = documentData.months
         .map((month, index) => {
-          const monthName = MONTHS[new Date(month).getMonth()];
-          const year = new Date(month).getFullYear();
+          const monthName = MONTHS[removeTimezone(month).getMonth()];
+          const year = removeTimezone(month).getFullYear();
 
           if (index === 0) {
             return `${monthName} ${year}`;
@@ -112,7 +112,7 @@ export default function Members({ months, membersParam, search }: Props) {
             <OptionMenu
               onClickPDF={() => setType("PDF")}
               onClickXSLX={() => setType("XSLX")}
-              month={new Date(months[0] ?? "")}
+              month={removeTimezone(months[0] ?? "")}
               filter={membersParam}
               enabledUnpaidNotification={months.length === 1}
             />
@@ -188,10 +188,9 @@ export default function Members({ months, membersParam, search }: Props) {
                           <PopoverContent className="flex flex-col items-center justify-center gap-2">
                             <Label className="mb-2 w-full text-left text-lg font-semibold">Payments</Label>
                             {months.map((month) => {
-                              const monthDate = new Date(month);
-                              const monthString = `${MONTHS[monthDate.getMonth()]} ${monthDate.getFullYear()}`;
+                              const monthString = `${MONTHS[removeTimezone(month).getMonth()]} ${removeTimezone(month).getFullYear()}`;
                               const payment = member.payments.find(
-                                (payment) => payment.month.toDateString() === new Date(month).toDateString(),
+                                (payment) => payment.month.toDateString() === removeTimezone(month).toDateString(),
                               );
 
                               return (

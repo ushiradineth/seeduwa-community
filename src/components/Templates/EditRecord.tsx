@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS, RECORD_TYPE } from "@/lib/consts";
-import { removeQueryParamsFromRouter } from "@/lib/utils";
+import { now, removeQueryParamsFromRouter } from "@/lib/utils";
 import { EditRecordSchema, type EditRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -91,7 +91,7 @@ export default function EditRecord() {
     form.clearErrors();
     form.setValue("Name", record?.name ?? "");
     form.setValue("Amount", record?.amount ?? DEFAULT_AMOUNT);
-    form.setValue("RecordDate", record?.recordAt ?? new Date());
+    form.setValue("RecordDate", record?.recordAt ?? now());
     form.setValue("RecordType", String(record?.type));
   }, [form, record]);
 

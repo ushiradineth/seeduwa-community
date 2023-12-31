@@ -9,7 +9,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { MONTHS, RECORD_TYPE } from "@/lib/consts";
-import { removeQueryParamsFromRouter } from "@/lib/utils";
+import { now, removeQueryParamsFromRouter, removeTimezone } from "@/lib/utils";
 import { CreateRecordSchema, type CreateRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -55,13 +55,14 @@ export default function CreateRecord() {
     form.resetField("Name");
     form.resetField("Amount");
     form.setValue("Months", [
-      new Date(
-        Number(router.query.filterYear ?? new Date().getFullYear()),
-        router.query.filterMonth ? MONTHS.findIndex((value) => value === router.query.filterMonth) : new Date().getMonth(),
-        1,
-      ),
+      moment()
+        .startOf("month")
+        .month(router.query.filterMonth ? MONTHS.findIndex((value) => value === router.query.filterMonth) : now().getMonth())
+        .year(Number(router.query.filterYear ?? now().getFullYear()))
+        .utcOffset(0, true)
+        .toDate(),
     ]);
-    form.setValue("RecordDate", new Date());
+    form.setValue("RecordDate", now());
   }, [router.query.create, form, router.query.filterMonth, router.query.filterYear]);
 
   return (
@@ -115,7 +116,7 @@ export default function CreateRecord() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select record type" />
                       </SelectTrigger>
-                      <SelectContent className="dark z-[250] w-max max-h-72">
+                      <SelectContent className="dark z-[250] max-h-72 w-max">
                         {RECORD_TYPE.map((type) => {
                           return (
                             <SelectItem key={type} value={type}>
@@ -144,7 +145,7 @@ export default function CreateRecord() {
                           type="button"
                           variant={"outline"}
                           className={"flex h-10 max-w-full justify-start text-left font-normal hover:bg-bgc"}>
-                          {(field.value ?? new Date()).toDateString()}
+                          {(field.value ?? now()).toDateString()}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="z-[1000] m-0 w-auto border-bc bg-bc p-0" align="start">
@@ -195,7 +196,7 @@ export default function CreateRecord() {
                             {field.value?.map((month) => {
                               return (
                                 <Badge key={month.toDateString()}>
-                                  {MONTHS[new Date(month).getMonth()]} {month.getFullYear()}
+                                  {MONTHS[removeTimezone(month).getMonth()]} {month.getFullYear()}
                                   <X
                                     className="h-5 cursor-pointer"
                                     onClick={() =>

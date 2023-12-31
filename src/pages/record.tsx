@@ -7,6 +7,7 @@ import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import Records from "@/components/Templates/Records";
 import { MONTHS, YEARS } from "@/lib/consts";
+import { now } from "@/lib/utils";
 import { prisma } from "@/server/db";
 
 export type Record = {
@@ -43,8 +44,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   }
 
   const search = context.query.search ? (context.query.search as string).split(" ").join(" <-> ") : "";
-  const year = Number(context.query.filterYear ?? new Date().getFullYear());
-  const month = String(context.query.filterMonth ?? MONTHS[new Date().getMonth()]);
+  const year = Number(context.query.filterYear ?? now().getFullYear());
+  const month = String(context.query.filterMonth ?? MONTHS[now().getMonth()]);
   const monthIndex = MONTHS.findIndex((value) => value === month);
   const recordDate = moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).toDate();
   const where =

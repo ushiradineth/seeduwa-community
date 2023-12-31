@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
-import { removeQueryParamsFromRouter } from "@/lib/utils";
+import { now, removeQueryParamsFromRouter } from "@/lib/utils";
 import { EditPaymentSchema, type EditPaymentFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -90,7 +90,7 @@ export default function EditPayment() {
   useEffect(() => {
     form.clearErrors();
     form.setValue("Amount", payment?.amount ?? DEFAULT_AMOUNT);
-    form.setValue("PaymentDate", payment?.paymentAt ?? new Date());
+    form.setValue("PaymentDate", payment?.paymentAt ?? now());
     form.setValue("Partial", payment?.partial ?? false);
   }, [form, payment]);
 

@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
-import { generateThankYouMessage, removeQueryParamsFromRouter } from "@/lib/utils";
+import { generateThankYouMessage, now, removeQueryParamsFromRouter } from "@/lib/utils";
 import { CreatePaymentForMemberSchema, type CreatePaymentForMemberFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -79,9 +79,14 @@ export default function CreatePaymentForMember() {
     form.setValue("Partial", false);
     form.setValue("Notify", false);
     form.setValue("Months", [
-      new Date(Number(router.query.year ?? new Date().getFullYear()), Number(router.query.month ?? new Date().getMonth()), 1),
+      moment()
+        .startOf("month")
+        .month(Number(router.query.month ?? now().getMonth()))
+        .year(Number(router.query.year ?? now().getFullYear()))
+        .utcOffset(0, true)
+        .toDate(),
     ]);
-    form.setValue("PaymentDate", new Date());
+    form.setValue("PaymentDate", now());
     form.setValue("Text", generateThankYouMessage(DEFAULT_AMOUNT, form.getValues("Months")));
   }, [router.query.create, form, router.query.month, router.query.year, creatingPayment, router.query.memberId]);
 
@@ -97,8 +102,8 @@ export default function CreatePaymentForMember() {
             <DialogHeader>
               <DialogTitle className="flex w-fit items-center justify-center gap-2">
                 <p>Add New Payment</p>
-                <Badge key={Number(router.query.year ?? new Date().getFullYear())} className="w-fit">
-                  {MONTHS[Number(router.query.month ?? new Date().getMonth())]} {Number(router.query.year ?? new Date().getFullYear())}
+                <Badge key={Number(router.query.year ?? now().getFullYear())} className="w-fit">
+                  {MONTHS[Number(router.query.month ?? now().getMonth())]} {Number(router.query.year ?? now().getFullYear())}
                 </Badge>
               </DialogTitle>
             </DialogHeader>

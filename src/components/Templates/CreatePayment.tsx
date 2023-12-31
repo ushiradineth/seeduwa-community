@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 
 import { api, type RouterOutputs } from "@/utils/api";
 import { DEFAULT_AMOUNT, LANE, MONTHS, YEARS } from "@/lib/consts";
-import { generateThankYouMessage, removeQueryParamsFromRouter } from "@/lib/utils";
+import { generateThankYouMessage, now, removeQueryParamsFromRouter, removeTimezone } from "@/lib/utils";
 import { CreatePaymentSchema, type CreatePaymentFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -123,7 +123,7 @@ export default function CreatePayment() {
     form.reset();
     form.setValue("Amount", DEFAULT_AMOUNT);
     form.setValue("Months", []);
-    form.setValue("PaymentDate", new Date());
+    form.setValue("PaymentDate", now());
     form.setValue("Partial", false);
     form.setValue("Notify", false);
     form.setValue("Text", generateThankYouMessage(DEFAULT_AMOUNT, []));
@@ -363,7 +363,7 @@ export default function CreatePayment() {
                           type="button"
                           variant={"outline"}
                           className={"flex h-10 max-w-full justify-start text-left font-normal hover:bg-bgc"}>
-                          {(field.value ?? new Date()).toDateString()}
+                          {(field.value ?? now()).toDateString()}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="z-[1000] m-0 w-auto border-bc bg-bc p-0" align="start">
@@ -415,7 +415,7 @@ export default function CreatePayment() {
                             {field.value?.map((month) => {
                               return (
                                 <Badge key={month.toDateString()}>
-                                  {MONTHS[new Date(month).getMonth()]} {month.getFullYear()}
+                                  {MONTHS[removeTimezone(month).getMonth()]} {month.getFullYear()}
                                   <X
                                     className="h-5 cursor-pointer"
                                     onClick={() =>

@@ -11,7 +11,7 @@ import { Button } from "@/components/Atoms/Button";
 import { Card } from "@/components/Molecules/Card";
 import Carousel from "@/components/Molecules/Carousel";
 import { MONTHS, YEARS } from "@/lib/consts";
-import { formalizeDate } from "@/lib/utils";
+import { formalizeDate, now, removeTimezone } from "@/lib/utils";
 import { prisma } from "@/server/db";
 
 export type Props = {
@@ -82,7 +82,7 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
   const paymentFilter = useCallback(
     (month: string, year: number) => {
       return member.payments.find((payment) => {
-        const paymentDate = new Date(payment.month);
+        const paymentDate = removeTimezone(payment.month);
         const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
         const paymentYear = paymentDate.getFullYear().toString();
 
@@ -120,7 +120,7 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
           <Link href={`tel:${member.phoneNumber}`}>{formatPhoneNumberIntl(member.phoneNumber)}</Link>
           <p>LKR {Number(total).toLocaleString()}</p>
         </div>
-        <Carousel navButtons activeIndex={YEARS.findIndex((year) => year === new Date().getFullYear())}>
+        <Carousel navButtons activeIndex={YEARS.findIndex((year) => year === now().getFullYear())}>
           {YEARS.map((year) => (
             <div key={year} className="w-[300px] select-none px-1 md:w-[400px]">
               <p className="flex items-center justify-center rounded-t-2xl border border-b p-4 font-semibold">{year}</p>

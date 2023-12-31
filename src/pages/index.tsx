@@ -12,6 +12,7 @@ import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import Dashboard from "@/components/Templates/Dashboard";
 import { ITEMS_PER_PAGE, ITEMS_PER_PAGE_FILTER, LANE_FILTER, YEARS } from "@/lib/consts";
+import { now } from "@/lib/utils";
 import { appRouter } from "@/server/api/root";
 import { prisma } from "@/server/db";
 
@@ -50,7 +51,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   }
 
   const search = context.query.search ? (context.query.search as string).split(" ").join(" | ") : "";
-  const paymentYear = YEARS.includes(Number(context.query.paymentYear)) ? Number(context.query.paymentYear) : new Date().getFullYear();
+  const paymentYear = YEARS.includes(Number(context.query.paymentYear)) ? Number(context.query.paymentYear) : now().getFullYear();
   const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
     ? Number(context.query.itemsPerPage)
     : ITEMS_PER_PAGE;

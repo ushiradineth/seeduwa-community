@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
-import { generateUnpaidNotificationMessage, removeQueryParamsFromRouter } from "@/lib/utils";
+import { generateUnpaidNotificationMessage, now, removeQueryParamsFromRouter } from "@/lib/utils";
 import { NotifyUnpaidMembersSchema, type NotifyUnpaidMembersFormData } from "@/lib/validators";
 import { Button } from "../Atoms/Button";
 import { Input } from "../Atoms/Input";
@@ -61,7 +61,12 @@ export default function NotifyUnpaidMembers() {
     form.setValue("Amount", DEFAULT_AMOUNT);
     form.setValue(
       "Month",
-      new Date(Number(router.query.year ?? new Date().getFullYear()), Number(router.query.month ?? new Date().getMonth()), 1),
+      moment()
+        .startOf("month")
+        .year(Number(router.query.year ?? now().getFullYear()))
+        .month(Number(router.query.month ?? now().getMonth()))
+        .utcOffset(0, true)
+        .toDate(),
     );
     form.setValue("Text", generateUnpaidNotificationMessage(DEFAULT_AMOUNT, form.getValues("Month")));
   }, [form, router.query.month, router.query.year]);

@@ -8,6 +8,11 @@ export default async function handler(request: NextApiRequest, response: NextApi
   const logger = new Logger();
   const log = logger.with({ cron: "delete-archived-data" });
 
+  if (!process.env.CRON_SECRET || request.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+    log.info("Archived data failed to delete", { error: "UNAUTHORIZED", code: 401 });
+    return response.status(401).json({ success: false });
+  }
+
   const members = await prisma.member.deleteMany({
     where: {
       active: false,
@@ -35,7 +40,7 @@ export default async function handler(request: NextApiRequest, response: NextApi
     },
   });
 
-  log.info("Deleted archived data", { members, payments, records });
+  log.info("Archived data deleted", { members, payments, records });
 
   response.status(200).json({
     body: {

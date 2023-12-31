@@ -10,14 +10,9 @@ export default async function handler(request: NextApiRequest, response: NextApi
   const logger = new Logger();
   const log = logger.with({ cron: "unpaid-reminders" });
 
-  if (new Date().getDate() !== 25) {
-    response.status(400).json({
-      body: {
-        message: "No Access",
-      },
-    });
-
-    return false;
+  if (!process.env.CRON_SECRET || request.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+    log.info("Unpaid Reminders failed to send", { error: "UNAUTHORIZED", code: 401 });
+    return response.status(401).json({ success: false });
   }
 
   const month = now();

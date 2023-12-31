@@ -11,6 +11,7 @@ export const env = createEnv({
     SMS_USER_ID: z.string(),
     SMS_API_KEY: z.string(),
     SMS_SENDER_ID: z.string(),
+    CRON_SECRET: z.string(),
   },
 
   client: {
@@ -29,6 +30,7 @@ export const env = createEnv({
     SMS_SENDER_ID: process.env.SMS_SENDER_ID,
     NEXT_PUBLIC_AXIOM_TOKEN: process.env.NEXT_PUBLIC_AXIOM_TOKEN,
     NEXT_PUBLIC_AXIOM_DATASET: process.env.NEXT_PUBLIC_AXIOM_DATASET,
+    CRON_SECRET: process.env.CRON_SECRET,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });

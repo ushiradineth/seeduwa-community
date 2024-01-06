@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -8,7 +7,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
-import { generateThankYouMessage, now, removeQueryParamsFromRouter } from "@/lib/utils";
+import { generateThankYouMessage, now, removeQueryParamsFromRouter, removeTimezone } from "@/lib/utils";
 import { CreatePaymentForMemberSchema, type CreatePaymentForMemberFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -46,8 +45,8 @@ export default function CreatePaymentForMember() {
     createPayment({
       amount: data.Amount,
       memberId: data.Member,
-      months: data.Months.map((month) => moment(month).startOf("month").utcOffset(0, true).toDate()),
-      paymentDate: moment(data.PaymentDate).startOf("day").utcOffset(0, true).toDate(),
+      months: data.Months.map((month) => removeTimezone(month).startOf("month").toDate()),
+      paymentDate: removeTimezone(data.PaymentDate).toDate(),
       notify: data.Notify,
       text: data.Text,
       partial: data.Partial,
@@ -79,11 +78,10 @@ export default function CreatePaymentForMember() {
     form.setValue("Partial", false);
     form.setValue("Notify", false);
     form.setValue("Months", [
-      moment()
+      removeTimezone()
         .startOf("month")
         .month(Number(router.query.month ?? now().getMonth()))
         .year(Number(router.query.year ?? now().getFullYear()))
-        .utcOffset(0, true)
         .toDate(),
     ]);
     form.setValue("PaymentDate", now());

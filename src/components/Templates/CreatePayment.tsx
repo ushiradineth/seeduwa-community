@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CalendarIcon, SearchIcon, X, XIcon } from "lucide-react";
-import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm, type ControllerRenderProps } from "react-hook-form";
 import { formatPhoneNumberIntl } from "react-phone-number-input";
@@ -68,8 +67,8 @@ export default function CreatePayment() {
     createPayment({
       amount: data.Amount,
       memberId: data.Member,
-      months: data.Months.map((month) => moment(month).startOf("month").utcOffset(0, true).toDate()),
-      paymentDate: moment(data.PaymentDate).startOf("day").utcOffset(0, true).toDate(),
+      months: data.Months.map((month) => removeTimezone(month).startOf("month").toDate()),
+      paymentDate: removeTimezone(data.PaymentDate).toDate(),
       notify: data.Notify,
       text: data.Text,
       partial: data.Partial,
@@ -415,7 +414,7 @@ export default function CreatePayment() {
                             {field.value?.map((month) => {
                               return (
                                 <Badge key={month.toDateString()}>
-                                  {MONTHS[removeTimezone(month).getMonth()]} {month.getFullYear()}
+                                  {MONTHS[removeTimezone(month).toDate().getMonth()]} {month.getFullYear()}
                                   <X
                                     className="h-5 cursor-pointer"
                                     onClick={() =>

@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -8,7 +7,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
-import { now, removeQueryParamsFromRouter } from "@/lib/utils";
+import { now, removeQueryParamsFromRouter, removeTimezone } from "@/lib/utils";
 import { EditPaymentSchema, type EditPaymentFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -64,7 +63,7 @@ export default function EditPayment() {
     editPayment({
       amount: data.Amount,
       id: payment?.id ?? "",
-      paymentDate: moment(data.PaymentDate).utcOffset(0, true).toDate(),
+      paymentDate: removeTimezone(data.PaymentDate).toDate(),
       partial: data.Partial,
     });
   }

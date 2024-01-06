@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CalendarIcon, X } from "lucide-react";
-import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -43,8 +42,8 @@ export default function CreateRecord() {
   function onSubmit(data: CreateRecordFormData) {
     createRecord({
       amount: data.Amount,
-      months: data.Months.map((month) => moment(month).startOf("month").utcOffset(0, true).toDate()),
-      recordDate: moment(data.RecordDate).startOf("day").utcOffset(0, true).toDate(),
+      months: data.Months.map((month) => removeTimezone(month).startOf("month").toDate()),
+      recordDate: removeTimezone(data.RecordDate).toDate(),
       name: data.Name,
       recordType: data.RecordType,
     });
@@ -55,11 +54,10 @@ export default function CreateRecord() {
     form.resetField("Name");
     form.resetField("Amount");
     form.setValue("Months", [
-      moment()
+      removeTimezone()
         .startOf("month")
         .month(router.query.filterMonth ? MONTHS.findIndex((value) => value === router.query.filterMonth) : now().getMonth())
         .year(Number(router.query.filterYear ?? now().getFullYear()))
-        .utcOffset(0, true)
         .toDate(),
     ]);
     form.setValue("RecordDate", now());
@@ -196,7 +194,7 @@ export default function CreateRecord() {
                             {field.value?.map((month) => {
                               return (
                                 <Badge key={month.toDateString()}>
-                                  {MONTHS[removeTimezone(month).getMonth()]} {month.getFullYear()}
+                                  {MONTHS[removeTimezone(month).toDate().getMonth()]} {month.getFullYear()}
                                   <X
                                     className="h-5 cursor-pointer"
                                     onClick={() =>

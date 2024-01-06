@@ -63,8 +63,8 @@ export default function Members({ months, membersParam, search }: Props) {
     if (documentData) {
       const monthsText = documentData.months
         .map((month, index) => {
-          const monthName = MONTHS[removeTimezone(month).getMonth()];
-          const year = removeTimezone(month).getFullYear();
+          const monthName = MONTHS[removeTimezone(month).toDate().getMonth()];
+          const year = removeTimezone(month).toDate().getFullYear();
 
           if (index === 0) {
             return `${monthName} ${year}`;
@@ -112,7 +112,7 @@ export default function Members({ months, membersParam, search }: Props) {
             <OptionMenu
               onClickPDF={() => setType("PDF")}
               onClickXSLX={() => setType("XSLX")}
-              month={removeTimezone(months[0] ?? "")}
+              month={removeTimezone(months[0] ?? "").toDate()}
               filter={membersParam}
               enabledUnpaidNotification={months.length === 1}
             />
@@ -188,9 +188,11 @@ export default function Members({ months, membersParam, search }: Props) {
                           <PopoverContent className="flex flex-col items-center justify-center gap-2">
                             <Label className="mb-2 w-full text-left text-lg font-semibold">Payments</Label>
                             {months.map((month) => {
-                              const monthString = `${MONTHS[removeTimezone(month).getMonth()]} ${removeTimezone(month).getFullYear()}`;
+                              const monthString = `${MONTHS[removeTimezone(month).toDate().getMonth()]} ${removeTimezone(month)
+                                .toDate()
+                                .getFullYear()}`;
                               const payment = member.payments.find(
-                                (payment) => payment.month.toDateString() === removeTimezone(month).toDateString(),
+                                (payment) => payment.month.toDateString() === removeTimezone(month).toDate().toDateString(),
                               );
 
                               return (

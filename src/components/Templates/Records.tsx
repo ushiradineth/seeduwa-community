@@ -1,7 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Edit, FileText, MoreVertical, Plus, Sheet } from "lucide-react";
-import moment from "moment";
 import * as XLSX from "xlsx";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
@@ -14,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/Molecules/DropdownMenu";
-import { s2ab } from "@/lib/utils";
+import { removeTimezone, s2ab } from "@/lib/utils";
 import { type Props, type Record } from "@/pages/record";
 import { Card, CardContent, CardHeader, CardTitle } from "../Molecules/Card";
 import Search from "../Molecules/Search";
@@ -85,7 +84,7 @@ export default function Records({ records: initialRecords, count, year, month, s
             <TableBody>
               <TableRow key={"header"} className="bg-slate-400 font-bold text-black hover:bg-slate-500">
                 <TableCell className="border text-center">
-                  <p>{moment().month(month).year(year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
+                  <p>{removeTimezone().month(month).year(year).startOf("month").format("DD/MM/YYYY")}</p>
                 </TableCell>
                 <TableCell className="border text-center">
                   <p>Balance Brought Forward</p>
@@ -105,7 +104,7 @@ export default function Records({ records: initialRecords, count, year, month, s
               </TableRow>
               <TableRow key={"payments"}>
                 <TableCell className="border text-center">
-                  <p>{moment().month(month).year(year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
+                  <p>{removeTimezone().month(month).year(year).startOf("month").format("DD/MM/YYYY")}</p>
                 </TableCell>
                 <TableCell className="border text-center">
                   <p>Monthly Fee from Residents</p>
@@ -127,7 +126,7 @@ export default function Records({ records: initialRecords, count, year, month, s
                 return (
                   <TableRow key={record.id}>
                     <TableCell className="border text-center">
-                      <p>{moment(record.recordAt).utcOffset(0, true).format("DD/MM/YYYY")}</p>
+                      <p>{removeTimezone(record.recordAt).format("DD/MM/YYYY")}</p>
                     </TableCell>
                     <TableCell className="border text-center">
                       <p className="max-w-24 flex items-center justify-center truncate">{record.name}</p>
@@ -157,7 +156,7 @@ export default function Records({ records: initialRecords, count, year, month, s
               })}
               <TableRow key={"footer"} className="bg-slate-400 font-bold text-black hover:bg-slate-500">
                 <TableCell className="border text-center">
-                  <p>{moment().month(month).year(year).endOf("month").utcOffset(0, true).format("DD/MM/YYYY")}</p>
+                  <p>{removeTimezone().month(month).year(year).endOf("month").format("DD/MM/YYYY")}</p>
                 </TableCell>
                 <TableCell className="border text-center">
                   <p>Balance</p>
@@ -241,7 +240,7 @@ function generatePDF(data: Props) {
     body: [
       [
         {
-          content: moment().month(data.month).year(data.year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY"),
+          content: removeTimezone().month(data.month).year(data.year).startOf("month").format("DD/MM/YYYY"),
           styles: { fillColor: green },
         },
         {
@@ -254,7 +253,7 @@ function generatePDF(data: Props) {
       ],
       [
         {
-          content: moment().month(data.month).year(data.year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY"),
+          content: removeTimezone().month(data.month).year(data.year).startOf("month").format("DD/MM/YYYY"),
           styles: { fillColor: green },
         },
         {
@@ -268,7 +267,7 @@ function generatePDF(data: Props) {
       ...data.records.map((record) => {
         const rowData = [
           {
-            content: moment(record.recordAt).utcOffset(0, true).format("DD/MM/YYYY"),
+            content: removeTimezone(record.recordAt).format("DD/MM/YYYY"),
             styles: { fillColor: green },
           },
           record.name,
@@ -288,7 +287,7 @@ function generatePDF(data: Props) {
       }),
       [
         {
-          content: moment().month(data.month).year(data.year).endOf("month").utcOffset(0, true).format("DD/MM/YYYY"),
+          content: removeTimezone().month(data.month).year(data.year).endOf("month").format("DD/MM/YYYY"),
           styles: { fillColor: green },
         },
         {
@@ -318,21 +317,21 @@ function generateXSLX(data: Props) {
     ["", "", "", "", ""],
     header,
     [
-      moment().month(data.month).year(data.year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY"),
+      removeTimezone().month(data.month).year(data.year).startOf("month").format("DD/MM/YYYY"),
       "Balance Brought Forward",
       "-",
       "-",
       "LKR " + data.balance.toLocaleString(),
     ],
     [
-      moment().month(data.month).year(data.year).startOf("month").utcOffset(0, true).format("DD/MM/YYYY"),
+      removeTimezone().month(data.month).year(data.year).startOf("month").format("DD/MM/YYYY"),
       "Monthly Fee from Residents",
       "LKR " + data.currentPayments.toLocaleString(),
       "-",
       "LKR " + (data.balance + data.currentPayments).toLocaleString(),
     ],
     ...data.records.map((record) => {
-      const rowData = [moment(record.recordAt).utcOffset(0, true).format("DD/MM/YYYY"), record.name];
+      const rowData = [removeTimezone(record.recordAt).format("DD/MM/YYYY"), record.name];
       record.type === "Income"
         ? rowData.push("LKR " + record.amount.toLocaleString(), "-")
         : rowData.push("-", "LKR " + record.amount.toLocaleString());
@@ -347,7 +346,7 @@ function generateXSLX(data: Props) {
       return rowData;
     }),
     [
-      moment().month(data.month).year(data.year).endOf("month").utcOffset(0, true).format("DD/MM/YYYY"),
+      removeTimezone().month(data.month).year(data.year).endOf("month").format("DD/MM/YYYY"),
       "Balance",
       "-",
       "-",

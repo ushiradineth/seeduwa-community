@@ -60,7 +60,7 @@ export default function Payments({ payments: initialPayments, count }: Props) {
                     </TableCell>
                     <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer border text-center">
                       <Link href={`/payment/${payment.id}`}>
-                        {MONTHS[removeTimezone(payment.month).getMonth()]} {removeTimezone(payment.month).getFullYear()}
+                        {MONTHS[removeTimezone(payment.month).toDate().getMonth()]} {removeTimezone(payment.month).toDate().getFullYear()}
                       </Link>
                     </TableCell>
                     <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer border text-center">
@@ -76,8 +76,8 @@ export default function Payments({ payments: initialPayments, count }: Props) {
                                 ...router.query,
                                 mode: "edit",
                                 payment: payment.id,
-                                month: removeTimezone(payment.month).getMonth(),
-                                year: removeTimezone(payment.month).getFullYear(),
+                                month: removeTimezone(payment.month).toDate().getMonth(),
+                                year: removeTimezone(payment.month).toDate().getFullYear(),
                               },
                             },
                             undefined,

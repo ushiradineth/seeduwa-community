@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { BadgeCheck, BadgeXIcon } from "lucide-react";
-import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { formatPhoneNumberIntl } from "react-phone-number-input";
@@ -10,7 +9,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS } from "@/lib/consts";
-import { generateUnpaidNotificationMessage, now, removeQueryParamsFromRouter } from "@/lib/utils";
+import { generateUnpaidNotificationMessage, now, removeQueryParamsFromRouter, removeTimezone } from "@/lib/utils";
 import { NotifyUnpaidMembersSchema, type NotifyUnpaidMembersFormData } from "@/lib/validators";
 import { Button } from "../Atoms/Button";
 import { Input } from "../Atoms/Input";
@@ -39,7 +38,7 @@ export default function NotifyUnpaidMembers() {
   function onSubmit(data: NotifyUnpaidMembersFormData) {
     notify({
       amount: data.Amount,
-      month: moment(data.Month).startOf("month").utcOffset(0, true).toDate(),
+      month: removeTimezone(data.Month).startOf("month").toDate(),
       text: data.Text,
     });
   }
@@ -61,11 +60,10 @@ export default function NotifyUnpaidMembers() {
     form.setValue("Amount", DEFAULT_AMOUNT);
     form.setValue(
       "Month",
-      moment()
+      removeTimezone()
         .startOf("month")
         .year(Number(router.query.year ?? now().getFullYear()))
         .month(Number(router.query.month ?? now().getMonth()))
-        .utcOffset(0, true)
         .toDate(),
     );
     form.setValue("Text", generateUnpaidNotificationMessage(DEFAULT_AMOUNT, form.getValues("Month")));

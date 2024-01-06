@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import moment from "moment";
 import Calendar from "react-calendar";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -8,7 +7,7 @@ import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
 import { DEFAULT_AMOUNT, MONTHS, RECORD_TYPE } from "@/lib/consts";
-import { now, removeQueryParamsFromRouter } from "@/lib/utils";
+import { now, removeQueryParamsFromRouter, removeTimezone } from "@/lib/utils";
 import { EditRecordSchema, type EditRecordFormData } from "@/lib/validators";
 import { Badge } from "../Atoms/Badge";
 import { Button } from "../Atoms/Button";
@@ -63,7 +62,7 @@ export default function EditRecord() {
     editRecord({
       amount: data.Amount,
       id: record?.id ?? "",
-      recordDate: moment(data.RecordDate).utcOffset(0, true).toDate(),
+      recordDate: removeTimezone(data.RecordDate).toDate(),
       name: data.Name,
       recordType: data.RecordType,
     });
@@ -151,7 +150,7 @@ export default function EditRecord() {
                         <SelectTrigger>
                           <SelectValue placeholder="Select record type" />
                         </SelectTrigger>
-                        <SelectContent className="dark z-[250] w-max max-h-72">
+                        <SelectContent className="dark z-[250] max-h-72 w-max">
                           {RECORD_TYPE.map((type) => {
                             return (
                               <SelectItem key={type} value={type}>

@@ -58,7 +58,7 @@ export default function Dashboard({ year, itemsPerPage, search, lane, page }: Pr
 
   const paymentFilter = useCallback((month: string, year: number, member: Member) => {
     return member.payments.find((payment) => {
-      const paymentDate = removeTimezone(payment.month);
+      const paymentDate = removeTimezone(payment.month).toDate();
       const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
       const paymentYear = paymentDate.getFullYear().toString();
 
@@ -233,7 +233,7 @@ function generatePDF(data: RouterOutputs["member"]["getDashboard"]) {
       ...data.members.map((member) => {
         const paymentsByMonth = MONTHS.map((month) => {
           const payment = member.payments.find((p) => {
-            const paymentDate = removeTimezone(p.month);
+            const paymentDate = removeTimezone(p.month).toDate();
             const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
             return paymentMonth === month;
           });
@@ -257,7 +257,7 @@ function generateXSLX(data: RouterOutputs["member"]["getDashboard"]) {
     ...data.members.map((member) => {
       const paymentsByMonth = MONTHS.map((month) => {
         const payment = member.payments.find((p) => {
-          const paymentDate = removeTimezone(p.month);
+          const paymentDate = removeTimezone(p.month).toDate();
           const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
           return paymentMonth === month;
         });

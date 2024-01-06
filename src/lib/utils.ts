@@ -99,6 +99,8 @@ export function now() {
   return moment().startOf("day").utcOffset(0, true).toDate();
 }
 
-export function removeTimezone(date: Date | string) {
-  return moment(date).startOf("day").utcOffset(0, true).toDate();
+export function removeTimezone(date?: Date | string) {
+  return moment(date ?? new Date())
+    .startOf("day")
+    .utcOffset(0, false);
 }

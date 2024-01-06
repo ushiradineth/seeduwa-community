@@ -1,4 +1,3 @@
-import moment from "moment";
 import { getSession } from "next-auth/react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
@@ -7,7 +6,7 @@ import { Card } from "@/components/Molecules/Card";
 import Filter from "@/components/Molecules/Filter";
 import Records from "@/components/Templates/Records";
 import { MONTHS, YEARS } from "@/lib/consts";
-import { now } from "@/lib/utils";
+import { now, removeTimezone } from "@/lib/utils";
 import { prisma } from "@/server/db";
 
 export type Record = {
@@ -47,7 +46,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const year = Number(context.query.filterYear ?? now().getFullYear());
   const month = String(context.query.filterMonth ?? MONTHS[now().getMonth()]);
   const monthIndex = MONTHS.findIndex((value) => value === month);
-  const recordDate = moment().year(year).month(monthIndex).startOf("month").utcOffset(0, true).toDate();
+  const recordDate = removeTimezone().year(year).month(monthIndex).startOf("month").toDate();
   const where =
     search !== ""
       ? { AND: [{ month: { equals: recordDate } }, { active: true }, { OR: [{ name: { search: search } }] }] }

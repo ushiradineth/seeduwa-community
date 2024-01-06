@@ -1,6 +1,5 @@
 import { createServerSideHelpers } from "@trpc/react-query/server";
 import { CalendarIcon, SearchIcon, X } from "lucide-react";
-import moment from "moment";
 import { getSession } from "next-auth/react";
 import { log } from "next-axiom";
 import Calendar from "react-calendar";
@@ -53,8 +52,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const membersParam = String(context.query.members ?? MEMBERS_PAYMENT_FILTER_ENUM.All) as MEMBERS_PAYMENT_FILTER_ENUM;
   const months =
     typeof context.query.months === "string"
-      ? [...context.query.months.split(",").map((month) => moment(month).startOf("month").utcOffset(0, true).toISOString())]
-      : [moment().startOf("month").utcOffset(0, true).toISOString()];
+      ? [...context.query.months.split(",").map((month) => removeTimezone(month).startOf("month").toISOString())]
+      : [removeTimezone().startOf("month").toISOString()];
 
   const trpc = createServerSideHelpers({
     router: appRouter,
@@ -100,7 +99,7 @@ export default function AllMembers({ membersParam, months, search }: InferGetSer
 function MonthPicker({ months: initialMonths }: { months: string[] }) {
   const router = useRouter();
   const [monthPicker, setMonthPicker] = useState(false);
-  const [months, setMonths] = useState<Date[]>([...initialMonths.map((month) => removeTimezone(month))]);
+  const [months, setMonths] = useState<Date[]>([...initialMonths.map((month) => removeTimezone(month).toDate())]);
 
   return (
     <Popover open={monthPicker} onOpenChange={(open) => setMonthPicker(open)}>
@@ -129,7 +128,7 @@ function MonthPicker({ months: initialMonths }: { months: string[] }) {
               {months.map((month) => {
                 return (
                   <Badge key={month.toDateString()} className="h-5 w-fit">
-                    {MONTHS[removeTimezone(month).getMonth()]} {month.getFullYear()}
+                    {MONTHS[removeTimezone(month).toDate().getMonth()]} {month.getFullYear()}
                     <X
                       className="h-5 w-5 cursor-pointer"
                       onClick={() => setMonths(months.filter((deletedMonth) => deletedMonth !== month))}
@@ -140,7 +139,7 @@ function MonthPicker({ months: initialMonths }: { months: string[] }) {
             </div>
             {!arrayCompare(
               [...months.map((month) => month.toDateString())],
-              [...initialMonths.map((month) => removeTimezone(month).toDateString())],
+              [...initialMonths.map((month) => removeTimezone(month).toDate().toDateString())],
             ) ? (
               <Button
                 type="button"

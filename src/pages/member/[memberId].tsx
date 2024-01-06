@@ -82,7 +82,7 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
   const paymentFilter = useCallback(
     (month: string, year: number) => {
       return member.payments.find((payment) => {
-        const paymentDate = removeTimezone(payment.month);
+        const paymentDate = removeTimezone(payment.month).toDate();
         const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
         const paymentYear = paymentDate.getFullYear().toString();
 

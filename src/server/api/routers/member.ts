@@ -1,9 +1,8 @@
 import { TRPCError } from "@trpc/server";
-import moment from "moment";
 import { z } from "zod";
 
 import { ITEMS_PER_PAGE, LANE_FILTER, MEMBERS_PAYMENT_FILTER_ENUM, YEARS } from "@/lib/consts";
-import { commonAttribute, now } from "@/lib/utils";
+import { commonAttribute, now, removeTimezone } from "@/lib/utils";
 import { CreateMemberSchema } from "@/lib/validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -173,7 +172,7 @@ export const memberRouter = createTRPCRouter({
       const search = input.search ? input.search.split(" ").join(" <-> ") : "";
       const membersParam = String(input.members ?? MEMBERS_PAYMENT_FILTER_ENUM.All) as MEMBERS_PAYMENT_FILTER_ENUM;
 
-      const months = [...input.months.map((month) => moment(month).startOf("month").utcOffset(0, true).toDate())];
+      const months = [...input.months.map((month) => removeTimezone(month).startOf("month").toDate())];
 
       let paymentsFilter = {};
 
@@ -330,8 +329,8 @@ export const memberRouter = createTRPCRouter({
             where: {
               active: true,
               month: {
-                gte: moment().year(year).startOf("year").utcOffset(0, true).toDate(),
-                lte: moment().year(year).endOf("year").utcOffset(0, true).toDate(),
+                gte: removeTimezone().year(year).startOf("year").toDate(),
+                lte: removeTimezone().year(year).endOf("year").toDate(),
               },
             },
             select: {

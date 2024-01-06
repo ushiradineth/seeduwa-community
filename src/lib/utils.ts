@@ -102,5 +102,5 @@ export function now() {
 export function removeTimezone(date?: Date | string) {
   return moment(date ?? new Date())
     .startOf("day")
-    .utcOffset(0, false);
+    .utcOffset(0, true);
 }

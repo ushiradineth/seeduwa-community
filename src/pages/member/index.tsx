@@ -1,5 +1,6 @@
 import { createServerSideHelpers } from "@trpc/react-query/server";
 import { CalendarIcon, SearchIcon, X } from "lucide-react";
+import moment from "moment";
 import { getSession } from "next-auth/react";
 import { log } from "next-axiom";
 import Calendar from "react-calendar";
@@ -52,8 +53,16 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const membersParam = String(context.query.members ?? MEMBERS_PAYMENT_FILTER_ENUM.All) as MEMBERS_PAYMENT_FILTER_ENUM;
   const months =
     typeof context.query.months === "string"
-      ? [...context.query.months.split(",").map((month) => removeTimezone(month).startOf("month").toISOString())]
-      : [removeTimezone().startOf("month").toISOString()];
+      ? [
+          ...context.query.months.split(",").map((month) =>
+            removeTimezone()
+              .month(month.split("+")[0] ?? "")
+              .year(Number(month.split("+")[1]) ?? moment().year())
+              .startOf("month")
+              .toISOString(false),
+          ),
+        ]
+      : [removeTimezone().startOf("month").toISOString(false)];
 
   const trpc = createServerSideHelpers({
     router: appRouter,
@@ -146,7 +155,7 @@ function MonthPicker({ months: initialMonths }: { months: string[] }) {
                 onClick={() =>
                   router.push({
                     pathname: router.pathname,
-                    query: { ...router.query, months: months.join(",") },
+                    query: { ...router.query, months: months.map((month) => `${month.getMonth()}+${month.getFullYear()}`).join(",") },
                   })
                 }
                 className="ml-auto w-full sm:h-full sm:w-fit">

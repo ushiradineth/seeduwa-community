@@ -177,7 +177,7 @@ export const memberRouter = createTRPCRouter({
       let paymentsFilter = {};
 
       const takePartial =
-        membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial ? true : membersParam === MEMBERS_PAYMENT_FILTER_ENUM.All ? undefined : false;
+        membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial ? true : membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid ? false : undefined;
 
       if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid || membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
         paymentsFilter = {
@@ -187,7 +187,6 @@ export const memberRouter = createTRPCRouter({
                 some: {
                   active: true,
                   month: { in: months },
-                  partial: false,
                 },
               },
             },
@@ -196,7 +195,6 @@ export const memberRouter = createTRPCRouter({
                 none: {
                   active: true,
                   month: { in: months },
-                  partial: false,
                 },
               },
             },
@@ -258,10 +256,14 @@ export const memberRouter = createTRPCRouter({
       });
 
       if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
-        members = members.filter((member) => member.payments.length < months.length);
+        members = members.filter((member) => member.payments.filter((payment) => payment.partial === false).length < months.length);
       }
 
-      if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid || membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial) {
+      if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
+        members = members.filter((member) => member.payments.filter((payment) => payment.partial === false).length === months.length);
+      }
+
+      if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial) {
         members = members.filter((member) => member.payments.length === months.length);
       }
 

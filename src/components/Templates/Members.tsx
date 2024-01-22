@@ -303,11 +303,16 @@ function generatePDF(data: RouterOutput["member"]["getMembers"], monthsText: str
   const pdfDocument = new jsPDF();
   const pageWidth = pdfDocument.internal.pageSize.width || pdfDocument.internal.pageSize.getWidth();
 
-  pdfDocument.text(`${data.membersParam} members for  ${monthsText}`, pageWidth / 2, 10, { align: "center" });
+  pdfDocument.text(`${data.membersParam} members for ${monthsText}`, pageWidth / 2, 10, {
+    align: "center",
+    maxWidth: pageWidth,
+  });
 
   const head = [["#", "Lane", "House Number", "Name", "Phone Number"]];
 
-  if (data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.All) head[0]?.push(`Paid`);
+  data.months.map((month) => {
+    head[0]?.push(`${MONTHS[removeTimezone(month).toDate().getMonth()]} ${removeTimezone(month).toDate().getFullYear()}`);
+  });
 
   autoTable(pdfDocument, {
     head,
@@ -318,6 +323,7 @@ function generatePDF(data: RouterOutput["member"]["getMembers"], monthsText: str
       halign: "center",
     },
     theme: "grid",
+    startY: 30,
     body: [
       ...data.members.map((member, index) => {
         const memberData = [
@@ -327,8 +333,13 @@ function generatePDF(data: RouterOutput["member"]["getMembers"], monthsText: str
           member.name,
           member.phoneNumber === "" ? "-" : formatPhoneNumberIntl(member.phoneNumber),
         ];
-        if (data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.All)
-          memberData.push(member.payment.partial ? "PARTIAL" : member.payment.paid ? "YES" : "NO");
+
+        for (const month of data.months) {
+          const payment = member.payments.find((payment) => payment.month.toDateString() === removeTimezone(month).toDate().toDateString());
+
+          payment ? (payment.partial ? memberData.push("PARTIAL") : memberData.push("PAID")) : memberData.push("UNPAID");
+        }
+
         return memberData;
       }),
     ],
@@ -341,18 +352,31 @@ function generatePDF(data: RouterOutput["member"]["getMembers"], monthsText: str
 
 function generateXSLX(data: RouterOutput["member"]["getMembers"], monthsText: string) {
   const workbook = XLSX.utils.book_new();
-  const header = ["#", "Lane", "House Number", "Name", "Phone Number", "Paid?"];
+  const header = ["#", "Lane", "House Number", "Name", "Phone Number"];
+
+  data.months.map((month) => {
+    header.push(`${MONTHS[removeTimezone(month).toDate().getMonth()]} ${removeTimezone(month).toDate().getFullYear()}`);
+  });
 
   const worksheetData = [
     header,
-    ...data.members.map((member, index) => [
-      Number(index + 1),
-      member.lane,
-      member.houseId,
-      member.name,
-      member.phoneNumber === "" ? "-" : formatPhoneNumberIntl(member.phoneNumber),
-      member.payment.partial ? "PARTIAL" : member.payment.paid ? "YES" : "NO",
-    ]),
+    ...data.members.map((member, index) => {
+      const arr = [
+        Number(index + 1),
+        member.lane,
+        member.houseId,
+        member.name,
+        member.phoneNumber === "" ? "-" : formatPhoneNumberIntl(member.phoneNumber),
+      ];
+
+      for (const month of data.months) {
+        const payment = member.payments.find((payment) => payment.month.toDateString() === removeTimezone(month).toDate().toDateString());
+
+        payment ? (payment.partial ? arr.push("PARTIAL") : arr.push("PAID")) : arr.push("UNPAID");
+      }
+
+      return arr;
+    }),
   ];
 
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);

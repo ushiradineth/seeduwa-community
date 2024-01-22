@@ -20,6 +20,8 @@ export type Payment = {
 export type Props = {
   payments: Payment[];
   count: number;
+  page: number;
+  itemPerPage: number;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
@@ -46,6 +48,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
           ],
         }
       : { active: true };
+
+  const page = Number(context.query.page ?? 1);
 
   const payments = await prisma.payment.findMany({
     take: ITEMS_PER_PAGE,
@@ -80,17 +84,19 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         paymentAt: payment.paymentAt.toDateString(),
       })),
       count,
+      page,
+      itemPerPage: ITEMS_PER_PAGE,
     },
   };
 };
 
-export default function AllPayments({ payments, count }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function AllPayments({ payments, count, itemPerPage, page }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
       <Head>
         <title>Payments - Seeduwa Village Security Association</title>
       </Head>
-      <Payments payments={payments} count={count} />
+      <Payments payments={payments} count={count} itemPerPage={itemPerPage} page={page} />
     </>
   );
 }

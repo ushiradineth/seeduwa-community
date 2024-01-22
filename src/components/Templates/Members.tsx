@@ -305,7 +305,7 @@ function generatePDF(data: RouterOutput["member"]["getMembers"], monthsText: str
 
   pdfDocument.text(`${data.membersParam} members for  ${monthsText}`, pageWidth / 2, 10, { align: "center" });
 
-  const head = [["Lane", "House Number", "Name", "Phone Number"]];
+  const head = [["#", "Lane", "House Number", "Name", "Phone Number"]];
 
   if (data.membersParam === MEMBERS_PAYMENT_FILTER_ENUM.All) head[0]?.push(`Paid`);
 
@@ -319,8 +319,9 @@ function generatePDF(data: RouterOutput["member"]["getMembers"], monthsText: str
     },
     theme: "grid",
     body: [
-      ...data.members.map((member) => {
+      ...data.members.map((member, index) => {
         const memberData = [
+          Number(index + 1),
           member.lane,
           member.houseId,
           member.name,
@@ -340,11 +341,12 @@ function generatePDF(data: RouterOutput["member"]["getMembers"], monthsText: str
 
 function generateXSLX(data: RouterOutput["member"]["getMembers"], monthsText: string) {
   const workbook = XLSX.utils.book_new();
-  const header = ["Lane", "House Number", "Name", "Phone Number", "Paid?"];
+  const header = ["#", "Lane", "House Number", "Name", "Phone Number", "Paid?"];
 
   const worksheetData = [
     header,
-    ...data.members.map((member) => [
+    ...data.members.map((member, index) => [
+      Number(index + 1),
       member.lane,
       member.houseId,
       member.name,

@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Payments({ payments: initialPayments, count }: Props) {
+export default function Payments({ payments: initialPayments, count, page, itemPerPage }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
   const [payments, setPayments] = useState<Payment[]>(initialPayments);
@@ -38,6 +38,7 @@ export default function Payments({ payments: initialPayments, count }: Props) {
         <Table className="border">
           <TableHeader>
             <TableRow>
+              <TableHead className="border text-center">#</TableHead>
               <TableHead className="border text-center">Member</TableHead>
               <TableHead className="border text-center">Amount</TableHead>
               <TableHead className="border text-center">Period</TableHead>
@@ -47,9 +48,14 @@ export default function Payments({ payments: initialPayments, count }: Props) {
           </TableHeader>
           <TableBody>
             {payments.length !== 0 ? (
-              payments.map((payment) => {
+              payments.map((payment, index) => {
                 return (
                   <TableRow key={payment.id}>
+                    <TableCell onClick={() => router.push(`/member/${payment.member.id}`)} className="cursor-pointer border text-center">
+                      <Link href={`/member/${payment.member.id}`} className="max-w-24 flex items-center justify-center truncate">
+                        {index + itemPerPage * (page - 1) + 1}
+                      </Link>
+                    </TableCell>
                     <TableCell onClick={() => router.push(`/member/${payment.member.id}`)} className="cursor-pointer border text-center">
                       <Link href={`/member/${payment.member.id}`} className="max-w-24 flex items-center justify-center truncate">
                         {payment.member.name}
@@ -94,7 +100,7 @@ export default function Payments({ payments: initialPayments, count }: Props) {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   No results.
                 </TableCell>
               </TableRow>

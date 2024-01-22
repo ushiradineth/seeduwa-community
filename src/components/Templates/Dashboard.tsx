@@ -106,7 +106,8 @@ export default function Dashboard({ year, itemsPerPage, search, lane, page }: Pr
           <Table className="border">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center">Member</TableHead>
+                <TableHead className="border text-center">#</TableHead>
+                <TableHead className="border text-center">Member</TableHead>
                 {MONTHS.map((month) => (
                   <TableHead key={month} className="border-x-2 text-center font-extrabold">
                     {month}
@@ -116,10 +117,13 @@ export default function Dashboard({ year, itemsPerPage, search, lane, page }: Pr
             </TableHeader>
             <TableBody>
               {data.members.length !== 0 ? (
-                data.members.map((member) => {
+                data.members.map((member, index) => {
                   return (
                     <TableRow key={member.id}>
-                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer text-center">
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer border text-center">
+                        <Link href={`/member/${member.id}`}>{index + itemsPerPage * (page - 1) + 1}</Link>
+                      </TableCell>
+                      <TableCell onClick={() => router.push(`/member/${member.id}`)} className="cursor-pointer border text-center">
                         <Link href={`/member/${member.id}`}>{member.name}</Link>
                       </TableCell>
                       {MONTHS.map((month, index) => {
@@ -162,7 +166,7 @@ export default function Dashboard({ year, itemsPerPage, search, lane, page }: Pr
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={13} className="h-24 text-center">
+                  <TableCell colSpan={14} className="h-24 text-center">
                     No results.
                   </TableCell>
                 </TableRow>
@@ -221,7 +225,7 @@ function generatePDF(data: RouterOutputs["member"]["getDashboard"]) {
   pdfDocument.text(`Seeduwa Village Security Association - ${data.year}`, pageWidth / 2, 10, { align: "center" });
 
   autoTable(pdfDocument, {
-    head: [["Member Name", ...MONTHS]],
+    head: [["#", "Member Name", ...MONTHS]],
     headStyles: {
       halign: "center",
     },
@@ -230,7 +234,7 @@ function generatePDF(data: RouterOutputs["member"]["getDashboard"]) {
     },
     theme: "grid",
     body: [
-      ...data.members.map((member) => {
+      ...data.members.map((member, index) => {
         const paymentsByMonth = MONTHS.map((month) => {
           const payment = member.payments.find((p) => {
             const paymentDate = removeTimezone(p.month).toDate();
@@ -240,7 +244,7 @@ function generatePDF(data: RouterOutputs["member"]["getDashboard"]) {
           return payment ? payment.amount.toFixed(2) : "-";
         });
 
-        return [member.name, ...paymentsByMonth];
+        return [Number(index + 1), member.name, ...paymentsByMonth];
       }),
     ],
   });
@@ -250,11 +254,11 @@ function generatePDF(data: RouterOutputs["member"]["getDashboard"]) {
 
 function generateXSLX(data: RouterOutputs["member"]["getDashboard"]) {
   const workbook = XLSX.utils.book_new();
-  const header = ["Member Name", ...MONTHS];
+  const header = ["#", "Member Name", ...MONTHS];
 
   const worksheetData = [
     header,
-    ...data.members.map((member) => {
+    ...data.members.map((member, index) => {
       const paymentsByMonth = MONTHS.map((month) => {
         const payment = member.payments.find((p) => {
           const paymentDate = removeTimezone(p.month).toDate();
@@ -264,7 +268,7 @@ function generateXSLX(data: RouterOutputs["member"]["getDashboard"]) {
         return payment ? payment.amount.toFixed(2) : "-";
       });
 
-      return [member.name, ...paymentsByMonth];
+      return [Number(index + 1), member.name, ...paymentsByMonth];
     }),
   ];
 

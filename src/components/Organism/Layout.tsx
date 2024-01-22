@@ -1,4 +1,4 @@
-import { Coins, LogOut, Menu, Plus, Receipt, User } from "lucide-react";
+import { Coins, LogOut, Mail, Menu, Plus, Receipt, User } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
@@ -89,6 +89,13 @@ function Layout(props: { children: React.ReactNode }) {
           <Popups />
           {props.children}
         </div>
+      </div>
+      <div className="bottom-0 left-0 z-[100000] flex h-12 w-screen items-center justify-center border-t bg-bgc">
+        <Link
+          className="flex h-full w-full items-center justify-center gap-2"
+          href="mailto:ushiradineth@gmail.com?subject=SVSA%20Website%20Issue&body=Hello%20SVSA%20Admin,%0A%0AI%20am%20facing%20the%20following%20issue:%20[Describe%20the%20issue%20here].%0A%0AThank%20you,%0A[Your%20Name]">
+          Contact Support <Mail />
+        </Link>
       </div>
     </main>
   );

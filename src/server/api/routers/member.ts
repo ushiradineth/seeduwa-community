@@ -294,7 +294,7 @@ export const memberRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const search = input.search ? input.search.split(" ").join(" | ") : "";
+      const search = input.search.split(" ").join(" & ");
       const year = YEARS.includes(input.year) ? input.year : now().getFullYear();
       const lane = LANE_FILTER.includes(String(input.lane)) ? String(input.lane) : LANE_FILTER[0]!;
 

@@ -50,7 +50,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     };
   }
 
-  const search = context.query.search ? (context.query.search as string).split(" ").join(" | ") : "";
+  const search = context.query.search ? (context.query.search as string) : "";
   const paymentYear = YEARS.includes(Number(context.query.paymentYear)) ? Number(context.query.paymentYear) : now().getFullYear();
   const itemsPerPage = ITEMS_PER_PAGE_FILTER.includes(Number(context.query.itemsPerPage))
     ? Number(context.query.itemsPerPage)

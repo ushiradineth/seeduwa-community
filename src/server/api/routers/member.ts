@@ -327,6 +327,7 @@ export const memberRouter = createTRPCRouter({
           houseId: true,
           name: true,
           lane: true,
+          lastPaymentAt: true,
           payments: {
             where: {
               active: true,
@@ -344,9 +345,11 @@ export const memberRouter = createTRPCRouter({
           },
         },
         orderBy: {
-          createdAt: "asc",
+          lastPaymentAt: "desc",
         },
       });
+
+      console.log(members.map((member) => member.lastPaymentAt));
 
       const count = await ctx.prisma.member.count({
         where,

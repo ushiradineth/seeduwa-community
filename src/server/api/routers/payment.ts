@@ -34,20 +34,27 @@ export const paymentRouter = createTRPCRouter({
       }
 
       try {
-        const payments = await ctx.prisma.payment.createMany({
-          data: [
-            ...input.months.map((month) => {
-              return {
-                amount: input.amount,
-                memberId: input.memberId,
-                month,
-                paymentAt: input.paymentDate,
-                partial: input.partial,
-              };
-            }),
-          ],
-          skipDuplicates: true,
-        });
+        const [payments, _] = await ctx.prisma.$transaction([
+          ctx.prisma.payment.createMany({
+            data: [
+              ...input.months.map((month) => {
+                return {
+                  amount: input.amount,
+                  memberId: input.memberId,
+                  month,
+                  paymentAt: input.paymentDate,
+                  partial: input.partial,
+                };
+              }),
+            ],
+            skipDuplicates: true,
+          }),
+
+          ctx.prisma.member.update({
+            where: { id: input.memberId },
+            data: { lastPaymentAt: new Date() },
+          }),
+        ]);
 
         ctx.log.info("Payment created", { input });
 
@@ -69,9 +76,18 @@ export const paymentRouter = createTRPCRouter({
 
   delete: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
     try {
-      const payment = await ctx.prisma.payment.update({
-        where: { id: input.id, active: true },
-        data: { active: false, deletedAt: now() },
+      const payment = await ctx.prisma.$transaction(async (tx) => {
+        const payment = await tx.payment.update({
+          where: { id: input.id, active: true },
+          data: { active: false, deletedAt: now() },
+        });
+
+        await tx.member.update({
+          where: { id: payment.memberId },
+          data: { lastPaymentAt: new Date() },
+        });
+
+        return payment;
       });
 
       ctx.log.info("Payment deleted", { payment });
@@ -87,9 +103,18 @@ export const paymentRouter = createTRPCRouter({
     .input(z.object({ id: z.string(), amount: z.number(), paymentDate: z.date(), partial: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const payment = await ctx.prisma.payment.update({
-          where: { id: input.id, active: true },
-          data: { amount: input.amount, paymentAt: input.paymentDate, partial: input.partial },
+        const payment = await ctx.prisma.$transaction(async (tx) => {
+          const payment = await tx.payment.update({
+            where: { id: input.id, active: true },
+            data: { amount: input.amount, paymentAt: input.paymentDate, partial: input.partial },
+          });
+
+          await tx.member.update({
+            where: { id: payment.memberId },
+            data: { lastPaymentAt: new Date() },
+          });
+
+          return payment;
         });
 
         ctx.log.info("Payment edited", { payment });

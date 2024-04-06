@@ -27,10 +27,11 @@ model Member {
   deletedAt DateTime?
   active    Boolean   @default(true)
 
-  name        String
-  phoneNumber String @default("")
-  houseId     String
-  lane        String
+  name          String
+  phoneNumber   String   @default("")
+  houseId       String
+  lane          String
+  lastPaymentAt DateTime @default(now())
 
   payments Payment[]
 }
@@ -44,7 +45,7 @@ model Payment {
   month     DateTime @default(now()) // which month the payment is for
   amount    Float
   paymentAt DateTime @default(now()) // when the payment was made
-  partial   Boolean @default(false)
+  partial   Boolean  @default(false)
 
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
   memberId String

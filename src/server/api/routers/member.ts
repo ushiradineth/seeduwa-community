@@ -349,8 +349,6 @@ export const memberRouter = createTRPCRouter({
         },
       });
 
-      console.log(members.map((member) => member.lastPaymentAt));
-
       const count = await ctx.prisma.member.count({
         where,
       });

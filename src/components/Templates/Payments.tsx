@@ -65,16 +65,16 @@ export default function Payments({ payments: initialPayments, count, year, month
                         {payment.member.name}
                       </Link>
                     </TableCell>
-                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer border text-center">
+                    <TableCell className="cursor-pointer border text-center">
                       <Link href={`/payment/${payment.id}`}>LKR {payment.amount.toLocaleString()}</Link>
                     </TableCell>
-                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer border text-center">
+                    <TableCell className="cursor-pointer border text-center">
                       <Link href={`/payment/${payment.id}`}>
                         {MONTHS[removeTimezone(payment.month).toDate().getMonth()]} {removeTimezone(payment.month).toDate().getFullYear()}
                       </Link>
                     </TableCell>
-                    <TableCell onClick={() => router.push(`/payment/${payment.id}`)} className="cursor-pointer border text-center">
-                      <Link href={`/payment/${payment.id}`}>{payment.paymentAt}</Link>
+                    <TableCell className="cursor-pointer border text-center">
+                      <p>{removeTimezone(payment.paymentAt).format("DD/MM/YYYY")}</p>
                     </TableCell>
                     <TableCell>
                       <button

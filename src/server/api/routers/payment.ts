@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { MONTHS } from "@/lib/consts";
-import { now } from "@/lib/utils";
+import { now, removeTimezone } from "@/lib/utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { sendMessage } from "./message";
 
@@ -132,4 +132,45 @@ export const paymentRouter = createTRPCRouter({
       include: { member: true },
     });
   }),
+
+  getPayments: protectedProcedure
+    .input(z.object({ year: z.number(), month: z.string(), search: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const monthIndex = MONTHS.findIndex((value) => value === input.month);
+      const recordDate = removeTimezone().year(input.year).month(monthIndex);
+      const paymentAt = { gte: recordDate.startOf("month").toDate(), lte: recordDate.endOf("month").toDate() };
+      const where =
+        input.search !== ""
+          ? {
+              AND: [
+                { paymentAt },
+                { active: true },
+                { OR: [{ member: { name: { search: input.search }, houseId: { search: input.search }, lane: { search: input.search } } }] },
+              ],
+            }
+          : { AND: [{ paymentAt }, { active: true }] };
+
+      return {
+        year: input.year,
+        month: input.month,
+        payments: await ctx.prisma.payment.findMany({
+          where,
+          select: {
+            id: true,
+            amount: true,
+            month: true,
+            paymentAt: true,
+            member: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        }),
+      };
+    }),
 });

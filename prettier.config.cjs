@@ -12,10 +12,7 @@ const config = {
   tabWidth: 2,
   bracketSameLine: true,
   singleAttributePerLine: false,
-  plugins: [
-    "@ianvs/prettier-plugin-sort-imports",
-    "prettier-plugin-tailwindcss",
-  ],
+  plugins: ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
   importOrder: [
     "^(react/(.*)$)|^(react$)",
     "^(next/(.*)$)|^(next$)",
@@ -26,8 +23,8 @@ const config = {
     "^@/(.*)$",
     "^[./]",
   ],
-  importOrderParserPlugins: ['typescript', 'jsx', 'decorators-legacy'],
-  importOrderTypeScriptVersion: '5.1.6',
+  importOrderParserPlugins: ["typescript", "jsx", "decorators-legacy"],
+  importOrderTypeScriptVersion: "5.1.6",
 };
 
 module.exports = config;

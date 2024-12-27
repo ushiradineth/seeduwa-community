@@ -162,7 +162,7 @@ export default function EditMember() {
                         <SelectTrigger>
                           <SelectValue placeholder="Select a lane" />
                         </SelectTrigger>
-                        <SelectContent className="dark z-[250] w-max max-h-72">
+                        <SelectContent className="dark z-[250] max-h-72 w-max">
                           {LANE.map((lane) => {
                             return (
                               <SelectItem key={lane} value={lane}>

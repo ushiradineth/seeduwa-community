@@ -55,7 +55,7 @@ export default function CreateMember() {
     <Dialog
       open={router.query.create === "member"}
       onOpenChange={() => router.push({ query: removeQueryParamsFromRouter(router, ["create"]) }, undefined, { shallow: true })}>
-      <DialogContent className="dark text-white sm:max-w-[425px] max-h-[90%]">
+      <DialogContent className="dark max-h-[90%] text-white sm:max-w-[425px]">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <DialogHeader>
@@ -127,7 +127,7 @@ export default function CreateMember() {
                       <SelectTrigger>
                         <SelectValue placeholder="Select a lane" />
                       </SelectTrigger>
-                      <SelectContent className="dark z-[250] w-max max-h-72">
+                      <SelectContent className="dark z-[250] max-h-72 w-max">
                         {LANE.map((lane) => {
                           return (
                             <SelectItem key={lane} value={lane}>

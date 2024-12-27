@@ -23,10 +23,7 @@ const config = {
         caughtErrorsIgnorePattern: "^_",
       },
     ],
-    "@typescript-eslint/consistent-type-imports": [
-      "error",
-      { prefer: "type-imports", fixStyle: "inline-type-imports" },
-    ],
+    "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports", fixStyle: "inline-type-imports" }],
     "@typescript-eslint/no-misused-promises": "off",
     "@typescript-eslint/no-unsafe-assignment": "off",
     "@typescript-eslint/no-unsafe-call": "off",

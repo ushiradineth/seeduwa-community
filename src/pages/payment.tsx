@@ -2,12 +2,12 @@ import { getSession } from "next-auth/react";
 import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 
+import { Card } from "@/components/Molecules/Card";
+import Filter from "@/components/Molecules/Filter";
 import Payments from "@/components/Templates/Payments";
 import { ITEMS_PER_PAGE, MONTHS, YEARS } from "@/lib/consts";
-import { prisma } from "@/server/db";
-import Filter from "@/components/Molecules/Filter";
-import { Card } from "@/components/Molecules/Card";
 import { now, removeTimezone } from "@/lib/utils";
+import { prisma } from "@/server/db";
 
 export type Payment = {
   id: string;

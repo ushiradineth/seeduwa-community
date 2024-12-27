@@ -23,6 +23,7 @@ export type Props = {
     name: string;
     lane: string;
     active: boolean;
+    lastPaymentAt: string;
     payments: {
       id: string;
       createdAt: string;
@@ -63,6 +64,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       member: {
         ...member,
         createdAt: formalizeDate(member.createdAt),
+        lastPaymentAt: formalizeDate(member.lastPaymentAt),
         payments: member.payments.map((payment: Payment) => {
           return {
             ...payment,

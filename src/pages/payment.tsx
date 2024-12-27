@@ -3,8 +3,11 @@ import { type GetServerSideProps, type InferGetServerSidePropsType } from "next"
 import Head from "next/head";
 
 import Payments from "@/components/Templates/Payments";
-import { ITEMS_PER_PAGE } from "@/lib/consts";
+import { ITEMS_PER_PAGE, MONTHS, YEARS } from "@/lib/consts";
 import { prisma } from "@/server/db";
+import Filter from "@/components/Molecules/Filter";
+import { Card } from "@/components/Molecules/Card";
+import { now, removeTimezone } from "@/lib/utils";
 
 export type Payment = {
   id: string;
@@ -20,6 +23,9 @@ export type Payment = {
 export type Props = {
   payments: Payment[];
   count: number;
+  year: number;
+  month: string;
+  search: string;
   page: number;
   itemPerPage: number;
 };
@@ -38,16 +44,21 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   }
 
   const search = context.query.search ? (context.query.search as string).split(" ").join(" | ") : "";
-
+  const year = Number(context.query.filterYear ?? now().getFullYear());
+  const month = String(context.query.filterMonth ?? MONTHS[now().getMonth()]);
+  const monthIndex = MONTHS.findIndex((value) => value === month);
+  const recordDate = removeTimezone().year(year).month(monthIndex);
+  const paymentAt = { gte: recordDate.startOf("month").toDate(), lte: recordDate.endOf("month").toDate() };
   const where =
     search !== ""
       ? {
           AND: [
+            { paymentAt },
             { active: true },
             { OR: [{ member: { name: { search: search }, houseId: { search: search }, lane: { search: search } } }] },
           ],
         }
-      : { active: true };
+      : { AND: [{ paymentAt }, { active: true }] };
 
   const page = Number(context.query.page ?? 1);
 
@@ -84,19 +95,38 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         paymentAt: payment.paymentAt.toDateString(),
       })),
       count,
+      year,
+      month,
+      search,
       page,
       itemPerPage: ITEMS_PER_PAGE,
     },
   };
 };
 
-export default function AllPayments({ payments, count, itemPerPage, page }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function PaymentsDashboard({
+  payments,
+  count,
+  year,
+  month,
+  search,
+  itemPerPage,
+  page,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
       <Head>
         <title>Payments - Seeduwa Village Security Association</title>
       </Head>
-      <Payments payments={payments} count={count} itemPerPage={itemPerPage} page={page} />
+      <div className="flex flex-col gap-4">
+        <Card className="flex flex-col justify-evenly gap-4 p-4">
+          <div className="flex w-full gap-4">
+            <Filter label="Month" filterItems={MONTHS} paramKey="filterMonth" value={month} />
+            <Filter label="Year" filterItems={YEARS} paramKey="filterYear" value={String(year)} />
+          </div>
+        </Card>
+        <Payments payments={payments} count={count} year={year} month={month} search={search} itemPerPage={itemPerPage} page={page} />
+      </div>
     </>
   );
 }

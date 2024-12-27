@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Payments({ payments: initialPayments, count, page, itemPerPage }: Props) {
+export default function Payments({ payments: initialPayments, count, year, month, search, page, itemPerPage }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
   const [payments, setPayments] = useState<Payment[]>(initialPayments);
@@ -24,7 +24,11 @@ export default function Payments({ payments: initialPayments, count, page, itemP
     <Card>
       <CardHeader>
         <CardTitle>Payments</CardTitle>
-        <CardDescription>A list of all payments.</CardDescription>
+        <CardDescription>
+          <p className="text-lg font-bold">
+            A list of payments made in {month} {year}.
+          </p>
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Search

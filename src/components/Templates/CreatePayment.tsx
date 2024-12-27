@@ -138,7 +138,7 @@ export default function CreatePayment() {
             <DialogHeader>
               <DialogTitle>Add payment</DialogTitle>
               <DialogDescription className="flex">
-                Add new payment payment.{" "}
+                Add new payment record.{" "}
                 <button
                   type="button"
                   className="ml-auto text-blue-400"

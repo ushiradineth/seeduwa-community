@@ -139,6 +139,7 @@ export const paymentRouter = createTRPCRouter({
       const monthIndex = MONTHS.findIndex((value) => value === input.month);
       const recordDate = removeTimezone().year(input.year).month(monthIndex);
       const paymentAt = { gte: recordDate.startOf("month").toDate(), lte: recordDate.endOf("month").toDate() };
+      const defaultQuery = { AND: [{ paymentAt }, { active: true }] };
       const where =
         input.search !== ""
           ? {
@@ -148,11 +149,21 @@ export const paymentRouter = createTRPCRouter({
                 { OR: [{ member: { name: { search: input.search }, houseId: { search: input.search }, lane: { search: input.search } } }] },
               ],
             }
-          : { AND: [{ paymentAt }, { active: true }] };
+          : defaultQuery;
+
+      const totalForTheMonth = (
+        await ctx.prisma.payment.findMany({
+          where: defaultQuery,
+          select: {
+            amount: true,
+          },
+        })
+      ).reduce((acc, curr) => acc + curr.amount, 0);
 
       return {
         year: input.year,
         month: input.month,
+        totalForTheMonth,
         payments: await ctx.prisma.payment.findMany({
           where,
           select: {

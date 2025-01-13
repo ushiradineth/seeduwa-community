@@ -23,6 +23,7 @@ export type Payment = {
 export type Props = {
   payments: Payment[];
   count: number;
+  totalForTheMonth: number;
   year: number;
   month: string;
   search: string;
@@ -49,6 +50,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   const monthIndex = MONTHS.findIndex((value) => value === month);
   const recordDate = removeTimezone().year(year).month(monthIndex);
   const paymentAt = { gte: recordDate.startOf("month").toDate(), lte: recordDate.endOf("month").toDate() };
+
+  const defaultQuery = { AND: [{ paymentAt }, { active: true }] };
   const where =
     search !== ""
       ? {
@@ -58,7 +61,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
             { OR: [{ member: { name: { search: search }, houseId: { search: search }, lane: { search: search } } }] },
           ],
         }
-      : { AND: [{ paymentAt }, { active: true }] };
+      : defaultQuery;
 
   const page = Number(context.query.page ?? 1);
 
@@ -87,6 +90,15 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     where,
   });
 
+  const totalForTheMonth = (
+    await prisma.payment.findMany({
+      where: defaultQuery,
+      select: {
+        amount: true,
+      },
+    })
+  ).reduce((acc, curr) => acc + curr.amount, 0);
+
   return {
     props: {
       payments: payments.map((payment) => ({
@@ -95,6 +107,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
         paymentAt: payment.paymentAt.toDateString(),
       })),
       count,
+      totalForTheMonth,
       year,
       month,
       search,
@@ -107,6 +120,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 export default function PaymentsDashboard({
   payments,
   count,
+  totalForTheMonth,
   year,
   month,
   search,
@@ -125,7 +139,16 @@ export default function PaymentsDashboard({
             <Filter label="Year" filterItems={YEARS} paramKey="filterYear" value={String(year)} />
           </div>
         </Card>
-        <Payments payments={payments} count={count} year={year} month={month} search={search} itemPerPage={itemPerPage} page={page} />
+        <Payments
+          payments={payments}
+          count={count}
+          totalForTheMonth={totalForTheMonth}
+          year={year}
+          month={month}
+          search={search}
+          itemPerPage={itemPerPage}
+          page={page}
+        />
       </div>
     </>
   );

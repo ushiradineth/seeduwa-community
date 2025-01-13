@@ -24,7 +24,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Search from "../Molecules/Search";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../Molecules/Table";
 
-export default function Payments({ payments: initialPayments, count, year, month, search, page, itemPerPage }: Props) {
+export default function Payments({ payments: initialPayments, count, totalForTheMonth, year, month, search, page, itemPerPage }: Props) {
   const router = useRouter();
   const pageNumber = Number(router.query.page ?? 1);
   const [payments, setPayments] = useState<Payment[]>(initialPayments);
@@ -84,7 +84,7 @@ export default function Payments({ payments: initialPayments, count, year, month
           </CardTitle>
           <CardDescription>
             <p className="text-lg font-bold">
-              A list of payments made in {month} {year}.
+              Total Payments for {month} {year}: LKR {totalForTheMonth.toLocaleString()}
             </p>
           </CardDescription>
         </CardHeader>
@@ -210,7 +210,8 @@ function OptionMenu({ onClickPDF, onClickXSLX }: { readonly onClickPDF: () => vo
   );
 }
 
-const yellow = [202, 222, 185] as [number, number, number];
+const yellow = [253, 243, 208] as [number, number, number];
+const green = [202, 222, 185] as [number, number, number];
 
 function generatePDF(data: RouterOutputs["payment"]["getPayments"]) {
   const pdfDocument = new jsPDF();
@@ -220,13 +221,13 @@ function generatePDF(data: RouterOutputs["payment"]["getPayments"]) {
     align: "center",
   });
 
-  const head = [["#", "Member", "Amount", "Period", "Paid on"]];
+  const head = [["#", "Payment Date", "Member", "Period", "Amount"]];
 
   autoTable(pdfDocument, {
     head,
     headStyles: {
       halign: "center",
-      fillColor: yellow,
+      fillColor: green,
       textColor: "black",
       fontStyle: "bold",
     },
@@ -238,13 +239,35 @@ function generatePDF(data: RouterOutputs["payment"]["getPayments"]) {
       ...data.payments.map((payment, index) => {
         const rowData = [
           index + 1,
-          payment.member.name,
-          "LKR " + payment.amount.toLocaleString(),
-          `${MONTHS[removeTimezone(payment.month).toDate().getMonth()]} ${removeTimezone(payment.month).toDate().getFullYear()}`,
           removeTimezone(payment.paymentAt).format("DD/MM/YYYY"),
+          payment.member.name,
+          `${MONTHS[removeTimezone(payment.month).toDate().getMonth()]} ${removeTimezone(payment.month).toDate().getFullYear()}`,
+          "LKR " + payment.amount.toLocaleString(),
         ];
         return rowData;
       }),
+      [
+        {
+          content: "-",
+          styles: { fillColor: yellow, fontStyle: "bold" },
+        },
+        {
+          content: "-",
+          styles: { fillColor: yellow, fontStyle: "bold" },
+        },
+        {
+          content: "-",
+          styles: { fillColor: yellow, fontStyle: "bold" },
+        },
+        {
+          content: "Total",
+          styles: { fillColor: yellow, fontStyle: "bold" },
+        },
+        {
+          content: "LKR " + data.totalForTheMonth.toLocaleString(),
+          styles: { fillColor: yellow, fontStyle: "bold" },
+        },
+      ],
     ],
   });
 
@@ -253,7 +276,7 @@ function generatePDF(data: RouterOutputs["payment"]["getPayments"]) {
 
 function generateXSLX(data: RouterOutputs["payment"]["getPayments"]) {
   const workbook = XLSX.utils.book_new();
-  const header = ["#", "Member", "Amount", "Period", "Paid on"];
+  const header = ["#", "Payment Date", "Member", "Period", "Amount"];
 
   const worksheetData = [
     ["", "", "", "", ""],
@@ -261,13 +284,14 @@ function generateXSLX(data: RouterOutputs["payment"]["getPayments"]) {
     ...data.payments.map((payment, index) => {
       const rowData = [
         index + 1,
-        payment.member.name,
-        "LKR " + payment.amount.toLocaleString(),
-        `${MONTHS[removeTimezone(payment.month).toDate().getMonth()]} ${removeTimezone(payment.month).toDate().getFullYear()}`,
         removeTimezone(payment.paymentAt).format("DD/MM/YYYY"),
+        payment.member.name,
+        `${MONTHS[removeTimezone(payment.month).toDate().getMonth()]} ${removeTimezone(payment.month).toDate().getFullYear()}`,
+        "LKR " + payment.amount.toLocaleString(),
       ];
       return rowData;
     }),
+    ["-", "-", "-", "Total", "LKR " + data.totalForTheMonth.toLocaleString()],
   ];
 
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);

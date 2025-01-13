@@ -210,8 +210,8 @@ function OptionMenu({ onClickPDF, onClickXSLX }: { readonly onClickPDF: () => vo
   );
 }
 
-const green = [253, 243, 208] as [number, number, number];
-const yellow = [202, 222, 185] as [number, number, number];
+const yellow = [253, 243, 208] as [number, number, number];
+const green = [202, 222, 185] as [number, number, number];
 
 function generatePDF(data: Props) {
   const pdfDocument = new jsPDF();
@@ -229,7 +229,7 @@ function generatePDF(data: Props) {
     head,
     headStyles: {
       halign: "center",
-      fillColor: yellow,
+      fillColor: green,
       textColor: "black",
       fontStyle: "bold",
     },
@@ -239,10 +239,7 @@ function generatePDF(data: Props) {
     theme: "grid",
     body: [
       [
-        {
-          content: removeTimezone().month(data.month).year(data.year).startOf("month").format("DD/MM/YYYY"),
-          styles: { fillColor: green },
-        },
+        removeTimezone().month(data.month).year(data.year).startOf("month").format("DD/MM/YYYY"),
         {
           content: "Balance Brought Forward",
           styles: { fontStyle: "bold" },
@@ -252,10 +249,7 @@ function generatePDF(data: Props) {
         "LKR " + data.balance.toLocaleString(),
       ],
       [
-        {
-          content: removeTimezone().month(data.month).year(data.year).startOf("month").format("DD/MM/YYYY"),
-          styles: { fillColor: green },
-        },
+        removeTimezone().month(data.month).year(data.year).startOf("month").format("DD/MM/YYYY"),
         {
           content: "Monthly Fee from Residents",
           styles: { fontStyle: "bold" },
@@ -265,13 +259,7 @@ function generatePDF(data: Props) {
         "LKR " + (data.balance + data.currentPayments).toLocaleString(),
       ],
       ...data.records.map((record) => {
-        const rowData = [
-          {
-            content: removeTimezone(record.recordAt).format("DD/MM/YYYY"),
-            styles: { fillColor: green },
-          },
-          record.name,
-        ];
+        const rowData = [removeTimezone(record.recordAt).format("DD/MM/YYYY"), record.name];
         record.type === "Income"
           ? rowData.push("LKR " + record.amount.toLocaleString(), "-")
           : rowData.push("-", "LKR " + record.amount.toLocaleString());
@@ -288,14 +276,20 @@ function generatePDF(data: Props) {
       [
         {
           content: removeTimezone().month(data.month).year(data.year).endOf("month").format("DD/MM/YYYY"),
-          styles: { fillColor: green },
+          styles: { fillColor: yellow },
+        },
+        {
+          content: "-",
+          styles: { fillColor: yellow, fontStyle: "bold" },
+        },
+        {
+          content: "-",
+          styles: { fillColor: yellow, fontStyle: "bold" },
         },
         {
           content: "Balance",
-          styles: { fontStyle: "bold" },
+          styles: { fillColor: yellow, fontStyle: "bold" },
         },
-        "",
-        "",
         {
           content: "LKR " + balanceWithPayments.toLocaleString(),
           styles: { fillColor: yellow, fontStyle: "bold" },

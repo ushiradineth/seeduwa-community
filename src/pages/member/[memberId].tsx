@@ -1,8 +1,8 @@
-import { type Payment } from "@prisma/client";
+import type { Payment } from "@prisma/client";
 import { getSession } from "next-auth/react";
 import { formatPhoneNumberIntl } from "react-phone-number-input";
 import { useCallback, useMemo } from "react";
-import { type GetServerSideProps, type InferGetServerSidePropsType } from "next";
+import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -85,7 +85,9 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
     (month: string, year: number) => {
       return member.payments.find((payment) => {
         const paymentDate = removeTimezone(payment.month).toDate();
-        const paymentMonth = paymentDate.toLocaleString("en-US", { month: "long" });
+        const paymentMonth = paymentDate.toLocaleString("en-US", {
+          month: "long",
+        });
         const paymentYear = paymentDate.getFullYear().toString();
 
         return paymentMonth === month && paymentYear === String(year) ? payment : undefined;
@@ -150,7 +152,7 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
                           },
                         )
                       }
-                      className={`flex items-center justify-center border p-8 text-lg active:bg-accent md:text-xl ${
+                      className={`flex flex-col items-center justify-center border px-4 py-8 text-lg active:bg-accent md:text-xl ${
                         index === 9 && "rounded-bl-2xl"
                       } ${index === 11 && "rounded-br-2xl"} ${
                         payment
@@ -160,6 +162,7 @@ export default function Member({ member }: InferGetServerSidePropsType<typeof ge
                           : "hover:bg-accent/90"
                       }`}>
                       {month}
+                      {payment && <p className="text-center text-sm">{"LKR " + payment?.amount.toLocaleString()}</p>}
                     </button>
                   );
                 })}

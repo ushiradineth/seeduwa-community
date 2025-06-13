@@ -1,0 +1,37 @@
+name: Backup Supabase Database to Google Drive
+
+on:
+  schedule:
+    - cron: '0 9 */3 * *' # Runs at 9:00 AM UTC every 3 days
+  workflow_dispatch:      # Manual trigger from the GitHub UI
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Dump database
+        id: dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          filename=$(date +'%Y-%m-%d_%H-%M-%S').dump
+          pg_dump "$DATABASE_URL" \
+            --format=custom \
+            --file="$filename"
+          echo "filename=$filename" >> "$GITHUB_OUTPUT"
+
+      - name: Upload backup to Google Drive
+        uses: adityak74/google-drive-upload-git-action@main
+        with:
+          filename: ${{ steps.dump.outputs.filename }}
+          credentials: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          folderId: ${{ secrets.GOOGLE_DRIVE_BACKUP_FOLDER_ID }}

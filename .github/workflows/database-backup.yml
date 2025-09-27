@@ -1,9 +1,10 @@
+---
 name: Backup Supabase Database to Google Drive
 
 on:
   schedule:
-    - cron: '0 9 */3 * *' # Runs at 9:00 AM UTC every 3 days
-  workflow_dispatch:      # Manual trigger from the GitHub UI
+    - cron: 0 9 */3 * *  # Runs at 9:00 AM UTC every 3 days
+  workflow_dispatch:  # Manual trigger from the GitHub UI
 
 jobs:
   backup:
@@ -29,9 +30,20 @@ jobs:
             --file="$filename"
           echo "filename=$filename" >> "$GITHUB_OUTPUT"
 
-      - name: Upload backup to Google Drive
-        uses: adityak74/google-drive-upload-git-action@main
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
         with:
-          filename: ${{ steps.dump.outputs.filename }}
-          credentials: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-          folderId: ${{ secrets.GOOGLE_DRIVE_BACKUP_FOLDER_ID }}
+          version: latest
+
+      - name: Upload backup to Supabase Storage
+        env:
+          SUPABASE_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_BUCKET: ${{ secrets.SUPABASE_BUCKET }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+        run: |-
+          supabase login --token $SUPABASE_TOKEN
+
+          supabase link --project-ref ${SUPABASE_PROJECT_ID} --password ${DATABASE_PASSWORD}
+
+          supabase storage cp ${{ steps.dump.outputs.filename }} ss:///$SUPABASE_BUCKET/${{ steps.dump.outputs.filename }} --experimental

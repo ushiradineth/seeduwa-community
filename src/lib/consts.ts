@@ -44,6 +44,6 @@ export enum MEMBERS_PAYMENT_FILTER_ENUM {
   Partial = "Partial",
 }
 
-export const DEFAULT_AMOUNT = 2500;
+export const DEFAULT_AMOUNT = 3500;
 
 export const RECORD_TYPE = ["Income", "Expense"];

@@ -33,7 +33,7 @@ export default function CreatePayment() {
 
   const { mutate: createPayment, isLoading: creatingPayment } = api.payment.create.useMutation({
     onSuccess: async (data, variables) => {
-      variables.notify && !data.response && toast.error("Failed to notify user");
+      variables.notify && !data.notify?.success && toast.error(data.notify?.error ?? "Failed to notify member");
       await router.push({ query: removeQueryParamsFromRouter(router, ["create"]) });
       toast.success("Payment added successfully");
     },

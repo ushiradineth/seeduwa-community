@@ -27,7 +27,7 @@ export default function CreatePaymentForMember() {
 
   const { mutate: createPayment, isLoading: creatingPayment } = api.payment.create.useMutation({
     onSuccess: async (data, variables) => {
-      variables.notify && !data.response && toast.error("Failed to notify user");
+      variables.notify && !data.notify?.success && toast.error(data.notify?.error ?? "Failed to notify member");
       await exitPopup(false);
       toast.success("Payment added successfully");
     },

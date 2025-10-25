@@ -5,15 +5,28 @@ import { z } from "zod";
 import { env } from "@/env.mjs";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
-export async function sendMessage(recipient: string, text: string, log: Logger): Promise<boolean> {
+type SendMessageResult = {
+  success: boolean;
+  error?: string;
+};
+
+export async function sendMessage(recipient: string, text: string, log: Logger): Promise<SendMessageResult> {
   if (recipient === "") {
-    return false;
+    const error = "Empty phone number";
+    log.error("Message not sent: Empty phone number", { message: text, receiver: recipient, error });
+    return { success: false, error };
   }
 
   const phoneNumber = parsePhoneNumber(recipient);
   if (phoneNumber && phoneNumber.country !== "LK") {
-    log.error("Message not sent", { message: text, receiver: recipient, response: "Phone number not in Sri Lanka" });
-    return false;
+    const error = "Phone number not in Sri Lanka";
+    log.error("Message not sent: Invalid country", {
+      message: text,
+      receiver: recipient,
+      country: phoneNumber.country,
+      error,
+    });
+    return { success: false, error };
   }
 
   // Remove country code (+94) for API - it only accepts local format
@@ -32,24 +45,51 @@ export async function sendMessage(recipient: string, text: string, log: Logger):
       body: formData,
     });
 
-    // @ts-expect-error SMS Gateway does not respond with an error code
-    if (!response.ok || response.status === "unsuccess") {
-      log.error("Message not sent", { message: text, receiver: recipient, response });
-      return false;
+    if (!response.ok) {
+      const error = `SMS Gateway HTTP error: ${response.status} ${response.statusText}`;
+      log.error("Message not sent: HTTP error", {
+        message: text,
+        receiver: recipient,
+        localNumber,
+        httpStatus: response.status,
+        httpStatusText: response.statusText,
+        error,
+      });
+      return { success: false, error };
     }
 
     const data = await response.json();
 
-    if (data.msg_id === "no") {
-      log.error("Message not sent", { message: text, receiver: recipient, response: data });
-      return false;
+    if (data.status === "error" || data.msg_id === "no") {
+      const errorMsg = data.message || "Unknown SMS Gateway error";
+      const error = `SMS Gateway failure: ${errorMsg}`;
+      log.error("Message not sent: Gateway rejected", {
+        message: text,
+        receiver: recipient,
+        localNumber,
+        gatewayResponse: data,
+        error,
+      });
+      return { success: false, error };
     }
 
-    log.info("Message sent", { message: text, receiver: recipient, response: data });
-    return true;
+    log.info("Message sent successfully", {
+      message: text,
+      receiver: recipient,
+      localNumber,
+      gatewayResponse: data,
+    });
+    return { success: true };
   } catch (error) {
-    log.error("Message not sent", { message: text, receiver: recipient, response: error });
-    return false;
+    const errorMsg = `SMS Gateway request failed: ${error instanceof Error ? error.message : String(error)}`;
+    log.error("Message not sent: Network/Request error", {
+      message: text,
+      receiver: recipient,
+      localNumber,
+      error: errorMsg,
+      exception: error,
+    });
+    return { success: false, error: errorMsg };
   }
 }
 
@@ -71,13 +111,15 @@ export const messageRouter = createTRPCRouter({
         },
       });
 
-      const messages: { name: string; number: string; status: boolean }[] = [];
+      const messages: { name: string; number: string; status: boolean; error?: string }[] = [];
 
       for (const member of members) {
+        const result = await sendMessage(member.phoneNumber, input.text, ctx.log);
         messages.push({
           name: member.name,
           number: member.phoneNumber,
-          status: await sendMessage(member.phoneNumber, input.text, ctx.log),
+          status: result.success,
+          error: result.error,
         });
       }
 
@@ -91,13 +133,15 @@ export const messageRouter = createTRPCRouter({
       },
     });
 
-    const messages: { name: string; number: string; status: boolean }[] = [];
+    const messages: { name: string; number: string; status: boolean; error?: string }[] = [];
 
     for (const member of members) {
+      const result = await sendMessage(member.phoneNumber, input.text, ctx.log);
       messages.push({
         name: member.name,
         number: member.phoneNumber,
-        status: await sendMessage(member.phoneNumber, input.text, ctx.log),
+        status: result.success,
+        error: result.error,
       });
     }
 

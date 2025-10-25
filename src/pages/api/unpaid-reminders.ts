@@ -29,10 +29,16 @@ export default async function handler(request: NextApiRequest, response: NextApi
     },
   });
 
-  const messages: { name: string; number: string; status: boolean }[] = [];
+  const messages: { name: string; number: string; status: boolean; error?: string }[] = [];
 
   for (const member of members) {
-    await sendMessage(member.phoneNumber, generateUnpaidNotificationMessage(DEFAULT_AMOUNT, month), log);
+    const result = await sendMessage(member.phoneNumber, generateUnpaidNotificationMessage(DEFAULT_AMOUNT, month), log);
+    messages.push({
+      name: member.name,
+      number: member.phoneNumber,
+      status: result.success,
+      error: result.error,
+    });
   }
 
   log.info("Unpaid Reminders sent", { members, messages });

@@ -6,24 +6,28 @@ import { env } from "@/env.mjs";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export async function sendMessage(recipient: string, text: string, log: Logger): Promise<boolean> {
-  const formData = new URLSearchParams();
-  formData.append("user_id", env.SMS_USER_ID);
-  formData.append("api_key", env.SMS_API_KEY);
-  formData.append("sender_id", env.SMS_SENDER_ID);
-  formData.append("to", recipient);
-  formData.append("message", text);
-
   if (recipient === "") {
     return false;
   }
 
   const phoneNumber = parsePhoneNumber(recipient);
   if (phoneNumber && phoneNumber.country !== "LK") {
+    log.error("Message not sent", { message: text, receiver: recipient, response: "Phone number not in Sri Lanka" });
     return false;
   }
 
+  // Remove country code (+94) for API - it only accepts local format
+  const localNumber = phoneNumber?.nationalNumber ?? recipient.replace(/^\+94/, "0");
+
+  const formData = new URLSearchParams();
+  formData.append("user_id", env.SMS_USER_ID);
+  formData.append("api_key", env.SMS_API_KEY);
+  formData.append("sender_id", env.SMS_SENDER_ID);
+  formData.append("to", localNumber);
+  formData.append("message", text);
+
   try {
-    const response = await fetch("http://send.srilankandiver.com/api/v2/send.php", {
+    const response = await fetch("https://sagesms.com/API/Sms_api/send_sms", {
       method: "POST",
       body: formData,
     });

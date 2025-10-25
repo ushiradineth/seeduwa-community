@@ -3,8 +3,8 @@ name: Backup Supabase Database to Google Drive
 
 on:
   schedule:
-    - cron: 0 9 */3 * *  # Runs at 9:00 AM UTC every 3 days
-  workflow_dispatch:  # Manual trigger from the GitHub UI
+    - cron: 0 9 */3 * * # Runs at 9:00 AM UTC every 3 days
+  workflow_dispatch: # Manual trigger from the GitHub UI
 
 jobs:
   backup:

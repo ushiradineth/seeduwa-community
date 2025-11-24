@@ -158,7 +158,12 @@ export const messageRouter = createTRPCRouter({
           Authorization: process.env.CRON_SECRET ? `Bearer ${process.env.CRON_SECRET}` : "",
         },
       }).catch((error) => {
-        ctx.log.error("Failed to trigger job processor", { error });
+        ctx.log.error("Failed to trigger job processor", {
+          error,
+          jobId: job.id,
+          url: processorUrl,
+          message: "Job is queued but auto-processing failed. Process manually via UI or API.",
+        });
       });
 
       return { jobId: job.id };

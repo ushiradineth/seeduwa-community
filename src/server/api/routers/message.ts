@@ -5,6 +5,7 @@ import { z } from "zod";
 import { env } from "@/env.mjs";
 import { MEMBERS_PAYMENT_FILTER_ENUM } from "@/lib/consts";
 import { removeTimezone } from "@/lib/utils";
+import { processBroadcastJob } from "@/server/jobs/broadcastProcessor";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 type SendMessageResult = {
@@ -151,18 +152,11 @@ export const messageRouter = createTRPCRouter({
 
       ctx.log.info("Broadcast job queued", { jobId: job.id });
 
-      // Trigger the job processor asynchronously (fire and forget)
-      fetch(`${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/api/process-broadcast-jobs`, {
-        method: "POST",
-        headers: {
-          Authorization: process.env.CRON_SECRET ? `Bearer ${process.env.CRON_SECRET}` : "",
-        },
-      }).catch((error) => {
-        ctx.log.error("Failed to trigger job processor", {
+      // Process the job asynchronously (fire and forget)
+      processBroadcastJob(job.id, ctx.prisma, ctx.log).catch((error) => {
+        ctx.log.error("Failed to process broadcast job", {
           error,
           jobId: job.id,
-          url: processorUrl,
-          message: "Job is queued but auto-processing failed. Process manually via UI or API.",
         });
       });
 
@@ -182,6 +176,23 @@ export const messageRouter = createTRPCRouter({
 
       if (!job) {
         throw new Error("Job not found");
+      }
+
+      // Auto-retry: if job stuck in QUEUED for >30 seconds, retry processing
+      if (job.status === "QUEUED") {
+        const secondsSinceCreated = (Date.now() - job.createdAt.getTime()) / 1000;
+
+        if (secondsSinceCreated > 30) {
+          ctx.log.warn("Job stuck in QUEUED, auto-retrying", {
+            jobId: job.id,
+            secondsSinceCreated,
+          });
+
+          // Fire and forget retry
+          processBroadcastJob(job.id, ctx.prisma, ctx.log).catch((error) => {
+            ctx.log.error("Auto-retry failed", { error, jobId: job.id });
+          });
+        }
       }
 
       return {

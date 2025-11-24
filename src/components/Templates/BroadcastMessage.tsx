@@ -1,9 +1,9 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { BadgeCheck, BadgeXIcon } from "lucide-react";
+import { AlertCircle, BadgeCheck, BadgeXIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { formatPhoneNumberIntl } from "react-phone-number-input";
 import { toast } from "react-toastify";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { api } from "@/utils/api";
@@ -11,19 +11,53 @@ import { removeQueryParamsFromRouter } from "@/lib/utils";
 import { BroadcastSchema, type BroadcastFormData } from "@/lib/validators";
 import { Button } from "../Atoms/Button";
 import { Textarea } from "../Atoms/Textarea";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../Molecules/Dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../Molecules/Form";
+
+const ITEMS_PER_PAGE = 10;
 
 export default function BroadcastMessage() {
   const router = useRouter();
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Determine if this is filtered mode or all members mode
+  const isFiltered = router.query.mode === "broadcast-filtered";
+  const isOpen = router.query.mode === "broadcast" || router.query.mode === "broadcast-filtered";
+
+  // Extract filter params from query
+  const filterParams = {
+    members: Array.isArray(router.query.broadcastMembers) ? router.query.broadcastMembers[0] : router.query.broadcastMembers,
+    months: Array.isArray(router.query.broadcastMonths)
+      ? router.query.broadcastMonths
+      : router.query.broadcastMonths
+      ? [router.query.broadcastMonths]
+      : undefined,
+    search: Array.isArray(router.query.broadcastSearch) ? router.query.broadcastSearch[0] : router.query.broadcastSearch,
+  };
+
+  // Get recipient count for confirmation
+  const { data: recipientCount } = api.message.getRecipientCount.useQuery(
+    {
+      members: filterParams.members,
+      months: filterParams.months,
+      search: filterParams.search,
+    },
+    {
+      enabled: isFiltered && isOpen,
+      refetchOnWindowFocus: false,
+    },
+  );
 
   const {
     data,
     mutate: broadcast,
     isLoading: broadcasting,
+    reset: resetMutation,
   } = api.message.broadcast.useMutation({
     onSuccess: () => {
       toast.success("Notifications sent successfully");
+      setShowConfirmation(false);
     },
   });
 
@@ -31,72 +65,160 @@ export default function BroadcastMessage() {
     resolver: yupResolver(BroadcastSchema),
   });
 
-  function onSubmit(data: BroadcastFormData) {
+  function onSubmit(formData: BroadcastFormData) {
+    if (!showConfirmation) {
+      setShowConfirmation(true);
+      return;
+    }
+
+    // Send broadcast with filter params
     broadcast({
-      text: data.Text,
+      text: formData.Text,
+      members: filterParams.members,
+      months: filterParams.months,
+      search: filterParams.search,
     });
   }
 
   const exitPopup = useCallback(
-    (shallow: boolean) =>
-      router.push(
+    (shallow: boolean) => {
+      form.reset();
+      resetMutation();
+      setShowConfirmation(false);
+      setCurrentPage(1);
+      void router.push(
         {
-          query: removeQueryParamsFromRouter(router, ["mode"]),
+          query: removeQueryParamsFromRouter(router, ["mode", "broadcastMembers", "broadcastMonths", "broadcastSearch"]),
         },
         undefined,
         { shallow },
-      ),
-    [router],
+      );
+    },
+    [router, form, resetMutation],
   );
 
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      form.reset({ Text: "" });
+      resetMutation();
+      setShowConfirmation(false);
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.query.mode, form, resetMutation]);
+
+  // Paginate results
+  const paginatedData = data ? data.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE) : [];
+  const totalPages = data ? Math.ceil(data.length / ITEMS_PER_PAGE) : 0;
+  const errorCount = data ? data.filter((m) => !m.status).length : 0;
+  const successCount = data ? data.filter((m) => m.status).length : 0;
+
+  const dialogTitle = isFiltered ? `Broadcast Message to ${recipientCount ?? "..."} Members` : "Broadcast Message to All Members";
+
   return (
-    <Dialog open={router.query.mode === "broadcast"} onOpenChange={() => exitPopup(true)}>
-      <DialogContent className="dark max-h-[90%] text-white sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={() => exitPopup(true)}>
+      <DialogContent className="dark max-h-[90%] overflow-y-auto text-white sm:max-w-[425px]">
         {data ? (
           <>
             <DialogHeader>
               <DialogTitle className="flex w-fit items-center justify-center gap-2">
-                <p>Broadcast Message to All Members</p>
+                <p>{dialogTitle}</p>
               </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                {errorCount > 0 && <span className="text-red-400">{errorCount} failed</span>}
+                {errorCount > 0 && successCount > 0 && " • "}
+                {successCount > 0 && <span className="text-green-400">{successCount} successful</span>}
+              </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-2">
-              {data.map((member) => (
-                <div key={member.name} className="flex items-center justify-start gap-2">
-                  <p className="w-36 truncate">{member.name}</p>
-                  <p>{member.number === "" ? "-" : formatPhoneNumberIntl(member.number)}</p>
-                  {member.status ? <BadgeCheck color="green" className="ml-auto" /> : <BadgeXIcon color="red" className="ml-auto" />}
+              {paginatedData.map((member, idx) => (
+                <div key={`${member.name}-${idx}`} className="flex flex-col gap-1 rounded border border-gray-700 p-2">
+                  <div className="flex items-center justify-start gap-2">
+                    <p className="w-36 truncate font-semibold">{member.name}</p>
+                    <p className="text-sm">{member.number === "" ? "-" : formatPhoneNumberIntl(member.number)}</p>
+                    {member.status ? <BadgeCheck color="green" className="ml-auto" /> : <BadgeXIcon color="red" className="ml-auto" />}
+                  </div>
+                  {!member.status && member.error && <p className="text-xs text-red-400">{member.error}</p>}
                 </div>
               ))}
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between gap-2">
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <span className="text-sm text-gray-400">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}>
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </>
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
               <DialogHeader>
                 <DialogTitle className="flex w-fit items-center justify-center gap-2">
-                  <p>Broadcast Message to All Members</p>
+                  <p>{dialogTitle}</p>
                 </DialogTitle>
               </DialogHeader>
 
-              <FormField
-                control={form.control}
-                name="Text"
-                render={({ field: innerField }) => (
-                  <FormItem>
-                    <FormLabel>Message</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Broadcast Message" {...innerField} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!showConfirmation ? (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="Text"
+                    render={({ field: innerField }) => (
+                      <FormItem>
+                        <FormLabel>Message</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Broadcast Message" {...innerField} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <DialogFooter className="gap-2 md:gap-0">
-                <Button loading={broadcasting} type="submit">
-                  Broadcast to All Members
-                </Button>
-              </DialogFooter>
+                  <DialogFooter className="gap-2 md:gap-0">
+                    <Button type="submit">Continue</Button>
+                  </DialogFooter>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start gap-3 rounded border border-yellow-600 bg-yellow-900/20 p-4">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 text-yellow-500" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-yellow-100">Send broadcast to {isFiltered ? recipientCount : "all"} members?</p>
+                      <p className="mt-2 text-sm text-yellow-200/80">
+                        This may take a moment. Do not close this page while messages are being sent.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded border border-gray-700 bg-gray-800 p-3">
+                    <p className="text-sm font-semibold text-gray-400">Message Preview:</p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm">{form.getValues("Text")}</p>
+                  </div>
+
+                  <DialogFooter className="gap-2">
+                    <Button type="button" variant="outline" onClick={() => setShowConfirmation(false)}>
+                      Back
+                    </Button>
+                    <Button loading={broadcasting} type="submit">
+                      {broadcasting ? "Sending..." : "Send Broadcast"}
+                    </Button>
+                  </DialogFooter>
+                </>
+              )}
             </form>
           </Form>
         )}

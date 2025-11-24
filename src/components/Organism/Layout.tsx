@@ -27,7 +27,6 @@ import CreateRecord from "../Templates/CreateRecord";
 import EditMember from "../Templates/EditMember";
 import EditPayment from "../Templates/EditPayment";
 import EditRecord from "../Templates/EditRecord";
-import NotifyUnpaidMembers from "../Templates/NotifyUnpaidMembers";
 
 const NAVBAR_HIDDEN_PATHS = ["/auth", "/auth/reset"];
 
@@ -43,7 +42,6 @@ function Layout(props: { children: React.ReactNode }) {
         <CreatePaymentForMember />
         <EditPayment />
         <EditMember />
-        <NotifyUnpaidMembers />
         <BroadcastMessage />
         <CreateRecord />
         <EditRecord />

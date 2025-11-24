@@ -112,9 +112,9 @@ export default function Members({ months, membersParam, search }: Props) {
             <OptionMenu
               onClickPDF={() => setType("PDF")}
               onClickXSLX={() => setType("XSLX")}
-              month={removeTimezone(months[0] ?? "").toDate()}
               filter={membersParam}
-              enabledUnpaidNotification={months.length === 1}
+              months={months}
+              search={search}
             />
           </CardTitle>
           <CardDescription>
@@ -246,15 +246,15 @@ export default function Members({ months, membersParam, search }: Props) {
 function OptionMenu({
   onClickPDF,
   onClickXSLX,
-  month,
   filter,
-  enabledUnpaidNotification,
+  months,
+  search,
 }: {
   onClickPDF: () => void;
   onClickXSLX: () => void;
-  month: Date;
   filter: MEMBERS_PAYMENT_FILTER_ENUM;
-  enabledUnpaidNotification: boolean;
+  months: string[];
+  search: string;
 }) {
   const router = useRouter();
 
@@ -271,20 +271,26 @@ function OptionMenu({
           onClick={() => router.push({ query: { ...router.query, create: "member" } }, undefined, { shallow: true })}>
           Add new member <Plus className="ml-auto" size={20} />
         </DropdownMenuItem>
-        {enabledUnpaidNotification && filter === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="flex cursor-pointer gap-4"
-              onClick={() =>
-                router.push({ query: { ...router.query, mode: "notify", month: month.getMonth(), year: month.getFullYear() } }, undefined, {
-                  shallow: true,
-                })
-              }>
-              Notify Unpaid Members <MessagesSquare className="ml-auto" size={20} />
-            </DropdownMenuItem>
-          </>
-        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="flex cursor-pointer gap-4"
+          onClick={() =>
+            router.push(
+              {
+                query: {
+                  ...router.query,
+                  mode: "broadcast-filtered",
+                  broadcastMembers: filter,
+                  broadcastMonths: months,
+                  broadcastSearch: search,
+                },
+              },
+              undefined,
+              { shallow: true },
+            )
+          }>
+          Broadcast Message <MessagesSquare className="ml-auto" size={20} />
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="flex cursor-pointer gap-4" onClick={onClickPDF}>
           Download as PDF <FileText className="ml-auto" size={20} />

@@ -69,16 +69,11 @@ export const EditPaymentSchema = yup.object().shape({
 
 export type EditPaymentFormData = yup.InferType<typeof EditPaymentSchema>;
 
-export const NotifyUnpaidMembersSchema = yup.object().shape({
-  Text: yup.string().default(""),
-  Month: yup.date().required("A month should be picked"),
-  Amount: yup.number().required(),
-});
-
-export type NotifyUnpaidMembersFormData = yup.InferType<typeof NotifyUnpaidMembersSchema>;
-
 export const BroadcastSchema = yup.object().shape({
   Text: yup.string().default("").min(1, "Broadcast message should not be empty"),
+  Members: yup.string().optional(),
+  Months: yup.array(yup.string()).optional(),
+  Search: yup.string().optional(),
 });
 
 export type BroadcastFormData = yup.InferType<typeof BroadcastSchema>;

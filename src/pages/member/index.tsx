@@ -49,7 +49,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     };
   }
 
-  const search = context.query.search ? (context.query.search as string).split(" ").join(" <-> ") : "";
+  const search = context.query.search ? (context.query.search as string) : "";
   const membersParam = String(context.query.members ?? MEMBERS_PAYMENT_FILTER_ENUM.All) as MEMBERS_PAYMENT_FILTER_ENUM;
   const months =
     typeof context.query.months === "string"

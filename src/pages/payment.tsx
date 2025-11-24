@@ -44,7 +44,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
     };
   }
 
-  const search = context.query.search ? (context.query.search as string).split(" ").join(" | ") : "";
+  const search = context.query.search ? (context.query.search as string).split(" ").filter(Boolean).join(" & ") : "";
   const year = Number(context.query.filterYear ?? now().getFullYear());
   const month = String(context.query.filterMonth ?? MONTHS[now().getMonth()]);
   const monthIndex = MONTHS.findIndex((value) => value === month);

@@ -20,6 +20,7 @@ export default function BroadcastMessage() {
   const router = useRouter();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [jobId, setJobId] = useState<string | null>(null);
 
   // Determine if this is filtered mode or all members mode
   const isFiltered = router.query.mode === "broadcast-filtered";
@@ -49,17 +50,42 @@ export default function BroadcastMessage() {
     },
   );
 
+  // Poll for job status
+  const { data: jobStatus } = api.message.getBroadcastJobStatus.useQuery(
+    { jobId: jobId! },
+    {
+      enabled: !!jobId,
+      refetchInterval: (data) => {
+        // Stop polling when job is completed or failed
+        if (data?.status === "COMPLETED" || data?.status === "FAILED") {
+          return false;
+        }
+        return 2000; // Poll every 2 seconds
+      },
+      refetchOnWindowFocus: false,
+      refetchOnMount: true,
+      staleTime: 0, // Always consider data stale
+      cacheTime: 0, // Don't cache results
+    },
+  );
+
   const {
-    data,
     mutate: broadcast,
     isLoading: broadcasting,
     reset: resetMutation,
   } = api.message.broadcast.useMutation({
-    onSuccess: () => {
-      toast.success("Notifications sent successfully");
+    onSuccess: (response) => {
+      setJobId(response.jobId);
       setShowConfirmation(false);
     },
+    onError: (error) => {
+      toast.error(`Failed to queue broadcast: ${error.message}`);
+    },
   });
+
+  // Derived data from job status
+  const data = jobStatus?.results;
+  const isProcessing = jobStatus?.status === "PROCESSING" || jobStatus?.status === "QUEUED";
 
   const form = useForm<BroadcastFormData>({
     resolver: yupResolver(BroadcastSchema),
@@ -86,6 +112,7 @@ export default function BroadcastMessage() {
       resetMutation();
       setShowConfirmation(false);
       setCurrentPage(1);
+      setJobId(null);
       void router.push(
         {
           query: removeQueryParamsFromRouter(router, ["mode", "broadcastMembers", "broadcastMonths", "broadcastSearch"]),
@@ -104,9 +131,32 @@ export default function BroadcastMessage() {
       resetMutation();
       setShowConfirmation(false);
       setCurrentPage(1);
+      setJobId(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.query.mode, form, resetMutation]);
+
+  // Debug: Log job status updates
+  useEffect(() => {
+    if (jobStatus) {
+      console.log("[Broadcast] Job status update:", {
+        status: jobStatus.status,
+        processed: jobStatus.processedCount,
+        total: jobStatus.totalRecipients,
+        success: jobStatus.successCount,
+        failed: jobStatus.failedCount,
+      });
+    }
+  }, [jobStatus]);
+
+  // Show success toast when job completes
+  useEffect(() => {
+    if (jobStatus?.status === "COMPLETED") {
+      toast.success(`Broadcast completed: ${jobStatus.successCount} sent, ${jobStatus.failedCount} failed`);
+    } else if (jobStatus?.status === "FAILED") {
+      toast.error(`Broadcast failed: ${jobStatus.error ?? "Unknown error"}`);
+    }
+  }, [jobStatus?.status, jobStatus?.successCount, jobStatus?.failedCount, jobStatus?.error]);
 
   // Paginate results
   const paginatedData = data ? data.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE) : [];
@@ -119,7 +169,41 @@ export default function BroadcastMessage() {
   return (
     <Dialog open={isOpen} onOpenChange={() => exitPopup(true)}>
       <DialogContent className="dark max-h-[90%] overflow-y-auto text-white sm:max-w-[425px]">
-        {data ? (
+        {isProcessing ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex w-fit items-center justify-center gap-2">
+                <p>{dialogTitle}</p>
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                {jobStatus?.status === "QUEUED" && "Queued - waiting to start..."}
+                {jobStatus?.status === "PROCESSING" && "Processing messages..."}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 rounded border border-blue-600 bg-blue-900/20 p-4">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                <div className="flex-1">
+                  <p className="font-semibold text-blue-100">
+                    {jobStatus?.processedCount ?? 0} / {jobStatus?.totalRecipients ?? "..."} messages sent
+                  </p>
+                  {jobStatus && jobStatus.totalRecipients > 0 && (
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-700">
+                      <div
+                        className="h-full bg-blue-500 transition-all duration-300"
+                        style={{ width: `${(jobStatus.processedCount / jobStatus.totalRecipients) * 100}%` }}
+                      />
+                    </div>
+                  )}
+                  <p className="mt-2 text-xs text-blue-200/80">
+                    Success: {jobStatus?.successCount ?? 0} • Failed: {jobStatus?.failedCount ?? 0}
+                  </p>
+                </div>
+              </div>
+              <p className="text-center text-sm text-gray-400">Please wait while messages are being sent...</p>
+            </div>
+          </>
+        ) : data ? (
           <>
             <DialogHeader>
               <DialogTitle className="flex w-fit items-center justify-center gap-2">

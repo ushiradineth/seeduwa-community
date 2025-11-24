@@ -12,7 +12,39 @@ type SendMessageResult = {
   error?: string;
 };
 
+// Mock SMS gateway for development
+async function sendMessageMock(recipient: string, text: string, log: Logger): Promise<SendMessageResult> {
+  // Random delay between 2-10 seconds to simulate network latency
+  const delay = Math.floor(Math.random() * 8000) + 2000;
+  await new Promise((resolve) => setTimeout(resolve, delay));
+
+  // 20% chance of random failure
+  const shouldFail = Math.random() < 0.2;
+
+  if (shouldFail) {
+    const errors = [
+      "Network timeout",
+      "SMS Gateway temporarily unavailable",
+      "Invalid phone number format",
+      "Recipient opted out",
+      "Rate limit exceeded",
+    ];
+    const error = errors[Math.floor(Math.random() * errors.length)]!;
+
+    log.warn("Mock SMS failed", { recipient, error, delay });
+    return { success: false, error };
+  }
+
+  log.info("Mock SMS sent successfully", { recipient, text: text.substring(0, 50), delay });
+  return { success: true };
+}
+
 export async function sendMessage(recipient: string, text: string, log: Logger): Promise<SendMessageResult> {
+  // Use mock in development
+  if (process.env.NODE_ENV === "development") {
+    return sendMessageMock(recipient, text, log);
+  }
+
   if (recipient === "") {
     const error = "Empty phone number";
     log.error("Message not sent: Empty phone number", { message: text, receiver: recipient, error });
@@ -106,130 +138,60 @@ export const messageRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      // Build filter conditions based on input (reusing member.ts filtering logic)
-      const search = input.search ? input.search.split(" ").filter(Boolean).join(" & ") : "";
-      const membersParam = String(input.members ?? MEMBERS_PAYMENT_FILTER_ENUM.All) as MEMBERS_PAYMENT_FILTER_ENUM;
-      const months = input.months ? [...input.months.map((month) => removeTimezone(month).startOf("month").toDate())] : [];
-
-      let paymentsFilter = {};
-
-      if (months.length > 0) {
-        if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid || membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
-          paymentsFilter = {
-            OR: [
-              {
-                payments: {
-                  some: {
-                    active: true,
-                    month: { in: months },
-                  },
-                },
-              },
-              {
-                payments: {
-                  none: {
-                    active: true,
-                    month: { in: months },
-                  },
-                },
-              },
-            ],
-          };
-        } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial) {
-          paymentsFilter = {
-            AND: [
-              {
-                payments: {
-                  some: {
-                    active: true,
-                    month: { in: months },
-                    partial: true,
-                  },
-                },
-              },
-            ],
-          };
-        }
-      }
-
-      const where =
-        search !== ""
-          ? {
-              AND: [
-                { active: true },
-                {
-                  OR: [
-                    { name: { search: search } },
-                    { phoneNumber: { search: search } },
-                    { houseId: { search: search } },
-                    { lane: { search: search } },
-                  ],
-                },
-                { ...paymentsFilter },
-              ],
-            }
-          : { active: true, ...paymentsFilter };
-
-      let members = await ctx.prisma.member.findMany({
-        where,
-        select: {
-          id: true,
-          name: true,
-          phoneNumber: true,
-          payments:
-            months.length > 0
-              ? {
-                  where: {
-                    active: true,
-                    month: { in: months },
-                  },
-                  select: {
-                    amount: true,
-                    month: true,
-                    partial: true,
-                  },
-                }
-              : undefined,
+      // Create a broadcast job instead of processing synchronously
+      const job = await ctx.prisma.broadcastJob.create({
+        data: {
+          message: input.text,
+          membersFilter: input.members,
+          monthsFilter: input.months ? JSON.stringify(input.months) : null,
+          searchFilter: input.search,
+          status: "QUEUED",
         },
-        orderBy: { lane: "asc" },
       });
 
-      // Filter by paid/unpaid status if months are provided (must match member.ts logic exactly)
-      if (months.length > 0) {
-        if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Paid) {
-          // Paid = has paid for ALL selected months (excluding partial payments)
-          members = members.filter(
-            (member) => member.payments && member.payments.filter((payment) => payment.partial === false).length === months.length,
-          );
-        } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Unpaid) {
-          // Unpaid = has paid for LESS THAN ALL selected months (excluding partial payments)
-          members = members.filter(
-            (member) => !member.payments || member.payments.filter((payment) => payment.partial === false).length < months.length,
-          );
-        } else if (membersParam === MEMBERS_PAYMENT_FILTER_ENUM.Partial) {
-          // Partial = has made payments for all months, but at least one is partial
-          members = members.filter((member) => member.payments && member.payments.length === months.length);
-        }
-      }
+      ctx.log.info("Broadcast job queued", { jobId: job.id });
 
-      const messages: { name: string; number: string; status: boolean; error?: string }[] = [];
-
-      for (const member of members) {
-        const result = await sendMessage(member.phoneNumber, input.text, ctx.log);
-        messages.push({
-          name: member.name,
-          number: member.phoneNumber,
-          status: result.success,
-          error: result.error,
-        });
-      }
-
-      // Sort to show errors first
-      return messages.sort((a, b) => {
-        if (!a.status && b.status) return -1;
-        if (a.status && !b.status) return 1;
-        return 0;
+      // Trigger the job processor asynchronously (fire and forget)
+      fetch(`${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/api/process-broadcast-jobs`, {
+        method: "POST",
+        headers: {
+          Authorization: process.env.CRON_SECRET ? `Bearer ${process.env.CRON_SECRET}` : "",
+        },
+      }).catch((error) => {
+        ctx.log.error("Failed to trigger job processor", { error });
       });
+
+      return { jobId: job.id };
+    }),
+
+  getBroadcastJobStatus: protectedProcedure
+    .input(
+      z.object({
+        jobId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const job = await ctx.prisma.broadcastJob.findUnique({
+        where: { id: input.jobId },
+      });
+
+      if (!job) {
+        throw new Error("Job not found");
+      }
+
+      return {
+        id: job.id,
+        status: job.status,
+        totalRecipients: job.totalRecipients,
+        processedCount: job.processedCount,
+        successCount: job.successCount,
+        failedCount: job.failedCount,
+        results: job.results ? (JSON.parse(job.results) as { name: string; number: string; status: boolean; error?: string }[]) : null,
+        error: job.error,
+        createdAt: job.createdAt,
+        startedAt: job.startedAt,
+        completedAt: job.completedAt,
+      };
     }),
 
   getRecipientCount: protectedProcedure

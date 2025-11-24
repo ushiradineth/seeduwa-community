@@ -65,3 +65,37 @@ model Record {
   month    DateTime   @default(now()) // which month the record is for
   recordAt DateTime   @default(now()) // when the record was made
 }
+
+enum BroadcastJobStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model BroadcastJob {
+  id        String             @id @default(cuid())
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  status    BroadcastJobStatus @default(QUEUED)
+
+  // Input parameters
+  message        String
+  membersFilter  String?
+  monthsFilter   String? // JSON array of dates
+  searchFilter   String?
+
+  // Progress tracking
+  totalRecipients   Int     @default(0)
+  processedCount    Int     @default(0)
+  successCount      Int     @default(0)
+  failedCount       Int     @default(0)
+  results           String? // JSON array of results
+  error             String?
+
+  // Processing metadata
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@index([status, createdAt])
+}

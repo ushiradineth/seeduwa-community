@@ -62,9 +62,16 @@ function Layout(props: { children: React.ReactNode }) {
     [],
   );
 
+  useEffect(() => {
+    if (status === "unauthenticated" && !router.pathname.startsWith("/auth")) {
+      void router.push("/auth");
+    }
+    if (status === "authenticated" && router.pathname.startsWith("/auth")) {
+      void router.push("/");
+    }
+  }, [status, router]);
+
   if (status === "loading") return <Loader background />;
-  if (status === "unauthenticated" && !router.pathname.startsWith("/auth")) void router.push("/auth");
-  if (status === "authenticated" && router.pathname.startsWith("/auth")) void router.push("/");
 
   return (
     <main className="dark flex min-h-screen flex-col border-bc bg-bgc text-white">
